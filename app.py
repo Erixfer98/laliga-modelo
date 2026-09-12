@@ -14,46 +14,53 @@ import modelo as mo
 
 st.set_page_config(page_title="Parlay La Liga", page_icon="⚽", layout="centered", initial_sidebar_state="collapsed")
 
-st.markdown("""
+# ------------------------------------------------------------------ tema (sigue el tema de Streamlit: claro u oscuro)
+try:
+    TEMA = st.context.theme.type or "dark"
+except Exception:
+    TEMA = "dark"
+P = {"dark": dict(card="#1c1f26", txt="#e6e6e6", mut="#9aa0a6", line="#2c313a", line2="#22262e", barbg="#2c313a",
+                  miss="#3a3f4a", mark="#ffffff", app="#0f1115"),
+     "light": dict(card="#f3f4f6", txt="#111827", mut="#4b5563", line="#d1d5db", line2="#e5e7eb", barbg="#d1d5db",
+                   miss="#9ca3af", mark="#111827", app="#ffffff")}[TEMA]
+W = P["txt"]
+
+st.markdown(f"""
 <style>
-  header[data-testid="stHeader"] {display:none;}
-  .stApp {background:#0f1115; color:#e6e6e6;}
-  .block-container {padding: 0.8rem 0.8rem 4rem 0.8rem; max-width: 620px;}
-  h3 {color:#e6e6e6 !important; margin:0 0 4px 0 !important; padding:0 !important;}
-  label, .stMarkdown p, .stCaption {color:#c9cdd3 !important;}
-  .card {background:#1c1f26; border-radius:14px; padding:12px 14px; margin:8px 0; color:#e6e6e6;}
-  .t {font-size:0.72rem; color:#9aa0a6; text-transform:uppercase; letter-spacing:.05em;}
-  .row {display:flex; justify-content:space-between; align-items:center; gap:8px;}
-  .big {font-size:1.7rem; font-weight:700; line-height:1.1;}
-  .mid {font-size:1rem; font-weight:600;}
-  .small {font-size:0.78rem; color:#9aa0a6;}
-  .w {color:#fff; font-weight:600;}
-  .bar {height:8px; border-radius:4px; background:#2c313a; position:relative; margin:5px 0 2px 0;}
-  .bar > div {height:8px; border-radius:4px;}
-  .bar .mark {position:absolute; top:-3px; width:2px; height:14px; background:#fff; opacity:.85;}
-  .mk {border-top:1px solid #2c313a; padding:9px 0;}
-  .tag {display:inline-block; padding:2px 8px; border-radius:6px; font-size:0.72rem; font-weight:700; white-space:nowrap;}
-  .exc {background:#166534; color:#dcfce7;} .bue {background:#2e9e5b; color:#fff;} .reg {background:#b45309; color:#fff;}
-  .mal {background:#991b1b; color:#fee2e2;} .pes {background:#450a0a; color:#fca5a5;}
-  .up {color:#4ade80;} .down {color:#f87171;}
-  .sticky {position:sticky; top:0; z-index:99; background:#0f1115; padding:4px 0;}
-  table.st {width:100%; border-collapse:collapse; font-size:0.82rem;}
-  table.st th {text-align:right; font-weight:500; color:#9aa0a6; padding:5px 4px; border-bottom:1px solid #2c313a;}
-  table.st th:first-child, table.st td:first-child {text-align:left; color:#9aa0a6;}
-  table.st td {text-align:right; padding:5px 4px; border-bottom:1px solid #22262e;}
-  table.st tr.liga td {color:#9aa0a6; font-style:italic;}
-  table.mx {border-collapse:separate; border-spacing:3px; width:100%; font-size:0.78rem;}
-  table.mx td {text-align:center; padding:6px 0; border-radius:6px; color:#e6e6e6;}
-  table.mx th {font-size:0.72rem; color:#9aa0a6; font-weight:500; padding:2px;}
-  .chart {position:relative; height:110px; margin:26px 0 22px 0;}
-  .chart .bars {display:flex; align-items:flex-end; gap:3px; height:100%;}
-  .chart .bars > div {flex:1; border-radius:4px 4px 0 0; position:relative; min-width:6px;}
-  .chart .bars > div .v {position:absolute; top:-16px; left:0; right:0; text-align:center; font-size:0.66rem; color:#c9cdd3;}
-  .chart .bars > div .x {position:absolute; bottom:-16px; left:0; right:0; text-align:center; font-size:0.62rem; color:#9aa0a6;}
-  .chart .ln {position:absolute; left:0; right:0; border-top:2px dashed #fff; opacity:.8;}
-  .chart .ln span {position:absolute; right:0; top:-14px; font-size:0.66rem; color:#fff;}
-  .chart .lg {position:absolute; left:0; right:0; border-top:2px dotted #f59e0b; opacity:.9;}
-  .chart .lg span {position:absolute; left:0; top:-14px; font-size:0.66rem; color:#f59e0b;}
+  .block-container {{padding: 3.2rem 0.8rem 4rem 0.8rem; max-width: 620px;}}
+  .card {{background:{P['card']}; border-radius:14px; padding:12px 14px; margin:8px 0; color:{P['txt']};}}
+  .t {{font-size:0.72rem; color:{P['mut']}; text-transform:uppercase; letter-spacing:.05em;}}
+  .row {{display:flex; justify-content:space-between; align-items:center; gap:8px;}}
+  .big {{font-size:1.7rem; font-weight:700; line-height:1.1;}}
+  .mid {{font-size:1rem; font-weight:600;}}
+  .small {{font-size:0.78rem; color:{P['mut']};}}
+  .w {{color:{P['txt']}; font-weight:600;}}
+  .bar {{height:8px; border-radius:4px; background:{P['barbg']}; position:relative; margin:5px 0 2px 0;}}
+  .bar > div {{height:8px; border-radius:4px;}}
+  .bar .mark {{position:absolute; top:-3px; width:2px; height:14px; background:{P['mark']}; opacity:.9;}}
+  .mk {{border-top:1px solid {P['line']}; padding:9px 0;}}
+  .tag {{display:inline-block; padding:2px 8px; border-radius:6px; font-size:0.72rem; font-weight:700; white-space:nowrap;}}
+  .exc {{background:#166534; color:#dcfce7;}} .bue {{background:#2e9e5b; color:#fff;}} .reg {{background:#b45309; color:#fff;}}
+  .mal {{background:#991b1b; color:#fee2e2;}} .pes {{background:#450a0a; color:#fca5a5;}}
+  .up {{color:{'#4ade80' if TEMA == 'dark' else '#15803d'};}} .down {{color:{'#f87171' if TEMA == 'dark' else '#b91c1c'};}}
+  .sticky {{position:sticky; top:0; z-index:99; background:{P['app']}; padding:4px 0;}}
+  table.st {{width:100%; border-collapse:collapse; font-size:0.82rem; color:{P['txt']};}}
+  table.st th {{text-align:right; font-weight:500; color:{P['mut']}; padding:5px 4px; border-bottom:1px solid {P['line']};}}
+  table.st th:first-child, table.st td:first-child {{text-align:left; color:{P['mut']};}}
+  table.st td {{text-align:right; padding:5px 4px; border-bottom:1px solid {P['line2']};}}
+  table.st tr.liga td {{color:{P['mut']}; font-style:italic;}}
+  table.mx {{border-collapse:separate; border-spacing:3px; width:100%; font-size:0.78rem;}}
+  table.mx td {{text-align:center; padding:6px 0; border-radius:6px; color:{P['txt']};}}
+  table.mx th {{font-size:0.72rem; color:{P['mut']}; font-weight:500; padding:2px;}}
+  .chart {{position:relative; height:110px; margin:26px 0 22px 0;}}
+  .chart .bars {{display:flex; align-items:flex-end; gap:3px; height:100%;}}
+  .chart .bars > div {{flex:1; border-radius:4px 4px 0 0; position:relative; min-width:6px;}}
+  .chart .bars > div .v {{position:absolute; top:-16px; left:0; right:0; text-align:center; font-size:0.66rem; color:{P['txt']};}}
+  .chart .bars > div .x {{position:absolute; bottom:-16px; left:0; right:0; text-align:center; font-size:0.62rem; color:{P['mut']};}}
+  .chart .ln {{position:absolute; left:0; right:0; border-top:2px dashed {P['mark']}; opacity:.8;}}
+  .chart .ln span {{position:absolute; right:0; top:-14px; font-size:0.66rem; color:{P['txt']};}}
+  .chart .lg {{position:absolute; left:0; right:0; border-top:2px dotted #f59e0b; opacity:.9;}}
+  .chart .lg span {{position:absolute; left:0; top:-14px; font-size:0.66rem; color:#d97706;}}
 </style>""", unsafe_allow_html=True)
 
 
@@ -176,7 +183,7 @@ def chart_barras(h, col, linea, media_liga, over, color):
     bars = ""
     for v, (_, g) in zip(vals, h.iloc[::-1].iterrows()):
         ok = (v > linea) if over else (v < linea)
-        c = color if ok else "#3a3f4a"
+        c = color if ok else P["miss"]
         bars += (f'<div style="height:{max(v / mx * 100, 2):.0f}%;background:{c}" title="{g.rival} {g.fecha}">'
                  f'<span class="v">{v:.0f}</span><span class="x">{"C" if g.condicion == "Casa" else "F"}</span></div>')
     return (f'<div class="chart"><div class="bars">{bars}</div>'
@@ -208,7 +215,7 @@ def matriz_html(m, local, visitante, region, k=6):
         h += f"<tr><th>{x}</th>"
         for y in range(k):
             p = m[x, y]; a = 0.15 + 0.85 * (p / mx)
-            col = f"rgba(46,158,91,{a:.2f})" if region(x, y) else f"rgba(90,98,112,{a * 0.7:.2f})"
+            col = f"rgba(46,158,91,{a:.2f})" if region(x, y) else (f"rgba(90,98,112,{a * 0.7:.2f})" if TEMA == "dark" else f"rgba(156,163,175,{a * 0.8:.2f})")
             h += f'<td style="background:{col}">{p * 100:.0f}</td>'
         h += "</tr>"
     return h + f'</table><div class="small" style="margin-top:4px">filas = {local} · columnas = {visitante} · cifra = % modelo · verde = gana la pata</div>'
@@ -224,9 +231,9 @@ def distribucion_html(m, mk, etiqueta):
     cond = (lambda s: s > mk["linea"]) if mk["over"] else (lambda s: s < mk["linea"])
     hi = len(dist)
     while hi > 1 and dist[hi - 1] < 0.005: hi -= 1
-    hi = max(hi, int(mk["linea"]) + 2)
+    hi = min(len(dist), max(hi, int(mk["linea"]) + 2))
     mx = dist[:hi].max()
-    bars = "".join(f'<div style="height:{max(dist[s] / mx * 100, 2):.0f}%;background:{"#2e9e5b" if cond(s) else "#3a3f4a"}">'
+    bars = "".join(f'<div style="height:{max(dist[s] / mx * 100, 2):.0f}%;background:{"#2e9e5b" if cond(s) else P["miss"]}">'
                    f'<span class="v">{dist[s]:.0%}</span><span class="x">{s}</span></div>' for s in range(hi))
     return f'<div class="chart"><div class="bars">{bars}</div></div><div class="small">{etiqueta} según el modelo · verde = gana la pata</div>'
 
