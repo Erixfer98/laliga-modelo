@@ -1,5 +1,5 @@
 """
-app.py — Sports Book La Liga.
+app.py — Kuota. Parlays con matemática e IA para las 5 grandes ligas.
 Paginas: Inicio · Armar · Analizar · Tabla · Admin (solo administradores).
 Usuarios y registro de uso: opcionales, se configuran en Streamlit Cloud -> Settings -> Secrets (ver pagina Admin).
 Local: streamlit run app.py
@@ -17,7 +17,7 @@ import streamlit as st
 
 import modelo as mo
 
-st.set_page_config(page_title="Sports Book", page_icon="⚽", layout="centered", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Kuota", page_icon="⚽", layout="centered", initial_sidebar_state="collapsed")
 
 # ------------------------------------------------------------------ tema (sigue el tema de Streamlit: claro u oscuro)
 try:
@@ -158,7 +158,7 @@ def ia_cfg():
     return {"key": key, "url": url, "modelo": modelo}
 
 
-SISTEMA_IA = ("Eres el analista de Sports Book La Liga, una app de apuestas con un modelo Poisson/Dixon-Coles y estadísticas descriptivas. "
+SISTEMA_IA = ("Eres el analista de Kuota, una app de apuestas para las 5 grandes ligas europeas con un modelo Poisson/Dixon-Coles y estadísticas descriptivas. "
               "Responde en español, directo y breve (máximo ~150 palabras salvo que pidan más). Fundamenta o debate con los datos del contexto: "
               "probabilidad del modelo, cuota justa, cumplimiento histórico, medias vs liga, resultados recientes. No inventes cifras que no estén en el contexto; "
               "si te falta un dato dilo. Señala riesgos: patas del mismo partido no son independientes, muestras chicas (N<5), equipos recién ascendidos con pocos datos, "
@@ -260,7 +260,7 @@ def registrar_uso(accion, detalle=""):
 
 usuarios = cfg_usuarios()
 if usuarios and "usuario" not in ss:
-    st.markdown("### Sports Book")
+    st.markdown("### Kuota")
     st.markdown('<div class="card"><div class="t">Acceso</div><div class="small">Ingresa con tu usuario y contraseña.</div></div>', unsafe_allow_html=True)
     u = st.text_input("Usuario")
     c = st.text_input("Contraseña", type="password")
@@ -533,7 +533,7 @@ def tendencias(met, n=5):
 # ================================================================== navegacion
 paginas = ["Inicio", "Armar", "Analizar", "Tabla", "Diccionario"] + (["Admin"] if ES_ADMIN else [])
 top1, top2 = st.columns([3, 1])
-top1.markdown("### Sports Book")
+top1.markdown('### Kuota <span class="small" style="font-weight:400">· cuota justa, parlay con datos</span>', unsafe_allow_html=True)
 if usuarios:
     if top2.button(f"Salir · {ss.usuario}", width="stretch"):
         registrar_uso("logout")
@@ -940,7 +940,7 @@ st.markdown(f"""<style>
 </style>""", unsafe_allow_html=True)
 with st.popover("IA"):
     ss.setdefault("ctx_titulo", "")
-    st.markdown(f'<div class="small">Analista IA · {ss.ctx_titulo or "abre Armar o Analizar para darle contexto"}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="small">Analista Kuota · {ss.ctx_titulo or "abre Armar o Analizar para darle contexto"}</div>', unsafe_allow_html=True)
     for m in ss.chat[-8:]:
         st.markdown(f'<div class="msg {"u" if m["rol"] == "user" else "a"}">{m["txt"]}</div>', unsafe_allow_html=True)
     sug = st.pills("Sugerencias", ["¿Qué opinas de esta pata?", "Debate mi parlay", "¿Mayor riesgo?"], label_visibility="collapsed", key=f"sug{len(ss.chat)}")
