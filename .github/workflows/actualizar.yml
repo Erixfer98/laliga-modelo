@@ -1,7 +1,7 @@
 name: Actualizar BBDD La Liga
 on:
   schedule:
-    - cron: "0 12 * * 1"   # lunes 12:00 UTC = 6:00 am Guatemala
+       - cron: "0 12 * * *"
   workflow_dispatch:        # boton "Run workflow" para correrlo a mano
 permissions:
   contents: write
