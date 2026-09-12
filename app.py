@@ -111,6 +111,63 @@ NOM = mo.NOMBRES
 HORA_GT = ZoneInfo("America/Guatemala")
 
 
+# ================================================================== asistente IA flotante (todas las vistas)
+PREFERIDOS_IA = ["openai/gpt-oss-120b", "llama-3.3-70b-versatile", "moonshotai/kimi-k2-instruct", "qwen/qwen3-32b",
+                 "meta-llama/llama-4-maverick-17b-128e-instruct", "llama-3.1-8b-instant"]
+
+
+@st.cache_data(ttl=6 * 3600, show_spinner=False)
+def modelo_disponible(url_chat, key):
+    """Pregunta al proveedor que modelos hay y elige el mejor de la lista de preferidos. Evita errores de modelo retirado."""
+    try:
+        r = requests.get(url_chat.replace("/chat/completions", "/models"), headers={"Authorization": f"Bearer {key}"}, timeout=10)
+        ids = [m["id"] for m in r.json().get("data", [])]
+        for p in PREFERIDOS_IA:
+            if p in ids:
+                return p
+        libres = [i for i in ids if not any(x in i for x in ("whisper", "guard", "tts", "embed"))]
+        return libres[0] if libres else PREFERIDOS_IA[0]
+    except Exception:
+        return PREFERIDOS_IA[0]
+
+
+def ia_cfg():
+    try:
+        key = st.secrets["IA_KEY"]
+    except Exception:
+        return None
+    url = st.secrets.get("IA_URL", "https://api.groq.com/openai/v1/chat/completions")
+    modelo = st.secrets.get("IA_MODELO") or modelo_disponible(url, key)
+    return {"key": key, "url": url, "modelo": modelo}
+
+
+SISTEMA_IA = ("Eres el analista de Sports Book La Liga, una app de apuestas con un modelo Poisson/Dixon-Coles y estadísticas descriptivas. "
+              "Responde en español, directo y breve (máximo ~150 palabras salvo que pidan más). Fundamenta o debate con los datos del contexto: "
+              "probabilidad del modelo, cuota justa, cumplimiento histórico, medias vs liga, resultados recientes. No inventes cifras que no estén en el contexto; "
+              "si te falta un dato dilo. Señala riesgos: patas del mismo partido no son independientes, muestras chicas (N<5), equipos recién ascendidos con pocos datos, "
+              "y que el modelo no sabe de lesiones, alineaciones ni árbitro. Si el usuario da una cuota, calcula EV = prob × cuota − 1 y di si hay valor. "
+              "Termina siempre con una recomendación concreta: apostar, no apostar o qué revisar.")
+
+
+def preguntar_ia(pregunta):
+    c = ia_cfg()
+    if c is None:
+        return "Falta configurar IA_KEY en Secrets (ver página Admin)."
+    msgs = [{"role": "system", "content": SISTEMA_IA + "\n\nContexto de la vista actual:\n" + (ss.ctx_ia or "sin contexto")}]
+    msgs += [{"role": m["rol"], "content": m["txt"]} for m in ss.chat[-8:]]
+    msgs.append({"role": "user", "content": pregunta})
+    try:
+        r = requests.post(c["url"], headers={"Authorization": f"Bearer {c['key']}", "Content-Type": "application/json"},
+                          json={"model": c["modelo"], "messages": msgs, "temperature": 0.4, "max_tokens": 600}, timeout=60)
+        if r.status_code != 200:
+            return f"Error {r.status_code}: {r.text[:200]}"
+        return r.json()["choices"][0]["message"]["content"].strip()
+    except Exception as ex:
+        return f"Error: {ex}"
+
+
+
+
 # ================================================================== usuarios y registro de uso (opcional, via Secrets)
 def cfg_usuarios():
     try:
@@ -582,8 +639,8 @@ elif pagina == "Admin":
         st.caption("El uso se guarda en uso.csv dentro de la rama `uso` del repo (no toca `main`, así la app no se redespliega). "
                    "Token: GitHub → Settings → Developer settings → Fine-grained tokens → solo este repo, permiso Contents read/write.")
     else:
-        c_ia = ia_cfg() if "ia_cfg" in globals() else None
-        st.markdown(f'<div class="card"><div class="t">Analista IA</div><div class="mid">{"Configurado · " + str(st.secrets.get("IA_MODELO", "llama-3.3-70b-versatile")) if "IA_KEY" in st.secrets else "Sin configurar"}</div>'
+        c_ia = ia_cfg()
+        st.markdown(f'<div class="card"><div class="t">Analista IA</div><div class="mid">{"Configurado · modelo " + c_ia["modelo"] if c_ia else "Sin configurar"}</div>'
                     '<div class="small" style="margin-top:6px">Secrets: IA_KEY (clave), y opcionales IA_URL (endpoint compatible OpenAI) e IA_MODELO. '
                     'Gratis: Groq (console.groq.com, URL https://api.groq.com/openai/v1/chat/completions) o Gemini (aistudio.google.com, URL https://generativelanguage.googleapis.com/v1beta/openai/chat/completions).</div></div>',
                     unsafe_allow_html=True)
@@ -809,41 +866,6 @@ else:
             registrar_uso("pata", f"{partido} | {sel} @ {cuota}")
             ss.grp = grp
             ir_a("Armar")
-
-# ================================================================== asistente IA flotante (todas las vistas)
-def ia_cfg():
-    try:
-        key = st.secrets["IA_KEY"]
-    except Exception:
-        return None
-    return {"key": key, "url": st.secrets.get("IA_URL", "https://api.groq.com/openai/v1/chat/completions"),
-            "modelo": st.secrets.get("IA_MODELO", "llama-3.3-70b-versatile")}
-
-
-SISTEMA_IA = ("Eres el analista de Sports Book La Liga, una app de apuestas con un modelo Poisson/Dixon-Coles y estadísticas descriptivas. "
-              "Responde en español, directo y breve (máximo ~150 palabras salvo que pidan más). Fundamenta o debate con los datos del contexto: "
-              "probabilidad del modelo, cuota justa, cumplimiento histórico, medias vs liga, resultados recientes. No inventes cifras que no estén en el contexto; "
-              "si te falta un dato dilo. Señala riesgos: patas del mismo partido no son independientes, muestras chicas (N<5), equipos recién ascendidos con pocos datos, "
-              "y que el modelo no sabe de lesiones, alineaciones ni árbitro. Si el usuario da una cuota, calcula EV = prob × cuota − 1 y di si hay valor. "
-              "Termina siempre con una recomendación concreta: apostar, no apostar o qué revisar.")
-
-
-def preguntar_ia(pregunta):
-    c = ia_cfg()
-    if c is None:
-        return "Falta configurar IA_KEY en Secrets (ver página Admin)."
-    msgs = [{"role": "system", "content": SISTEMA_IA + "\n\nContexto de la vista actual:\n" + (ss.ctx_ia or "sin contexto")}]
-    msgs += [{"role": m["rol"], "content": m["txt"]} for m in ss.chat[-8:]]
-    msgs.append({"role": "user", "content": pregunta})
-    try:
-        r = requests.post(c["url"], headers={"Authorization": f"Bearer {c['key']}", "Content-Type": "application/json"},
-                          json={"model": c["modelo"], "messages": msgs, "temperature": 0.4, "max_tokens": 600}, timeout=60)
-        if r.status_code != 200:
-            return f"Error {r.status_code}: {r.text[:200]}"
-        return r.json()["choices"][0]["message"]["content"].strip()
-    except Exception as ex:
-        return f"Error: {ex}"
-
 
 st.markdown(f"""<style>
   div[data-testid="stPopover"] {{position:fixed; bottom:22px; right:18px; z-index:1000;}}
