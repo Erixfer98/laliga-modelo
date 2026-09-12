@@ -104,6 +104,8 @@ ss.setdefault("parlay", [])
 ss.setdefault("pagina", "Inicio")
 ss.setdefault("gen", 0)   # cambia para reiniciar los widgets al saltar de pagina
 ss.setdefault("banca", 1000.0)
+ss.setdefault("chat", [])       # historial del asistente IA
+ss.setdefault("ctx_ia", "")     # contexto de la vista actual que se le pasa a la IA
 GOL = ("goles", "goles_1t", "goles_2t")
 NOM = mo.NOMBRES
 HORA_GT = ZoneInfo("America/Guatemala")
@@ -448,7 +450,7 @@ def tendencias(met, n=5):
 
 
 # ================================================================== navegacion
-paginas = ["Inicio", "Armar", "Analizar", "Tabla"] + (["Admin"] if ES_ADMIN else [])
+paginas = ["Inicio", "Armar", "Analizar", "Tabla", "Diccionario"] + (["Admin"] if ES_ADMIN else [])
 top1, top2 = st.columns([3, 1])
 top1.markdown("### Sports Book La Liga")
 if usuarios:
@@ -500,6 +502,9 @@ if pagina == "Inicio":
     t = tabla_posiciones(temp)
     st.markdown('<div class="t" style="margin-top:8px">Tabla · top 6</div>', unsafe_allow_html=True)
     st.markdown(html_tabla(t.head(6), compacta=True), unsafe_allow_html=True)
+    ss.ctx_ia = (f"Vista: Inicio. Temporada {temp}, datos al {ult:%d/%m/%Y}. Tabla: " +
+                 "; ".join(f"{i + 1}. {f.equipo} {f.PTS} pts (J{f.J} G{f.G} E{f.E} P{f.P}, DG {f.DG:+d})" for i, f in t.iterrows()) +
+                 ("\nBoleto actual: " + "; ".join(f"{l['mercado']} ({l['partido']}, modelo {l['prob']:.0%}, cuota {l['cuota']})" for l in ss.parlay) if ss.parlay else "\nBoleto vacío."))
 
     st.markdown('<div class="t" style="margin-top:8px">Tendencias · últimos 5 partidos</div>', unsafe_allow_html=True)
     met_h = st.pills("Métrica tendencias", list(mo.METRICAS), format_func=lambda x: NOM[x], default="corners", label_visibility="collapsed")
@@ -516,6 +521,47 @@ if pagina == "Inicio":
                     + "".join(fila(f) for _, f in tt.tail(4).iloc[::-1].iterrows()) + '</div>', unsafe_allow_html=True)
         st.caption("Barra = promedio del equipo (a favor + en contra) en sus últimos 5 · marca blanca = media de la liga. "
                    "Sirve para elegir qué partido y mercado analizar.")
+
+# ================================================================== PAGINA DICCIONARIO
+elif pagina == "Diccionario":
+    DIC = [
+        ("Modelo", "λ (lambda)", "Cantidad esperada de la métrica para un equipo en este partido, según el modelo. Ej. λ corners 5.2 = se esperan unos 5 corners de ese equipo."),
+        ("Modelo", "Poisson", "Fórmula que convierte una λ en probabilidades: cuántas veces sale 0, 1, 2, 3… Se usa para goles, tiros, corners, faltas y tarjetas."),
+        ("Modelo", "Dixon-Coles (ρ)", "Corrección a Poisson solo para goles: ajusta los marcadores 0-0, 1-0, 0-1 y 1-1, que Poisson estima mal. ρ negativo = más empates bajos."),
+        ("Modelo", "Ataque / defensa", "Fuerza del equipo relativa a la liga. 1.00 = promedio; 1.30 = produce 30% más que un equipo promedio; 0.80 = 20% menos."),
+        ("Modelo", "Peso por recencia", "Los partidos recientes pesan más que los viejos al calcular las fuerzas. Un partido de hace ~140 días pesa la mitad que uno de hoy."),
+        ("Modelo", "Matriz de resultados", "Tabla con la probabilidad de cada marcador exacto (filas = local, columnas = visitante). Verde = marcadores con los que gana la pata."),
+        ("Mercados", "Cuota justa", "1 dividido entre la probabilidad del modelo. Es la cuota a la que no ganas ni pierdes a largo plazo. Si la casa paga más que la justa, hay valor."),
+        ("Mercados", "EV (valor esperado)", "prob. modelo × cuota − 1. Positivo = a largo plazo ganas; negativo = pierdes. EV +0.10 = ganas 10 centavos por cada Q1 apostado, en promedio."),
+        ("Mercados", "Over / Under", "Más de / menos de una línea. Total Over 2.5 goles = 3 o más goles en el partido. Las líneas .5 no permiten empate."),
+        ("Mercados", "Línea y ± líneas", "Línea = el centro que quieres ver (ej. 9.5 corners). ± líneas = cuántas líneas alrededor mostrar (±2 con 9.5 muestra 7.5, 8.5, 9.5, 10.5 y 11.5)."),
+        ("Mercados", "1X2 / doble oportunidad", "1 = gana local, X = empate, 2 = gana visitante. 1X = local o empate; X2 = visitante o empate."),
+        ("Mercados", "Ambos anotan (BTTS)", "Sí = los dos equipos marcan al menos un gol. No = al menos uno se queda en cero."),
+        ("Mercados", "Total / Local / Visitante", "Grupos de mercados. Total suma los dos equipos; Local y Visitante son la métrica de un solo equipo."),
+        ("Validación", "Últ. N", "Contra cuántos partidos recientes de cada equipo se valida la pata. N chico = forma actual; N grande = tendencia estable."),
+        ("Validación", "X/N cumplió", "En cuántos de los últimos N partidos del equipo se habría cumplido ese mercado. 4/5 = pasó en 4 de 5."),
+        ("Validación", "Calificación", "60% probabilidad del modelo + 40% cumplimiento histórico. Excelente ≥ 78%, Buena ≥ 68%, Regular ≥ 56%, Mala ≥ 45%, Pésima el resto."),
+        ("Validación", "Como jugarán", "Filtro: solo partidos del local jugando en casa y del visitante jugando fuera."),
+        ("Validación", "Media / mediana / desv. est.", "Media = promedio. Mediana = valor del medio (resiste goleadas raras). Desviación estándar = qué tanto varía de partido a partido; alta = equipo irregular."),
+        ("Validación", "Media liga", "Promedio de todos los partidos cargados. Referencia para saber si un equipo está por encima o por debajo de lo normal."),
+        ("Banca", "Banca", "Dinero total destinado a apostar. Todo el stake se calcula como porcentaje de esto."),
+        ("Banca", "Kelly", "Fracción de banca que maximiza el crecimiento si la probabilidad del modelo fuera exacta: ((cuota−1)·p − (1−p)) / (cuota−1). Nunca lo es, por eso existen las fracciones."),
+        ("Banca", "½, ¼, ⅛ Kelly", "La mitad, un cuarto y un octavo del Kelly completo. Para parlays usa ¼ o ⅛: menos crecimiento pero mucha menos probabilidad de quebrar."),
+        ("Banca", "Patas no independientes", "Dos patas del mismo partido (ej. gana Madrid + over 2.5) están relacionadas; multiplicar sus probabilidades da un número inexacto."),
+        ("Datos", "Fuente", "football-data.co.uk. Se descarga cada lunes por GitHub Actions y regenera la base completa."),
+        ("Datos", "Columnas _val", "goles, goles 1er/2do tiempo, tiros, tiros a puerta, corners, faltas, amarillas y rojas, cada una para local y visitante."),
+        ("Datos", "Jornada", "Estimada: partido n-ésimo de cada equipo en la temporada. Un aplazado se cuenta cuando se jugó."),
+        ("Datos", "Temporada", "Formato 2025-26 (agosto a mayo)."),
+    ]
+    q = st.text_input("Buscar", placeholder="Buscar un término…", label_visibility="collapsed").strip().lower()
+    grupos_d = list(dict.fromkeys(g for g, _, _ in DIC))
+    for g in grupos_d:
+        items = [(t_, d_) for gg, t_, d_ in DIC if gg == g and (not q or q in t_.lower() or q in d_.lower())]
+        if not items:
+            continue
+        st.markdown(f'<div class="t" style="margin-top:8px">{g}</div><div class="card">' +
+                    "".join(f'<div class="mk"><div class="mid">{t_}</div><div class="small" style="margin-top:2px;color:{P["txt"]};opacity:.85">{d_}</div></div>' for t_, d_ in items)
+                    + '</div>', unsafe_allow_html=True)
 
 # ================================================================== PAGINA TABLA
 elif pagina == "Tabla":
@@ -536,6 +582,11 @@ elif pagina == "Admin":
         st.caption("El uso se guarda en uso.csv dentro de la rama `uso` del repo (no toca `main`, así la app no se redespliega). "
                    "Token: GitHub → Settings → Developer settings → Fine-grained tokens → solo este repo, permiso Contents read/write.")
     else:
+        c_ia = ia_cfg() if "ia_cfg" in globals() else None
+        st.markdown(f'<div class="card"><div class="t">Analista IA</div><div class="mid">{"Configurado · " + str(st.secrets.get("IA_MODELO", "llama-3.3-70b-versatile")) if "IA_KEY" in st.secrets else "Sin configurar"}</div>'
+                    '<div class="small" style="margin-top:6px">Secrets: IA_KEY (clave), y opcionales IA_URL (endpoint compatible OpenAI) e IA_MODELO. '
+                    'Gratis: Groq (console.groq.com, URL https://api.groq.com/openai/v1/chat/completions) o Gemini (aistudio.google.com, URL https://generativelanguage.googleapis.com/v1beta/openai/chat/completions).</div></div>',
+                    unsafe_allow_html=True)
         st.markdown('<div class="card"><div class="t">Usuarios activos</div><div class="mid">' + " · ".join(usuarios) + '</div>'
                     '<div class="small" style="margin-top:6px">Se agregan o quitan en Streamlit Cloud → Settings → Secrets, bloque [usuarios]. El cambio aplica al instante.</div></div>',
                     unsafe_allow_html=True)
@@ -659,6 +710,14 @@ else:
                      f'<div class="row small"><span>modelo <span class="w">{mk["prob"]:.0%}</span> · justa <span class="w">{mo.cuota_justa(mk["prob"])}</span></span>'
                      f'<span>últ.{n}: <span class="w">{e["hl"]}/{e["nl"]}</span> {local[:10]} · <span class="w">{e["hv"]}/{e["nv"]}</span> {visitante[:10]}</span></div></div>')
         st.markdown(html + '<div class="small" style="padding-top:6px">barra = prob. modelo · marca blanca = % histórico</div></div>', unsafe_allow_html=True)
+        ss.ctx_ia = (f"Vista: Armar. Partido {partido}. Métrica {NOM[met]}. λ local {lam_l:.2f}, λ visitante {lam_v:.2f}, λ total {lam_l + lam_v:.2f}; "
+                     f"media liga local {ml['local']:.2f}, visita {ml['visitante']:.2f}, total {ml['total']:.2f}. Validación con últimos {n} partidos.\n"
+                     "Mercados del grupo " + grp + ":\n" + "\n".join(
+                         f"- {mk['mercado']}: prob modelo {mk['prob']:.0%}, cuota justa {mo.cuota_justa(mk['prob'])}, "
+                         f"{local} cumplió {ev_['hl']}/{ev_['nl']}, {visitante} {ev_['hv']}/{ev_['nv']}, calificación {ev_['cal']}"
+                         for mk in lst if mk["grupo"] == grp for ev_ in [evaluar(mk, hl, hv)]) +
+                     ("\nBoleto actual: " + "; ".join(f"{l['mercado']} ({l['partido']}, {l['metrica']}, modelo {l['prob']:.0%}, cuota casa {l['cuota']})" for l in ss.parlay)
+                      if ss.parlay else "\nBoleto vacío."))
 
         st.markdown('<div class="t">Agregar al boleto</div>', unsafe_allow_html=True)
         nombres = [x["mercado"] for x in lst if x["grupo"] == grp]
@@ -723,6 +782,15 @@ else:
                     f'<div style="margin-top:10px">{tabla_stats(h, mk["linea"], mk["over"], ref_f, ref_c, ml["total"])}</div></div>')
 
         st.markdown(bloque(local, hl, e["hl"], "l", P["acc"]) + bloque(visitante, hv, e["hv"], "v", "#8b5cf6"), unsafe_allow_html=True)
+        def _st(h):
+            return (f"a favor media {h.a_favor.mean():.1f} mediana {h.a_favor.median():.1f} desv {h.a_favor.std(ddof=0):.1f}; "
+                    f"en contra media {h.en_contra.mean():.1f}; total media {h.total.mean():.1f} máx {h.total.max()} mín {h.total.min()}") if len(h) else "sin partidos"
+        ss.ctx_ia = (f"Vista: Analizar. Partido {partido}. Métrica {NOM[met]}. Pata: {sel}. Prob modelo {mk['prob']:.0%}, cuota justa {mo.cuota_justa(mk['prob'])}, "
+                     f"calificación {e['cal']}, cumplimiento histórico {e['tasa']:.0%} ({e['hl']}/{e['nl']} {local}, {e['hv']}/{e['nv']} {visitante}) "
+                     f"en últimos {n} partidos, filtro {filtro}. λ {local} {lam_l:.2f}, λ {visitante} {lam_v:.2f}, media liga local {ml['local']:.2f} visita {ml['visitante']:.2f} total {ml['total']:.2f}.\n"
+                     f"{local} últimos {len(hl)}: {_st(hl)}. Resultados (reciente→antiguo): " + ", ".join(f"{r_.condicion[0]} vs {r_.rival} {r_.marcador} ({int(r_.a_favor)}-{int(r_.en_contra)} {NOM[met].lower()})" for _, r_ in hl.iterrows()) +
+                     f"\n{visitante} últimos {len(hv)}: {_st(hv)}. Resultados: " + ", ".join(f"{r_.condicion[0]} vs {r_.rival} {r_.marcador} ({int(r_.a_favor)}-{int(r_.en_contra)} {NOM[met].lower()})" for _, r_ in hv.iterrows()) +
+                     ("\nBoleto actual: " + "; ".join(f"{l['mercado']} ({l['partido']}, modelo {l['prob']:.0%}, cuota {l['cuota']})" for l in ss.parlay) if ss.parlay else "\nBoleto vacío."))
 
         with st.expander("Partido a partido", expanded=True):
             st.markdown(lista_partidos(local, hl, mk, "l") + lista_partidos(visitante, hv, mk, "v"), unsafe_allow_html=True)
@@ -741,6 +809,63 @@ else:
             registrar_uso("pata", f"{partido} | {sel} @ {cuota}")
             ss.grp = grp
             ir_a("Armar")
+
+# ================================================================== asistente IA flotante (todas las vistas)
+def ia_cfg():
+    try:
+        key = st.secrets["IA_KEY"]
+    except Exception:
+        return None
+    return {"key": key, "url": st.secrets.get("IA_URL", "https://api.groq.com/openai/v1/chat/completions"),
+            "modelo": st.secrets.get("IA_MODELO", "llama-3.3-70b-versatile")}
+
+
+SISTEMA_IA = ("Eres el analista de Sports Book La Liga, una app de apuestas con un modelo Poisson/Dixon-Coles y estadísticas descriptivas. "
+              "Responde en español, directo y breve (máximo ~150 palabras salvo que pidan más). Fundamenta o debate con los datos del contexto: "
+              "probabilidad del modelo, cuota justa, cumplimiento histórico, medias vs liga, resultados recientes. No inventes cifras que no estén en el contexto; "
+              "si te falta un dato dilo. Señala riesgos: patas del mismo partido no son independientes, muestras chicas (N<5), equipos recién ascendidos con pocos datos, "
+              "y que el modelo no sabe de lesiones, alineaciones ni árbitro. Si el usuario da una cuota, calcula EV = prob × cuota − 1 y di si hay valor. "
+              "Termina siempre con una recomendación concreta: apostar, no apostar o qué revisar.")
+
+
+def preguntar_ia(pregunta):
+    c = ia_cfg()
+    if c is None:
+        return "Falta configurar IA_KEY en Secrets (ver página Admin)."
+    msgs = [{"role": "system", "content": SISTEMA_IA + "\n\nContexto de la vista actual:\n" + (ss.ctx_ia or "sin contexto")}]
+    msgs += [{"role": m["rol"], "content": m["txt"]} for m in ss.chat[-8:]]
+    msgs.append({"role": "user", "content": pregunta})
+    try:
+        r = requests.post(c["url"], headers={"Authorization": f"Bearer {c['key']}", "Content-Type": "application/json"},
+                          json={"model": c["modelo"], "messages": msgs, "temperature": 0.4, "max_tokens": 600}, timeout=60)
+        if r.status_code != 200:
+            return f"Error {r.status_code}: {r.text[:200]}"
+        return r.json()["choices"][0]["message"]["content"].strip()
+    except Exception as ex:
+        return f"Error: {ex}"
+
+
+st.markdown(f"""<style>
+  div[data-testid="stPopover"] {{position:fixed; bottom:22px; right:18px; z-index:1000;}}
+  div[data-testid="stPopover"] > button {{border-radius:999px; padding:10px 18px; font-weight:700; background:{P['acc']}; color:#fff; border:none; box-shadow:0 6px 20px rgba(0,0,0,.35);}}
+  div[data-testid="stPopoverBody"] {{width:min(92vw, 420px); max-height:70vh; overflow:auto;}}
+  .msg {{padding:8px 11px; border-radius:12px; margin:5px 0; font-size:0.84rem; line-height:1.35;}}
+  .msg.u {{background:{P['acc']}; color:#fff; margin-left:18%;}} .msg.a {{background:{P['card2']}; color:{P['txt']}; margin-right:8%;}}
+</style>""", unsafe_allow_html=True)
+with st.popover("Analista IA"):
+    if not ss.chat:
+        st.markdown(f'<div class="small">Pregúntame sobre lo que ves en pantalla: "¿qué opinas de esta pata?", "¿por qué el over sale Regular?", "debate mi parlay".</div>', unsafe_allow_html=True)
+    for m in ss.chat[-8:]:
+        st.markdown(f'<div class="msg {"u" if m["rol"] == "user" else "a"}">{m["txt"]}</div>', unsafe_allow_html=True)
+    preg = st.text_input("Pregunta", key=f"ia_q{len(ss.chat)}", placeholder="Escribe tu pregunta…", label_visibility="collapsed")
+    a, b = st.columns([3, 1])
+    if a.button("Enviar", width="stretch", key="ia_send") and preg.strip():
+        ss.chat.append({"rol": "user", "txt": preg.strip()})
+        ss.chat.append({"rol": "assistant", "txt": preguntar_ia(preg.strip())})
+        registrar_uso("ia", preg.strip()[:80])
+        st.rerun()
+    if b.button("Limpiar", width="stretch", key="ia_clear"):
+        ss.chat = []; st.rerun()
 
 st.caption(f"{len(df)} partidos · último {df['fecha'].max():%d/%m/%Y} · football-data.co.uk · "
            "Calificación = 60% prob. modelo + 40% cumplimiento histórico · EV = prob × cuota − 1 · "
