@@ -515,7 +515,7 @@ def tendencias(met, n=5):
 
 
 # ================================================================== navegacion
-paginas = ["Inicio", "Armar", "Analizar", "Tabla", "Diccionario"] + (["Admin"] if ES_ADMIN else [])
+paginas = ["Inicio", "Armar", "Analizar", "IA", "Tabla", "Diccionario"] + (["Admin"] if ES_ADMIN else [])
 top1, top2 = st.columns([3, 1])
 top1.markdown("### Sports Book")
 if usuarios:
@@ -529,7 +529,7 @@ else:
 pagina = st.segmented_control("Página", paginas, default=ss.pagina if ss.pagina in paginas else "Inicio",
                               label_visibility="collapsed", key=f"pag_w{ss.gen}") or ss.pagina
 ss.pagina = pagina
-if pagina not in ("Diccionario", "Admin"):
+if pagina not in ("Diccionario", "Admin", "IA"):
     liga_sel = st.pills("Liga", list(LIGAS_DISPONIBLES), format_func=lambda k: LIGAS_DISPONIBLES[k], default=ss.liga,
                         label_visibility="collapsed", key=f"liga_w{ss.gen}") or ss.liga
     if liga_sel != ss.liga:
@@ -579,6 +579,7 @@ if pagina == "Inicio":
     t = tabla_posiciones(temp)
     st.markdown('<div class="t" style="margin-top:8px">Tabla · top 6</div>', unsafe_allow_html=True)
     st.markdown(html_tabla(t.head(6), compacta=True), unsafe_allow_html=True)
+    ss.ctx_titulo = f"Inicio · {LIGA} · tabla {temp}"
     ss.ctx_ia = (f"Vista: Inicio. Liga {LIGA}. Temporada {temp}, datos al {ult:%d/%m/%Y}. Tabla: " +
                  "; ".join(f"{i + 1}. {f.equipo} {f.PTS} pts (J{f.J} G{f.G} E{f.E} P{f.P}, DG {f.DG:+d})" for i, f in t.iterrows()) +
                  ("\nBoleto actual: " + "; ".join(f"{l['mercado']} ({l['partido']}, modelo {l['prob']:.0%}, cuota {l['cuota']})" for l in ss.parlay) if ss.parlay else "\nBoleto vacío."))
@@ -598,6 +599,31 @@ if pagina == "Inicio":
                     + "".join(fila(f) for _, f in tt.tail(4).iloc[::-1].iterrows()) + '</div>', unsafe_allow_html=True)
         st.caption("Barra = promedio del equipo (a favor + en contra) en sus últimos 5 · marca blanca = media de la liga. "
                    "Sirve para elegir qué partido y mercado analizar.")
+
+# ================================================================== PAGINA IA (analista)
+elif pagina == "IA":
+    ss.setdefault("ctx_titulo", "")
+    st.markdown(f'<div class="card flat"><div class="t">Analista IA</div><div class="mid">{ss.ctx_titulo or "Sin vista analizada todavía"}</div>'
+                f'<div class="small">Responde con los datos de la última vista que abriste (Armar o Analizar) y tu boleto. '
+                f'Para cambiar de partido o pata, vuelve a Armar o Analizar y regresa aquí.</div></div>', unsafe_allow_html=True)
+    if not ia_cfg():
+        st.warning("Falta IA_KEY en Secrets (ver Admin).")
+    for m in ss.chat[-12:]:
+        with st.chat_message("user" if m["rol"] == "user" else "assistant"):
+            st.markdown(m["txt"])
+    sug = st.pills("Sugerencias", ["¿Qué opinas de esta pata?", "Debate mi parlay", "¿Cuál es el mayor riesgo?", "Dame la mejor pata de este grupo"],
+                   label_visibility="collapsed", key=f"sug{len(ss.chat)}")
+    preg = st.chat_input("Escribe tu pregunta al analista…")
+    texto = preg or sug
+    if texto:
+        ss.chat.append({"rol": "user", "txt": texto})
+        with st.spinner("Analizando…"):
+            resp = preguntar_ia(texto)
+        ss.chat.append({"rol": "assistant", "txt": resp})
+        registrar_uso("ia", texto[:80])
+        st.rerun()
+    if ss.chat and st.button("Limpiar conversación"):
+        ss.chat = []; st.rerun()
 
 # ================================================================== PAGINA DICCIONARIO
 elif pagina == "Diccionario":
@@ -803,6 +829,7 @@ else:
                      f'<div class="row small"><span>modelo <span class="w">{mk["prob"]:.0%}</span> · justa <span class="w">{mo.cuota_justa(mk["prob"])}</span></span>'
                      f'<span>últ.{n}: <span class="w">{e["hl"]}/{e["nl"]}</span> {local[:10]} · <span class="w">{e["hv"]}/{e["nv"]}</span> {visitante[:10]}</span></div></div>')
         st.markdown(html + '<div class="small" style="padding-top:6px">barra = prob. modelo · marca blanca = % histórico</div></div>', unsafe_allow_html=True)
+        ss.ctx_titulo = f"Armar · {partido} · {NOM[met]} · {grp}"
         ss.ctx_ia = (f"Vista: Armar. Liga {LIGA}. Partido {partido}. Métrica {NOM[met]}. λ local {lam_l:.2f}, λ visitante {lam_v:.2f}, λ total {lam_l + lam_v:.2f}; "
                      f"media liga local {ml['local']:.2f}, visita {ml['visitante']:.2f}, total {ml['total']:.2f}. Validación con últimos {n} partidos.\n"
                      "Mercados del grupo " + grp + ":\n" + "\n".join(
@@ -830,6 +857,8 @@ else:
         if b.button("Analizar esta pata", width="stretch"):
             ss.an_mercado, ss.grp = sel, grp
             ir_a("Analizar")
+        if st.button("Preguntar al analista IA", width="stretch", key="ia_armar"):
+            ir_a("IA")
 
     # ---------------------------------------------------------- ANALIZAR
     else:
@@ -878,6 +907,7 @@ else:
         def _st(h):
             return (f"a favor media {h.a_favor.mean():.1f} mediana {h.a_favor.median():.1f} desv {h.a_favor.std(ddof=0):.1f}; "
                     f"en contra media {h.en_contra.mean():.1f}; total media {h.total.mean():.1f} máx {h.total.max()} mín {h.total.min()}") if len(h) else "sin partidos"
+        ss.ctx_titulo = f"Analizar · {partido} · {sel}"
         ss.ctx_ia = (f"Vista: Analizar. Liga {LIGA}. Partido {partido}. Métrica {NOM[met]}. Pata: {sel}. Prob modelo {mk['prob']:.0%}, cuota justa {mo.cuota_justa(mk['prob'])}, "
                      f"calificación {e['cal']}, cumplimiento histórico {e['tasa']:.0%} ({e['hl']}/{e['nl']} {local}, {e['hv']}/{e['nv']} {visitante}) "
                      f"en últimos {n} partidos, filtro {filtro}. λ {local} {lam_l:.2f}, λ {visitante} {lam_v:.2f}, media liga local {ml['local']:.2f} visita {ml['visitante']:.2f} total {ml['total']:.2f}.\n"
@@ -894,6 +924,8 @@ else:
                 st.markdown(f'<div class="card">{distribucion_html(r["matriz"], mk, NOM[met].lower() + (" total" if mk["grupo"] == "Total" else " " + mk["grupo"]))}</div>',
                             unsafe_allow_html=True)
 
+        if st.button("Preguntar al analista IA sobre esta pata", width="stretch", key="ia_an"):
+            ir_a("IA")
         a, b = st.columns(2)
         cuota = a.number_input("Cuota casa", 1.01, 50.0, 1.90, 0.01, key=f"cuota_an_{met}", label_visibility="collapsed")
         if b.button("Agregar al boleto", width="stretch", key="add_an"):
@@ -902,28 +934,6 @@ else:
             registrar_uso("pata", f"{partido} | {sel} @ {cuota}")
             ss.grp = grp
             ir_a("Armar")
-
-st.markdown(f"""<style>
-  div[data-testid="stPopover"] {{position:fixed; bottom:22px; right:18px; z-index:1000;}}
-  div[data-testid="stPopover"] > button {{border-radius:999px; padding:10px 18px; font-weight:700; background:{P['acc']}; color:#fff; border:none; box-shadow:0 6px 20px rgba(0,0,0,.35);}}
-  div[data-testid="stPopoverBody"] {{width:min(92vw, 420px); max-height:70vh; overflow:auto;}}
-  .msg {{padding:8px 11px; border-radius:12px; margin:5px 0; font-size:0.84rem; line-height:1.35;}}
-  .msg.u {{background:{P['acc']}; color:#fff; margin-left:18%;}} .msg.a {{background:{P['card2']}; color:{P['txt']}; margin-right:8%;}}
-</style>""", unsafe_allow_html=True)
-with st.popover("Analista IA"):
-    if not ss.chat:
-        st.markdown(f'<div class="small">Pregúntame sobre lo que ves en pantalla: "¿qué opinas de esta pata?", "¿por qué el over sale Regular?", "debate mi parlay".</div>', unsafe_allow_html=True)
-    for m in ss.chat[-8:]:
-        st.markdown(f'<div class="msg {"u" if m["rol"] == "user" else "a"}">{m["txt"]}</div>', unsafe_allow_html=True)
-    preg = st.text_input("Pregunta", key=f"ia_q{len(ss.chat)}", placeholder="Escribe tu pregunta…", label_visibility="collapsed")
-    a, b = st.columns([3, 1])
-    if a.button("Enviar", width="stretch", key="ia_send") and preg.strip():
-        ss.chat.append({"rol": "user", "txt": preg.strip()})
-        ss.chat.append({"rol": "assistant", "txt": preguntar_ia(preg.strip())})
-        registrar_uso("ia", preg.strip()[:80])
-        st.rerun()
-    if b.button("Limpiar", width="stretch", key="ia_clear"):
-        ss.chat = []; st.rerun()
 
 st.caption(f"{LIGA}: {len(df)} partidos · último {df['fecha'].max():%d/%m/%Y} · football-data.co.uk · "
            "Calificación = 60% prob. modelo + 40% cumplimiento histórico · EV = prob × cuota − 1 · "
