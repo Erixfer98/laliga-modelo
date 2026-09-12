@@ -61,6 +61,20 @@ st.markdown(f"""
   .chart .ln span {{position:absolute; right:0; top:-14px; font-size:0.66rem; color:{P['txt']};}}
   .chart .lg {{position:absolute; left:0; right:0; border-top:2px dotted #f59e0b; opacity:.9;}}
   .chart .lg span {{position:absolute; left:0; top:-14px; font-size:0.66rem; color:#d97706;}}
+  .pl {{display:flex; align-items:center; gap:6px; padding:7px 0; border-bottom:1px solid {P['line2']}; font-size:0.8rem;}}
+  .pl:last-child {{border-bottom:none;}}
+  .pl .dt {{width:46px; flex:none; font-size:0.64rem; color:{P['mut']}; line-height:1.2;}}
+  .pl .tm {{flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:{P['mut']};}}
+  .pl .tm.r {{text-align:right;}}
+  .pl .tm.me {{font-weight:700; color:{P['txt']};}}
+  .pl .sc {{width:46px; flex:none; text-align:center; font-weight:700; border-radius:6px; padding:4px 0; color:#fff; font-size:0.8rem; letter-spacing:.03em;}}
+  .sc.g {{background:#2e9e5b;}} .sc.p {{background:#c53030;}} .sc.e {{background:#6b7280;}}
+  .pl .mv {{width:54px; flex:none; text-align:right; line-height:1.1;}}
+  .pl .mv b {{font-size:1rem;}} .pl .mv .small {{font-size:0.62rem;}}
+  .mv.ok b {{color:{'#4ade80' if TEMA == 'dark' else '#15803d'};}} .mv.no b {{color:{P['mut']};}}
+  .forma {{display:inline-flex; gap:3px; vertical-align:middle;}}
+  .forma span {{width:18px; height:18px; border-radius:50%; font-size:0.62rem; font-weight:700; color:#fff; display:inline-flex; align-items:center; justify-content:center;}}
+  .forma .g {{background:#2e9e5b;}} .forma .p {{background:#c53030;}} .forma .e {{background:#6b7280;}}
 </style>""", unsafe_allow_html=True)
 
 
@@ -206,6 +220,41 @@ def tabla_stats(h, linea, over, ref_f, ref_c, ref_t):
         html += f"<tr><td>{nm}</td><td>{f(A[i])}</td><td>{f(C[i])}</td><td>{f(T[i])}</td></tr>"
     html += f'<tr class="liga"><td>Media liga</td><td>{ref_f:.1f}</td><td>{ref_c:.1f}</td><td>{ref_t:.1f}</td></tr></table>'
     return html
+
+
+def lista_partidos(equipo, h, mk, lado):
+    """Partido a partido estilo FotMob: local - marcador (verde gano / rojo perdio / gris empate) - visitante,
+    racha G/E/P y el valor de la pata en cada partido (verde = cumplio)."""
+    if h.empty:
+        return f'<div class="card"><div class="mid">{equipo}</div><div class="small">sin partidos con ese filtro</div></div>'
+    col = mk["col_l"] if lado == "l" else mk["col_v"]
+    serie = cumple(h, mk, lado)
+    filas, forma = "", []
+    for (_, g), ok in zip(h.iterrows(), serie):
+        gl, gv = (int(x) for x in g.marcador.split("-"))
+        casa = g.condicion == "Casa"
+        gf, gc = (gl, gv) if casa else (gv, gl)
+        res = "g" if gf > gc else ("p" if gf < gc else "e")
+        forma.append(res)
+        home, away = (equipo, g.rival) if casa else (g.rival, equipo)
+        if col in ("a_favor", "en_contra", "total"):
+            det = f"{int(g.a_favor)}·{int(g.en_contra)}" if col == "total" else ("a favor" if col == "a_favor" else "en contra")
+            if met == "goles" and col != "total":
+                det = ""
+            val = f'<b>{int(g[col])}</b><div class="small">{det}</div>'
+        else:
+            val = f'<b>{"✓" if ok else "✗"}</b>'
+        filas += (f'<div class="pl"><div class="dt">{g.fecha}<br>{"Casa" if casa else "Fuera"}</div>'
+                  f'<div class="tm r{" me" if casa else ""}">{home}</div><div class="sc {res}">{gl}-{gv}</div>'
+                  f'<div class="tm{"" if casa else " me"}">{away}</div><div class="mv {"ok" if ok else "no"}">{val}</div></div>')
+    G, E, Pp = forma.count("g"), forma.count("e"), forma.count("p")
+    dots = "".join(f'<span class="{x}">{x.upper()}</span>' for x in forma[::-1])
+    que = {"a_favor": "a favor", "en_contra": "en contra", "total": "total"}.get(col, "cumple")
+    return (f'<div class="card"><div class="row"><div class="mid">{equipo}</div>'
+            f'<div class="small">{G}G {E}E {Pp}P</div></div>'
+            f'<div class="row" style="margin:4px 0 6px 0"><div class="forma">{dots}</div>'
+            f'<div class="small">{NOM[met].lower()} {que} · <span class="w">{int(serie.sum())}/{len(h)}</span> cumplió</div></div>'
+            f'{filas}<div class="small" style="margin-top:6px">racha: antiguo → reciente · marcador verde = ganó, rojo = perdió, gris = empate · valor verde = cumplió la pata</div></div>')
 
 
 def matriz_html(m, local, visitante, region, k=6):
@@ -395,10 +444,8 @@ else:
         else:
             st.markdown(f'<div class="card">{distribucion_html(r["matriz"], mk, NOM[met].lower() + (" total" if mk["grupo"] == "Total" else " " + mk["grupo"]))}</div>',
                         unsafe_allow_html=True)
-    with st.expander("Tabla de partidos"):
-        cols = ["fecha", "condicion", "rival", "marcador", "a_favor", "en_contra", "total"]
-        st.markdown(f"**{local}**"); st.dataframe(hl[cols], hide_index=True, width="stretch")
-        st.markdown(f"**{visitante}**"); st.dataframe(hv[cols], hide_index=True, width="stretch")
+    with st.expander("Partido a partido", expanded=True):
+        st.markdown(lista_partidos(local, hl, mk, "l") + lista_partidos(visitante, hv, mk, "v"), unsafe_allow_html=True)
 
     a, b = st.columns(2)
     cuota = a.number_input("Cuota casa", 1.01, 50.0, 1.90, 0.01, key=f"cuota_an_{met}", label_visibility="collapsed")
