@@ -16,6 +16,7 @@ import requests
 import streamlit as st
 
 import modelo as mo
+import elo as el
 
 st.set_page_config(page_title="Kuota", page_icon="⚽", layout="centered", initial_sidebar_state="collapsed")
 
@@ -109,6 +110,13 @@ LIGAS_DISPONIBLES = {k: v for k, v in LIGAS.items() if os.path.exists(f"datos/bb
 @st.cache_data(ttl=3600)
 def datos(liga):
     return mo.cargar(f"datos/bbdd_{liga}.csv")
+
+
+@st.cache_data(ttl=3600)
+def elos(liga):
+    """Ranking Elo por metrica (indice = equipo: elo, delta5, pj, pos). Ver elo.py."""
+    d = mo.cargar(f"datos/bbdd_{liga}.csv")
+    return {m: el.ranking(d, m) for m in el.METRICAS}
 
 
 ss = st.session_state
@@ -310,13 +318,20 @@ def kelly(p, cuota):
     return (b * p - (1 - p)) / b if b > 0 else 0.0
 
 
+NIVELES = [("Excelente", "exc"), ("Buena", "bue"), ("Regular", "reg"), ("Mala", "mal"), ("Pésima", "pes")]
+
+
 def evaluar(mk, hl, hv):
     cl, cv = cumple(hl, mk, "l"), cumple(hv, mk, "v")
     n = len(hl) + len(hv)
     tasa = (cl.sum() + cv.sum()) / n if n else 0
     txt, cls = calificar(mk["prob"], tasa)
+    # segunda opinion: si Poisson y Elo difieren mas del umbral, la pata baja un nivel
+    alerta = mk.get("elo") is not None and abs(mk["prob"] - mk["elo"]) > el.UMBRAL_ALERTA
+    if alerta:
+        txt, cls = NIVELES[min([c for _, c in NIVELES].index(cls) + 1, len(NIVELES) - 1)]
     return {"hl": int(cl.sum()), "nl": len(hl), "hv": int(cv.sum()), "nv": len(hv), "tasa": tasa, "cal": txt, "cls": cls,
-            "serie_l": cl, "serie_v": cv}
+            "serie_l": cl, "serie_v": cv, "alerta": alerta, "tag": ("⚠ " if alerta else "") + txt}
 
 
 # ================================================================== mercados (linea configurable)
@@ -324,23 +339,27 @@ def lineas(centro, rango):
     return [x for x in np.arange(centro - rango, centro + rango + 0.01, 1.0) if x > 0]
 
 
-def mercados(r, met, local, visitante, cfg):
-    """cfg = {grupo: (centro, rango)}. Devuelve lista de mercados con su regla de evaluacion historica."""
+def mercados(r, met, local, visitante, cfg, rk=None):
+    """cfg = {grupo: (centro, rango)}. rk = ranking Elo de la metrica (o None). Devuelve lista de mercados con su regla de evaluacion historica."""
     m, lam_l, lam_v = r["matriz"], r["lambda_local"], r["lambda_visitante"]
     k = m.shape[0]; tot = np.add.outer(np.arange(k), np.arange(k))
     out = []
 
-    def add(nombre, grupo, p, col_l, col_v, linea, over, region):
+    def add(nombre, grupo, p, col_l, col_v, linea, over, region, elo=None):
         out.append({"mercado": nombre, "grupo": grupo, "prob": float(min(max(p, 0), 1)), "col_l": col_l, "col_v": col_v,
-                    "linea": linea, "over": over, "region": region})
+                    "linea": linea, "over": over, "region": region, "elo": None if elo is None else float(elo)})
 
+    # quien gana / quien hace mas: Poisson (matriz) y, si existe, Elo de la metrica como segunda opinion
+    p1, px, p2 = np.tril(m, -1).sum(), np.trace(m), np.triu(m, 1).sum()
+    e1 = ex = e2 = None
+    if rk is not None and local in rk.index and visitante in rk.index:
+        e1, ex, e2 = el.prob(rk.loc[local, "elo"], rk.loc[visitante, "elo"], met)
     if met in GOL:
-        p1, px, p2 = np.tril(m, -1).sum(), np.trace(m), np.triu(m, 1).sum()
-        add(f"Gana {local}", "Resultado", p1, "gano", "perdio", 0.5, True, lambda x, y: x > y)
-        add("Empate", "Resultado", px, "empato", "empato", 0.5, True, lambda x, y: x == y)
-        add(f"Gana {visitante}", "Resultado", p2, "perdio", "gano", 0.5, True, lambda x, y: x < y)
-        add(f"{local} o empate", "Resultado", p1 + px, "no_perdio", "no_gano", 0.5, True, lambda x, y: x >= y)
-        add(f"{visitante} o empate", "Resultado", p2 + px, "no_gano", "no_perdio", 0.5, True, lambda x, y: x <= y)
+        add(f"Gana {local}", "Resultado", p1, "gano", "perdio", 0.5, True, lambda x, y: x > y, e1)
+        add("Empate", "Resultado", px, "empato", "empato", 0.5, True, lambda x, y: x == y, ex)
+        add(f"Gana {visitante}", "Resultado", p2, "perdio", "gano", 0.5, True, lambda x, y: x < y, e2)
+        add(f"{local} o empate", "Resultado", p1 + px, "no_perdio", "no_gano", 0.5, True, lambda x, y: x >= y, None if e1 is None else e1 + ex)
+        add(f"{visitante} o empate", "Resultado", p2 + px, "no_gano", "no_perdio", 0.5, True, lambda x, y: x <= y, None if e2 is None else e2 + ex)
         b = m[1:, 1:].sum()
         add("Ambos anotan: Sí", "Resultado", b, "btts", "btts", 0.5, True, lambda x, y: x > 0 and y > 0)
         add("Ambos anotan: No", "Resultado", 1 - b, "btts", "btts", 0.5, False, lambda x, y: x == 0 or y == 0)
@@ -348,6 +367,11 @@ def mercados(r, met, local, visitante, cfg):
         po = m[tot > ln].sum()
         add(f"Total Over {ln}", "Total", po, "total", "total", ln, True, lambda x, y, ln=ln: x + y > ln)
         add(f"Total Under {ln}", "Total", 1 - po, "total", "total", ln, False, lambda x, y, ln=ln: x + y < ln)
+    if met not in GOL and met in el.METRICAS:
+        que = NOM[met].lower()
+        add(f"Más {que}: {local}", "Mayor número", p1, "gano", "perdio", 0.5, True, lambda x, y: x > y, e1)
+        add(f"Más {que}: empate", "Mayor número", px, "empato", "empato", 0.5, True, lambda x, y: x == y, ex)
+        add(f"Más {que}: {visitante}", "Mayor número", p2, "perdio", "gano", 0.5, True, lambda x, y: x < y, e2)
     for ln in lineas(*cfg[local]):
         po = mo.prob_over(lam_l, ln)
         add(f"{local} Over {ln}", local, po, "a_favor", "en_contra", ln, True, lambda x, y, ln=ln: x > ln)
@@ -477,6 +501,22 @@ def distribucion_html(m, mk, etiqueta):
 
 
 
+def diferencia_html(m, mk, local, visitante, etiqueta):
+    """Barras de P(local - visitante = d) segun la matriz Poisson. Verde = diferencias con las que gana la pata."""
+    k = m.shape[0]
+    dif = np.subtract.outer(np.arange(k), np.arange(k))
+    ds = list(range(-(k - 1), k))
+    dist = np.array([m[dif == d].sum() for d in ds])
+    lo, hi = 0, len(ds)
+    while lo < len(ds) - 1 and dist[lo] < 0.005: lo += 1
+    while hi > lo + 1 and dist[hi - 1] < 0.005: hi -= 1
+    mx = dist[lo:hi].max()
+    bars = "".join(f'<div style="height:{max(dist[i] / mx * 100, 2):.0f}%;background:{"#2e9e5b" if mk["region"](max(ds[i], 0), max(-ds[i], 0)) else P["miss"]}">'
+                   f'<span class="v">{dist[i]:.0%}</span><span class="x">{ds[i]:+d}</span></div>' for i in range(lo, hi))
+    return (f'<div class="chart"><div class="bars">{bars}</div></div>'
+            f'<div class="small">{etiqueta}: {local} menos {visitante} según el modelo · + = más el local, − = más el visitante · verde = gana la pata</div>')
+
+
 # ================================================================== tabla de posiciones y tendencias
 def temporada_actual():
     return df.sort_values("fecha")["temporada_txt"].iloc[-1]
@@ -516,6 +556,15 @@ def html_tabla(t, resaltar=(), compacta=False):
               f'<div class="n">{f.E}</div><div class="n">{f.P}</div>' + ('' if compacta else f'<div class="n gfgc" style="width:44px">{f.GF}-{f.GC}</div>')
               + f'<div class="n">{f.DG:+d}</div><div class="pts">{f.PTS}</div>' + ('' if compacta else f'<div class="forma" style="width:102px">{forma}</div>') + '</div>')
     return h + '<div class="small" style="margin-top:6px">verde = Champions · ámbar = Europa · rojo = descenso · forma: antiguo → reciente</div></div>'
+
+
+def html_elo(rk, resaltar=()):
+    h = ('<div class="card"><table class="st"><tr><th>#</th><th style="text-align:left">Equipo</th><th>Elo</th><th>Δ últ. 5</th><th>J</th></tr>')
+    for eq, f in rk.iterrows():
+        h += (f'<tr{" class=me" if eq in resaltar else ""}><td>{int(f.pos)}</td><td style="text-align:left;color:{P["txt"]}">{eq}</td>'
+              f'<td class="w">{f.elo:.0f}</td><td class="{"up" if round(f.delta5) >= 0 else "down"}">{int(round(f.delta5)):+d}</td><td>{int(f.pj)}</td></tr>')
+    return h + ('</table><div class="small" style="margin-top:6px">1500 = promedio de la liga · Δ = cambio en sus últimos 5 partidos de la temporada · '
+                'al empezar la temporada cada equipo se acerca 1/3 al promedio y los ascendidos entran con el Elo de los descendidos</div></div>')
 
 
 def tendencias(met, n=5):
@@ -623,6 +672,8 @@ elif pagina == "Diccionario":
         ("Modelo", "Ataque / defensa", "Fuerza del equipo relativa a la liga. 1.00 = promedio; 1.30 = produce 30% más que un equipo promedio; 0.80 = 20% menos."),
         ("Modelo", "Peso por recencia", "Los partidos recientes pesan más que los viejos al calcular las fuerzas. Un partido de hace ~140 días pesa la mitad que uno de hoy."),
         ("Modelo", "Matriz de resultados", "Tabla con la probabilidad de cada marcador exacto (filas = local, columnas = visitante). Verde = marcadores con los que gana la pata."),
+        ("Modelo", "Elo", "Marcador de fuerza: todos empiezan en 1500 y tras cada partido el que hizo más le quita puntos al otro, más cuanto más sorpresivo el resultado y mayor el margen. Hay un Elo por métrica: goles (quién gana), tiros, tiros a puerta, corners, faltas y amarillas (quién hace más). Al empezar la temporada cada equipo se acerca 1/3 al promedio."),
+        ("Modelo", "Elo → probabilidad", "La diferencia de Elo (más la ventaja de local de esa métrica) se convierte en % local / empate / visitante con una curva ajustada a la historia de las 5 ligas. Se muestra junto al Poisson como segunda opinión; no cambia la cuota justa ni el EV."),
         ("Mercados", "Cuota justa", "1 dividido entre la probabilidad del modelo. Es la cuota a la que no ganas ni pierdes a largo plazo. Si la casa paga más que la justa, hay valor."),
         ("Mercados", "EV (valor esperado)", "prob. modelo × cuota − 1. Positivo = a largo plazo ganas; negativo = pierdes. EV +0.10 = ganas 10 centavos por cada Q1 apostado, en promedio."),
         ("Mercados", "Over / Under", "Más de / menos de una línea. Total Over 2.5 goles = 3 o más goles en el partido. Las líneas .5 no permiten empate."),
@@ -630,9 +681,11 @@ elif pagina == "Diccionario":
         ("Mercados", "1X2 / doble oportunidad", "1 = gana local, X = empate, 2 = gana visitante. 1X = local o empate; X2 = visitante o empate."),
         ("Mercados", "Ambos anotan (BTTS)", "Sí = los dos equipos marcan al menos un gol. No = al menos uno se queda en cero."),
         ("Mercados", "Total / Local / Visitante", "Grupos de mercados. Total suma los dos equipos; Local y Visitante son la métrica de un solo equipo."),
+        ("Mercados", "Mayor número", "Qué equipo termina con más tiros, tiros a puerta, corners, faltas o amarillas (o empate). Probabilidad = matriz Poisson de la métrica; el Elo de la métrica aparece al lado como segunda opinión."),
         ("Validación", "Últ. N", "Contra cuántos partidos recientes de cada equipo se valida la pata. N chico = forma actual; N grande = tendencia estable."),
         ("Validación", "X/N cumplió", "En cuántos de los últimos N partidos del equipo se habría cumplido ese mercado. 4/5 = pasó en 4 de 5."),
         ("Validación", "Calificación", "60% probabilidad del modelo + 40% cumplimiento histórico. Excelente ≥ 78%, Buena ≥ 68%, Regular ≥ 56%, Mala ≥ 45%, Pésima el resto."),
+        ("Validación", "⚠ Elo difiere", "Poisson y Elo difieren en más de 10 puntos en esa pata: la calificación baja un nivel. Dos modelos que no coinciden = pata menos confiable."),
         ("Validación", "Como jugarán", "Filtro: solo partidos del local jugando en casa y del visitante jugando fuera."),
         ("Validación", "Media / mediana / desv. est.", "Media = promedio. Mediana = valor del medio (resiste goleadas raras). Desviación estándar = qué tanto varía de partido a partido; alta = equipo irregular."),
         ("Validación", "Media liga", "Promedio de todos los partidos cargados. Referencia para saber si un equipo está por encima o por debajo de lo normal."),
@@ -657,11 +710,24 @@ elif pagina == "Diccionario":
 
 # ================================================================== PAGINA TABLA
 elif pagina == "Tabla":
-    temps = sorted(df.temporada_txt.unique(), reverse=True)
-    temp = st.selectbox("Temporada", temps, label_visibility="collapsed")
-    t = tabla_posiciones(temp)
-    st.markdown(html_tabla(t), unsafe_allow_html=True)
-    st.caption(f"{LIGA} · calculada desde la BBDD (solo partidos cargados). Zonas europeas y de descenso son orientativas (4 / 2 / 3).")
+    vista = st.pills("Vista", ["Posiciones", "Elo"], default=ss.get("vista_tabla", "Posiciones"), label_visibility="collapsed") or "Posiciones"
+    ss.vista_tabla = vista
+    if vista == "Elo":
+        met_e = st.pills("Métrica Elo", list(el.METRICAS), format_func=lambda x: NOM[x], default="goles", label_visibility="collapsed") or "goles"
+        rk = elos(ss.liga)[met_e]
+        st.markdown(f'<div class="t">Elo · {NOM[met_e]} · {el.DUELO[met_e]}</div>', unsafe_allow_html=True)
+        st.markdown(html_elo(rk), unsafe_allow_html=True)
+        st.caption(f"{LIGA} · Elo = fuerza que sube o baja partido a partido según el rival y la sorpresa del resultado. "
+                   "Se usa como segunda opinión junto al Poisson en Armar y Analizar.")
+        ss.ctx_titulo = f"Tabla Elo · {LIGA} · {NOM[met_e]}"
+        ss.ctx_ia = (f"Vista: Tabla Elo. Liga {LIGA}. Métrica {NOM[met_e]} ({el.DUELO[met_e]}). Ranking: " +
+                     "; ".join(f"{int(f.pos)}. {eq} Elo {f.elo:.0f} (Δ5 {int(round(f.delta5)):+d}, J{int(f.pj)})" for eq, f in rk.iterrows()))
+    else:
+        temps = sorted(df.temporada_txt.unique(), reverse=True)
+        temp = st.selectbox("Temporada", temps, label_visibility="collapsed")
+        t = tabla_posiciones(temp)
+        st.markdown(html_tabla(t), unsafe_allow_html=True)
+        st.caption(f"{LIGA} · calculada desde la BBDD (solo partidos cargados). Zonas europeas y de descenso son orientativas (4 / 2 / 3).")
 
 # ================================================================== PAGINA ADMIN
 elif pagina == "Admin":
@@ -749,17 +815,19 @@ else:
     r = mo.analizar(df, local, visitante, met)
     lam_l, lam_v = r["lambda_local"], r["lambda_visitante"]
     ml = mo.medias_liga(df, met)
+    rk = elos(ss.liga).get(met)                      # ranking Elo de la metrica (None si no aplica)
+    elo_ok = rk is not None and local in rk.index and visitante in rk.index
 
     key_cfg = f"cfg_{met}_{local}_{visitante}"
     if key_cfg not in ss:
         ss[key_cfg] = {"Total": [centro_defecto(lam_l + lam_v, met), 2 if met == "goles" else 1],
                        local: [centro_defecto(lam_l, met), 1], visitante: [centro_defecto(lam_v, met), 1]}
     cfg = ss[key_cfg]
-    lst = mercados(r, met, local, visitante, cfg)
+    lst = mercados(r, met, local, visitante, cfg, rk)
     grupos = list(dict.fromkeys(x["grupo"] for x in lst))
 
     def selector_lineas(grp, key):
-        if grp == "Resultado":
+        if grp in ("Resultado", "Mayor número"):
             return
         a, b = st.columns([1, 1])
         centro = a.number_input(f"Línea {grp[:14]}", 0.5, 60.5, float(cfg[grp][0]), 1.0, key=f"c_{key}_{grp}")
@@ -800,9 +868,11 @@ else:
                 if st.button("Vaciar boleto"):
                     ss.parlay = []; st.rerun()
 
+        elo_txt = (f'<div class="small" style="margin-top:2px">Elo {el.DUELO[met]}: {local} <span class="w">{rk.loc[local, "elo"]:.0f}</span> (#{int(rk.loc[local, "pos"])}) · '
+                   f'{visitante} <span class="w">{rk.loc[visitante, "elo"]:.0f}</span> (#{int(rk.loc[visitante, "pos"])})</div>') if elo_ok else ""
         st.markdown(f'<div class="card flat"><div class="t">{NOM[met]} · esperado del modelo</div>'
                     f'<div class="mid">{local} <span class="w">{lam_l:.2f}</span> · {visitante} <span class="w">{lam_v:.2f}</span> · total <span class="w">{lam_l + lam_v:.2f}</span></div>'
-                    f'<div class="small">media liga: local {ml["local"]:.1f} · visita {ml["visitante"]:.1f} · total {ml["total"]:.1f}</div></div>',
+                    f'<div class="small">media liga: local {ml["local"]:.1f} · visita {ml["visitante"]:.1f} · total {ml["total"]:.1f}</div>{elo_txt}</div>',
                     unsafe_allow_html=True)
 
         grp = st.pills("Grupo", grupos, default=ss.get("grp", grupos[0]) if ss.get("grp") in grupos else grupos[0],
@@ -819,17 +889,21 @@ else:
             if mk["grupo"] != grp: continue
             e = evaluar(mk, hl, hv)
             if solo and e["cls"] not in ("exc", "bue"): continue
-            html += (f'<div class="mk"><div class="row"><div class="mid">{mk["mercado"]}</div><span class="tag {e["cls"]}">{e["cal"]}</span></div>'
+            elo_mk = f' · Elo <span class="w">{mk["elo"]:.0%}</span>' if mk.get("elo") is not None else ""
+            html += (f'<div class="mk"><div class="row"><div class="mid">{mk["mercado"]}</div><span class="tag {e["cls"]}">{e["tag"]}</span></div>'
                      f'{barra(mk["prob"], e["tasa"], 1, P["ok"] if mk["prob"] >= 0.6 else "#b45309")}'
-                     f'<div class="row small"><span>modelo <span class="w">{mk["prob"]:.0%}</span> · justa <span class="w">{mo.cuota_justa(mk["prob"])}</span></span>'
+                     f'<div class="row small"><span>modelo <span class="w">{mk["prob"]:.0%}</span>{elo_mk} · justa <span class="w">{mo.cuota_justa(mk["prob"])}</span></span>'
                      f'<span>últ.{n}: <span class="w">{e["hl"]}/{e["nl"]}</span> {local[:10]} · <span class="w">{e["hv"]}/{e["nv"]}</span> {visitante[:10]}</span></div></div>')
-        st.markdown(html + '<div class="small" style="padding-top:6px">barra = prob. modelo · marca blanca = % histórico</div></div>', unsafe_allow_html=True)
+        st.markdown(html + '<div class="small" style="padding-top:6px">barra = prob. modelo · marca blanca = % histórico'
+                    + (' · Elo = segunda opinión · ⚠ = Poisson y Elo difieren más de 10 pts (baja un nivel)' if any(x.get("elo") is not None for x in lst if x["grupo"] == grp) else '')
+                    + '</div></div>', unsafe_allow_html=True)
         ss.ctx_titulo = f"Armar · {partido} · {NOM[met]} · {grp}"
         ss.ctx_ia = (f"Vista: Armar. Liga {LIGA}. Partido {partido}. Métrica {NOM[met]}. λ local {lam_l:.2f}, λ visitante {lam_v:.2f}, λ total {lam_l + lam_v:.2f}; "
                      f"media liga local {ml['local']:.2f}, visita {ml['visitante']:.2f}, total {ml['total']:.2f}. Validación con últimos {n} partidos.\n"
                      "Mercados del grupo " + grp + ":\n" + "\n".join(
-                         f"- {mk['mercado']}: prob modelo {mk['prob']:.0%}, cuota justa {mo.cuota_justa(mk['prob'])}, "
-                         f"{local} cumplió {ev_['hl']}/{ev_['nl']}, {visitante} {ev_['hv']}/{ev_['nv']}, calificación {ev_['cal']}"
+                         f"- {mk['mercado']}: prob modelo (Poisson) {mk['prob']:.0%}" + (f", Elo {mk['elo']:.0%}" if mk.get("elo") is not None else "") +
+                         f", cuota justa {mo.cuota_justa(mk['prob'])}, {local} cumplió {ev_['hl']}/{ev_['nl']}, {visitante} {ev_['hv']}/{ev_['nv']}, "
+                         f"calificación {ev_['tag']}"
                          for mk in lst if mk["grupo"] == grp for ev_ in [evaluar(mk, hl, hv)]) +
                      ("\nBoleto actual: " + "; ".join(f"{l['mercado']} ({l['partido']}, {l['metrica']}, modelo {l['prob']:.0%}, cuota casa {l['cuota']})" for l in ss.parlay)
                       if ss.parlay else "\nBoleto vacío."))
@@ -841,12 +915,13 @@ else:
         a, b = st.columns(2)
         cuota = a.number_input("Cuota casa", 1.01, 50.0, 1.90, 0.01, key=f"cuota_{met}_{grp}", label_visibility="collapsed")
         ev = mk["prob"] * cuota - 1
-        b.markdown(f'<div style="padding-top:6px"><span class="tag {e["cls"]}">{e["cal"]}</span> &nbsp; EV <b class="{"up" if ev > 0 else "down"}">{ev:+.2f}</b>'
-                   f'<br><span class="small">modelo {mk["prob"]:.0%} · justa {mo.cuota_justa(mk["prob"])}</span></div>', unsafe_allow_html=True)
+        b.markdown(f'<div style="padding-top:6px"><span class="tag {e["cls"]}">{e["tag"]}</span> &nbsp; EV <b class="{"up" if ev > 0 else "down"}">{ev:+.2f}</b>'
+                   f'<br><span class="small">modelo {mk["prob"]:.0%}' + (f' · Elo {mk["elo"]:.0%}' if mk.get("elo") is not None else '')
+                   + f' · justa {mo.cuota_justa(mk["prob"])}</span></div>', unsafe_allow_html=True)
         a, b = st.columns(2)
         if a.button("Agregar al boleto", width="stretch"):
             ss.parlay.append({"partido": partido, "metrica": NOM[met], "mercado": sel, "prob": mk["prob"], "cuota": cuota,
-                              "cal": e["cal"], "cls": e["cls"]})
+                              "cal": e["tag"], "cls": e["cls"]})
             registrar_uso("pata", f"{partido} | {sel} @ {cuota}")
             st.rerun()
         if b.button("Analizar esta pata", width="stretch"):
@@ -873,8 +948,9 @@ else:
         e = evaluar(mk, hl, hv)
 
         st.markdown(f'<div class="card"><div class="row"><div><div class="t">{sel} · {NOM[met]}</div>'
-                    f'<div class="big">{mk["prob"]:.0%} <span class="small">modelo</span></div><div class="small">cuota justa {mo.cuota_justa(mk["prob"])}</div></div>'
-                    f'<div style="text-align:right"><span class="tag {e["cls"]}">{e["cal"]}</span><div class="big" style="margin-top:4px">{e["tasa"]:.0%}</div>'
+                    f'<div class="big">{mk["prob"]:.0%} <span class="small">modelo</span></div><div class="small">cuota justa {mo.cuota_justa(mk["prob"])}'
+                    + (f' · Elo {mk["elo"]:.0%}' + (' ⚠ difiere' if e["alerta"] else '') if mk.get("elo") is not None else '') + '</div></div>'
+                    f'<div style="text-align:right"><span class="tag {e["cls"]}">{e["tag"]}</span><div class="big" style="margin-top:4px">{e["tasa"]:.0%}</div>'
                     f'<div class="small">histórico · {e["hl"] + e["hv"]} de {e["nl"] + e["nv"]}</div></div></div>'
                     f'{barra(mk["prob"], e["tasa"], 1, P["acc"])}'
                     f'<div class="small">λ {local} {lam_l:.2f} {delta(lam_l, ml["local"], 2)} · λ {visitante} {lam_v:.2f} {delta(lam_v, ml["visitante"], 2)} · λ total {lam_l + lam_v:.2f} {delta(lam_l + lam_v, ml["total"], 2)} (vs media liga)</div></div>',
@@ -901,8 +977,9 @@ else:
             return (f"a favor media {h.a_favor.mean():.1f} mediana {h.a_favor.median():.1f} desv {h.a_favor.std(ddof=0):.1f}; "
                     f"en contra media {h.en_contra.mean():.1f}; total media {h.total.mean():.1f} máx {h.total.max()} mín {h.total.min()}") if len(h) else "sin partidos"
         ss.ctx_titulo = f"Analizar · {partido} · {sel}"
-        ss.ctx_ia = (f"Vista: Analizar. Liga {LIGA}. Partido {partido}. Métrica {NOM[met]}. Pata: {sel}. Prob modelo {mk['prob']:.0%}, cuota justa {mo.cuota_justa(mk['prob'])}, "
-                     f"calificación {e['cal']}, cumplimiento histórico {e['tasa']:.0%} ({e['hl']}/{e['nl']} {local}, {e['hv']}/{e['nv']} {visitante}) "
+        ss.ctx_ia = (f"Vista: Analizar. Liga {LIGA}. Partido {partido}. Métrica {NOM[met]}. Pata: {sel}. Prob modelo (Poisson) {mk['prob']:.0%}"
+                     + (f", Elo {mk['elo']:.0%} (Elo {local} {rk.loc[local, 'elo']:.0f}, {visitante} {rk.loc[visitante, 'elo']:.0f})" if mk.get("elo") is not None else "") +
+                     f", cuota justa {mo.cuota_justa(mk['prob'])}, calificación {e['tag']}, cumplimiento histórico {e['tasa']:.0%} ({e['hl']}/{e['nl']} {local}, {e['hv']}/{e['nv']} {visitante}) "
                      f"en últimos {n} partidos, filtro {filtro}. λ {local} {lam_l:.2f}, λ {visitante} {lam_v:.2f}, media liga local {ml['local']:.2f} visita {ml['visitante']:.2f} total {ml['total']:.2f}.\n"
                      f"{local} últimos {len(hl)}: {_st(hl)}. Resultados (reciente→antiguo): " + ", ".join(f"{r_.condicion[0]} vs {r_.rival} {r_.marcador} ({int(r_.a_favor)}-{int(r_.en_contra)} {NOM[met].lower()})" for _, r_ in hl.iterrows()) +
                      f"\n{visitante} últimos {len(hv)}: {_st(hv)}. Resultados: " + ", ".join(f"{r_.condicion[0]} vs {r_.rival} {r_.marcador} ({int(r_.a_favor)}-{int(r_.en_contra)} {NOM[met].lower()})" for _, r_ in hv.iterrows()) +
@@ -913,6 +990,8 @@ else:
         with st.expander("Qué dice el modelo", expanded=False):
             if met in GOL and mk["grupo"] in ("Resultado", "Total"):
                 st.markdown(f'<div class="card">{matriz_html(r["matriz"], local, visitante, mk["region"])}</div>', unsafe_allow_html=True)
+            elif mk["grupo"] == "Mayor número":
+                st.markdown(f'<div class="card">{diferencia_html(r["matriz"], mk, local, visitante, NOM[met].lower())}</div>', unsafe_allow_html=True)
             else:
                 st.markdown(f'<div class="card">{distribucion_html(r["matriz"], mk, NOM[met].lower() + (" total" if mk["grupo"] == "Total" else " " + mk["grupo"]))}</div>',
                             unsafe_allow_html=True)
@@ -921,7 +1000,7 @@ else:
         cuota = a.number_input("Cuota casa", 1.01, 50.0, 1.90, 0.01, key=f"cuota_an_{met}", label_visibility="collapsed")
         if b.button("Agregar al boleto", width="stretch", key="add_an"):
             ss.parlay.append({"partido": partido, "metrica": NOM[met], "mercado": sel, "prob": mk["prob"], "cuota": cuota,
-                              "cal": e["cal"], "cls": e["cls"]})
+                              "cal": e["tag"], "cls": e["cls"]})
             registrar_uso("pata", f"{partido} | {sel} @ {cuota}")
             ss.grp = grp
             ir_a("Armar")
@@ -957,5 +1036,5 @@ with st.popover("IA"):
         ss.chat = []; st.rerun()
 
 st.caption(f"{LIGA}: {len(df)} partidos · último {df['fecha'].max():%d/%m/%Y} · football-data.co.uk · "
-           "Calificación = 60% prob. modelo + 40% cumplimiento histórico · EV = prob × cuota − 1 · "
+           "Calificación = 60% prob. modelo + 40% cumplimiento histórico (⚠ baja un nivel si Elo difiere >10 pts) · EV = prob × cuota − 1 · "
            "Kelly = ((cuota−1)·p − (1−p)) / (cuota−1)")
