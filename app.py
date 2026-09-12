@@ -448,7 +448,14 @@ def tendencias(met, n=5):
 paginas = ["Inicio", "Armar", "Analizar", "Tabla"] + (["Admin"] if ES_ADMIN else [])
 top1, top2 = st.columns([3, 1])
 top1.markdown("### Sports Book La Liga")
-top2.markdown(f'<div class="small" style="text-align:right;padding-top:14px">{ss.usuario}</div>', unsafe_allow_html=True)
+if usuarios:
+    if top2.button(f"Salir · {ss.usuario}", width="stretch"):
+        registrar_uso("logout")
+        for k in list(ss.keys()):
+            del ss[k]
+        st.rerun()
+else:
+    top2.markdown(f'<div class="small" style="text-align:right;padding-top:14px">{ss.usuario}</div>', unsafe_allow_html=True)
 pagina = st.segmented_control("Página", paginas, default=ss.pagina if ss.pagina in paginas else "Inicio",
                               label_visibility="collapsed", key=f"pag_w{ss.gen}") or ss.pagina
 ss.pagina = pagina
