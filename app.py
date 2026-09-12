@@ -602,11 +602,9 @@ if pagina == "Inicio":
                     f'<span class="small">{f.prom - media:+.1f} vs liga</span></div></div>'
                     f'{barra(f.prom, media, max(tt.prom.max(), media) * 1.1, P["ok"] if f.prom >= media else P["mut"])}'
                     f'<div class="small">a favor {f.favor:.1f} · en contra {f.contra:.1f}</div></div>')
-        st.markdown(f'<div class="card"><div class="t">Más {NOM[met_h].lower()} por partido · media liga {media:.1f}</div>'
-                    + "".join(fila(f) for _, f in tt.head(4).iterrows()) + '</div>'
-                    f'<div class="card"><div class="t">Menos {NOM[met_h].lower()} por partido</div>'
-                    + "".join(fila(f) for _, f in tt.tail(4).iloc[::-1].iterrows()) + '</div>', unsafe_allow_html=True)
-        st.caption("Barra = promedio del equipo (a favor + en contra) en sus últimos 5 · marca blanca = media de la liga. "
+        st.markdown(f'<div class="card"><div class="t">{NOM[met_h]} por partido · todos los equipos · media liga {media:.1f}</div>'
+                    + "".join(fila(f) for _, f in tt.iterrows()) + '</div>', unsafe_allow_html=True)
+        st.caption("Ordenados de mayor a menor. Barra = promedio del equipo (a favor + en contra) en sus últimos 5 · marca blanca = media de la liga. "
                    "Sirve para elegir qué partido y mercado analizar.")
 
 # ================================================================== PAGINA DICCIONARIO
