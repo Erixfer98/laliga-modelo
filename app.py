@@ -1,5 +1,5 @@
 """
-app.py — Kuota. Parlays con matemática e IA para las 5 grandes ligas.
+app.py — Kuota · Parlays con Datos. Las 5 grandes ligas.
 Paginas: Inicio · Armar · Analizar · Tabla · Admin (solo administradores).
 Usuarios y registro de uso: opcionales, se configuran en Streamlit Cloud -> Settings -> Secrets (ver pagina Admin).
 Local: streamlit run app.py
@@ -260,7 +260,7 @@ def registrar_uso(accion, detalle=""):
 
 usuarios = cfg_usuarios()
 if usuarios and "usuario" not in ss:
-    st.markdown("### Kuota")
+    st.markdown('### Kuota <span class="small" style="font-weight:400">· Parlays con Datos</span>', unsafe_allow_html=True)
     st.markdown('<div class="card"><div class="t">Acceso</div><div class="small">Ingresa con tu usuario y contraseña.</div></div>', unsafe_allow_html=True)
     u = st.text_input("Usuario")
     c = st.text_input("Contraseña", type="password")
@@ -533,7 +533,7 @@ def tendencias(met, n=5):
 # ================================================================== navegacion
 paginas = ["Inicio", "Armar", "Analizar", "Tabla", "Diccionario"] + (["Admin"] if ES_ADMIN else [])
 top1, top2 = st.columns([3, 1])
-top1.markdown('### Kuota <span class="small" style="font-weight:400">· cuota justa, parlay con datos</span>', unsafe_allow_html=True)
+top1.markdown('### Kuota <span class="small" style="font-weight:400">· Parlays con Datos</span>', unsafe_allow_html=True)
 if usuarios:
     if top2.button(f"Salir · {ss.usuario}", width="stretch"):
         registrar_uso("logout")
