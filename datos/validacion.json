@@ -1,0 +1,75 @@
+{
+ "fecha": "12/09/2026 18:23 UTC",
+ "ligas": {
+  "bundesliga": {
+   "partidos": 324,
+   "ultimo": "06/09/2026",
+   "temporadas": {
+    "2025-26": 306,
+    "2026-27": 18
+   },
+   "equipos": 21,
+   "vacias": 0,
+   "duplicados": 0,
+   "errores": [],
+   "avisos": [],
+   "ok": true
+  },
+  "laliga": {
+   "partidos": 421,
+   "ultimo": "07/09/2026",
+   "temporadas": {
+    "2025-26": 380,
+    "2026-27": 41
+   },
+   "equipos": 23,
+   "vacias": 0,
+   "duplicados": 0,
+   "errores": [],
+   "avisos": [],
+   "ok": true
+  },
+  "ligue1": {
+   "partidos": 333,
+   "ultimo": "06/09/2026",
+   "temporadas": {
+    "2025-26": 306,
+    "2026-27": 27
+   },
+   "equipos": 20,
+   "vacias": 0,
+   "duplicados": 0,
+   "errores": [],
+   "avisos": [],
+   "ok": true
+  },
+  "premier": {
+   "partidos": 410,
+   "ultimo": "06/09/2026",
+   "temporadas": {
+    "2025-26": 380,
+    "2026-27": 30
+   },
+   "equipos": 23,
+   "vacias": 0,
+   "duplicados": 0,
+   "errores": [],
+   "avisos": [],
+   "ok": true
+  },
+  "seriea": {
+   "partidos": 410,
+   "ultimo": "07/09/2026",
+   "temporadas": {
+    "2025-26": 380,
+    "2026-27": 30
+   },
+   "equipos": 23,
+   "vacias": 0,
+   "duplicados": 0,
+   "errores": [],
+   "avisos": [],
+   "ok": true
+  }
+ }
+}
