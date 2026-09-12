@@ -734,8 +734,14 @@ elif pagina == "Admin":
 # ================================================================== ARMAR / ANALIZAR (comparten partido y metrica)
 else:
     c1, c2 = st.columns(2)
-    local = c1.selectbox("Local", lista, index=lista.index("Real Madrid") if "Real Madrid" in lista else 0)
-    visitante = c2.selectbox("Visitante", [e for e in lista if e != local])
+    # el partido elegido se recuerda al cambiar de pagina (y por liga)
+    rec = ss.setdefault("partido_liga", {}).get(ss.liga, {})
+    ini_l = rec.get("local") if rec.get("local") in lista else ("Real Madrid" if "Real Madrid" in lista else lista[0])
+    local = c1.selectbox("Local", lista, index=lista.index(ini_l))
+    otros = [e for e in lista if e != local]
+    ini_v = rec.get("visitante") if rec.get("visitante") in otros else otros[0]
+    visitante = c2.selectbox("Visitante", otros, index=otros.index(ini_v))
+    ss.partido_liga[ss.liga] = {"local": local, "visitante": visitante}
     partido = f"{local} vs {visitante} ({LIGA})"
     met = st.pills("Métrica", list(mo.METRICAS), format_func=lambda x: NOM[x], default=ss.get("met", "goles"),
                    label_visibility="collapsed", key="met_w") or "goles"
