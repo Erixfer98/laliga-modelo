@@ -173,12 +173,19 @@ def preguntar_ia(pregunta):
     msgs = [{"role": "system", "content": SISTEMA_IA + "\n\nContexto de la vista actual:\n" + (ss.ctx_ia or "sin contexto")}]
     msgs += [{"role": m["rol"], "content": m["txt"]} for m in ss.chat[-8:]]
     msgs.append({"role": "user", "content": pregunta})
+    payload = {"model": c["modelo"], "messages": msgs, "temperature": 0.4, "max_tokens": int(st.secrets.get("IA_MAX_TOKENS", 3000))}
+    if "gpt-oss" in c["modelo"]:
+        payload["reasoning_effort"] = "low"   # los modelos razonadores gastan tokens pensando; asi dejan tokens para responder
     try:
         r = requests.post(c["url"], headers={"Authorization": f"Bearer {c['key']}", "Content-Type": "application/json"},
-                          json={"model": c["modelo"], "messages": msgs, "temperature": 0.4, "max_tokens": 600}, timeout=60)
+                          json=payload, timeout=90)
         if r.status_code != 200:
             return f"Error {r.status_code}: {r.text[:200]}"
-        return r.json()["choices"][0]["message"]["content"].strip()
+        msg = r.json()["choices"][0]["message"]
+        texto = (msg.get("content") or "").strip()
+        if not texto:   # respuesta vacia (se agoto el limite razonando): usar el razonamiento o avisar
+            texto = (msg.get("reasoning") or msg.get("reasoning_content") or "").strip()
+        return texto or "El modelo no devolvió texto. Pregunta de nuevo o cambia IA_MODELO en Secrets (ej. llama-3.3-70b-versatile)."
     except Exception as ex:
         return f"Error: {ex}"
 
