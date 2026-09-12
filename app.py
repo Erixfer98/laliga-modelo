@@ -89,6 +89,15 @@ st.markdown(f"""
   .tb .eq {{flex:1; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}}
   .tb .n {{width:26px; text-align:center; color:{P['mut']};}} .tb .pts {{width:30px; text-align:right; font-weight:700;}}
   .tb .z {{width:3px; height:26px; border-radius:2px;}}
+  .tb .eq {{min-width:70px;}}
+  @media (max-width: 520px) {{
+    .tb {{gap:5px; font-size:0.8rem;}}
+    .tb .gfgc {{display:none;}}
+    .tb .n {{width:20px;}} .tb .pts {{width:26px;}} .tb .pos {{width:18px;}}
+    .tb .forma {{width:auto !important;}}
+    .forma span {{width:14px; height:14px; font-size:0.52rem;}}
+    .forma {{gap:2px;}}
+  }}
   .kpi {{display:flex; gap:8px;}} .kpi > div {{flex:1; background:{P['card2']}; border-radius:12px; padding:10px 12px;}}
 </style>""", unsafe_allow_html=True)
 
@@ -489,7 +498,7 @@ def html_tabla(t, resaltar=(), compacta=False):
     n = len(t)
     h = ('<div class="card"><div class="tb" style="border:none;padding:2px 0"><div class="z"></div><div class="pos"></div><div class="eq t">Equipo</div>'
          '<div class="n t">J</div><div class="n t">G</div><div class="n t">E</div><div class="n t">P</div>'
-         + ('' if compacta else '<div class="n t" style="width:44px">GF-GC</div>') + '<div class="n t">DG</div><div class="pts t">PTS</div>'
+         + ('' if compacta else '<div class="n t gfgc" style="width:44px">GF-GC</div>') + '<div class="n t">DG</div><div class="pts t">PTS</div>'
          + ('' if compacta else '<div class="forma" style="width:102px"></div>') + '</div>')
     for i, f in t.iterrows():
         pos = i + 1
@@ -497,7 +506,7 @@ def html_tabla(t, resaltar=(), compacta=False):
         forma = "".join(f'<span class="{x}">{x.upper()}</span>' for x in f.forma[-5:])
         h += (f'<div class="tb"{" style=background:" + P["card2"] if f.equipo in resaltar else ""}><div class="z" style="background:{z}"></div>'
               f'<div class="pos">{pos}</div><div class="eq">{f.equipo}</div><div class="n">{f.J}</div><div class="n">{f.G}</div>'
-              f'<div class="n">{f.E}</div><div class="n">{f.P}</div>' + ('' if compacta else f'<div class="n" style="width:44px">{f.GF}-{f.GC}</div>')
+              f'<div class="n">{f.E}</div><div class="n">{f.P}</div>' + ('' if compacta else f'<div class="n gfgc" style="width:44px">{f.GF}-{f.GC}</div>')
               + f'<div class="n">{f.DG:+d}</div><div class="pts">{f.PTS}</div>' + ('' if compacta else f'<div class="forma" style="width:102px">{forma}</div>') + '</div>')
     return h + '<div class="small" style="margin-top:6px">verde = Champions · ámbar = Europa · rojo = descenso · forma: antiguo → reciente</div></div>'
 
@@ -515,7 +524,7 @@ def tendencias(met, n=5):
 
 
 # ================================================================== navegacion
-paginas = ["Inicio", "Armar", "Analizar", "IA", "Tabla", "Diccionario"] + (["Admin"] if ES_ADMIN else [])
+paginas = ["Inicio", "Armar", "Analizar", "Tabla", "Diccionario"] + (["Admin"] if ES_ADMIN else [])
 top1, top2 = st.columns([3, 1])
 top1.markdown("### Sports Book")
 if usuarios:
@@ -529,7 +538,7 @@ else:
 pagina = st.segmented_control("Página", paginas, default=ss.pagina if ss.pagina in paginas else "Inicio",
                               label_visibility="collapsed", key=f"pag_w{ss.gen}") or ss.pagina
 ss.pagina = pagina
-if pagina not in ("Diccionario", "Admin", "IA"):
+if pagina not in ("Diccionario", "Admin"):
     liga_sel = st.pills("Liga", list(LIGAS_DISPONIBLES), format_func=lambda k: LIGAS_DISPONIBLES[k], default=ss.liga,
                         label_visibility="collapsed", key=f"liga_w{ss.gen}") or ss.liga
     if liga_sel != ss.liga:
@@ -599,31 +608,6 @@ if pagina == "Inicio":
                     + "".join(fila(f) for _, f in tt.tail(4).iloc[::-1].iterrows()) + '</div>', unsafe_allow_html=True)
         st.caption("Barra = promedio del equipo (a favor + en contra) en sus últimos 5 · marca blanca = media de la liga. "
                    "Sirve para elegir qué partido y mercado analizar.")
-
-# ================================================================== PAGINA IA (analista)
-elif pagina == "IA":
-    ss.setdefault("ctx_titulo", "")
-    st.markdown(f'<div class="card flat"><div class="t">Analista IA</div><div class="mid">{ss.ctx_titulo or "Sin vista analizada todavía"}</div>'
-                f'<div class="small">Responde con los datos de la última vista que abriste (Armar o Analizar) y tu boleto. '
-                f'Para cambiar de partido o pata, vuelve a Armar o Analizar y regresa aquí.</div></div>', unsafe_allow_html=True)
-    if not ia_cfg():
-        st.warning("Falta IA_KEY en Secrets (ver Admin).")
-    for m in ss.chat[-12:]:
-        with st.chat_message("user" if m["rol"] == "user" else "assistant"):
-            st.markdown(m["txt"])
-    sug = st.pills("Sugerencias", ["¿Qué opinas de esta pata?", "Debate mi parlay", "¿Cuál es el mayor riesgo?", "Dame la mejor pata de este grupo"],
-                   label_visibility="collapsed", key=f"sug{len(ss.chat)}")
-    preg = st.chat_input("Escribe tu pregunta al analista…")
-    texto = preg or sug
-    if texto:
-        ss.chat.append({"rol": "user", "txt": texto})
-        with st.spinner("Analizando…"):
-            resp = preguntar_ia(texto)
-        ss.chat.append({"rol": "assistant", "txt": resp})
-        registrar_uso("ia", texto[:80])
-        st.rerun()
-    if ss.chat and st.button("Limpiar conversación"):
-        ss.chat = []; st.rerun()
 
 # ================================================================== PAGINA DICCIONARIO
 elif pagina == "Diccionario":
@@ -857,8 +841,6 @@ else:
         if b.button("Analizar esta pata", width="stretch"):
             ss.an_mercado, ss.grp = sel, grp
             ir_a("Analizar")
-        if st.button("Preguntar al analista IA", width="stretch", key="ia_armar"):
-            ir_a("IA")
 
     # ---------------------------------------------------------- ANALIZAR
     else:
@@ -924,8 +906,6 @@ else:
                 st.markdown(f'<div class="card">{distribucion_html(r["matriz"], mk, NOM[met].lower() + (" total" if mk["grupo"] == "Total" else " " + mk["grupo"]))}</div>',
                             unsafe_allow_html=True)
 
-        if st.button("Preguntar al analista IA sobre esta pata", width="stretch", key="ia_an"):
-            ir_a("IA")
         a, b = st.columns(2)
         cuota = a.number_input("Cuota casa", 1.01, 50.0, 1.90, 0.01, key=f"cuota_an_{met}", label_visibility="collapsed")
         if b.button("Agregar al boleto", width="stretch", key="add_an"):
@@ -934,6 +914,36 @@ else:
             registrar_uso("pata", f"{partido} | {sel} @ {cuota}")
             ss.grp = grp
             ir_a("Armar")
+
+# ================================================================== analista IA flotante (boton pequeno abajo a la izquierda)
+st.markdown(f"""<style>
+  div[data-testid="stPopover"] {{position:fixed; bottom:16px; left:12px; z-index:1000; width:auto !important;}}
+  div[data-testid="stPopover"] > div {{width:auto !important;}}
+  div[data-testid="stPopover"] button {{width:50px !important; height:50px !important; min-height:50px; border-radius:50% !important; padding:0 !important;
+      background:{P['acc']} !important; color:#fff !important; border:none !important; font-weight:800; font-size:0.8rem; box-shadow:0 6px 18px rgba(0,0,0,.4);}}
+  div[data-testid="stPopover"] button p {{font-size:0.8rem; font-weight:800;}}
+  div[data-testid="stPopover"] button svg {{display:none;}}
+  div[data-testid="stPopoverBody"] {{width:min(94vw, 440px); max-height:75vh; overflow:auto;}}
+  .msg {{padding:8px 11px; border-radius:12px; margin:5px 0; font-size:0.84rem; line-height:1.4;}}
+  .msg.u {{background:{P['acc']}; color:#fff; margin-left:15%;}} .msg.a {{background:{P['card2']}; color:{P['txt']}; margin-right:6%;}}
+</style>""", unsafe_allow_html=True)
+with st.popover("IA"):
+    ss.setdefault("ctx_titulo", "")
+    st.markdown(f'<div class="small">Analista IA · {ss.ctx_titulo or "abre Armar o Analizar para darle contexto"}</div>', unsafe_allow_html=True)
+    for m in ss.chat[-8:]:
+        st.markdown(f'<div class="msg {"u" if m["rol"] == "user" else "a"}">{m["txt"]}</div>', unsafe_allow_html=True)
+    sug = st.pills("Sugerencias", ["¿Qué opinas de esta pata?", "Debate mi parlay", "¿Mayor riesgo?"], label_visibility="collapsed", key=f"sug{len(ss.chat)}")
+    preg = st.text_input("Pregunta", key=f"ia_q{len(ss.chat)}", placeholder="Escribe tu pregunta…", label_visibility="collapsed")
+    a, b = st.columns([3, 1])
+    enviar = a.button("Enviar", width="stretch", key="ia_send")
+    texto = (preg.strip() if enviar and preg.strip() else None) or (sug if not enviar else None)
+    if texto:
+        ss.chat.append({"rol": "user", "txt": texto})
+        ss.chat.append({"rol": "assistant", "txt": preguntar_ia(texto)})
+        registrar_uso("ia", texto[:80])
+        st.rerun()
+    if b.button("Limpiar", width="stretch", key="ia_clear"):
+        ss.chat = []; st.rerun()
 
 st.caption(f"{LIGA}: {len(df)} partidos · último {df['fecha'].max():%d/%m/%Y} · football-data.co.uk · "
            "Calificación = 60% prob. modelo + 40% cumplimiento histórico · EV = prob × cuota − 1 · "
