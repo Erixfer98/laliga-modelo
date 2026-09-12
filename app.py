@@ -6,6 +6,7 @@ Local: streamlit run app.py
 """
 
 import base64
+import os
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -16,7 +17,7 @@ import streamlit as st
 
 import modelo as mo
 
-st.set_page_config(page_title="Sports Book La Liga", page_icon="⚽", layout="centered", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Sports Book", page_icon="⚽", layout="centered", initial_sidebar_state="collapsed")
 
 # ------------------------------------------------------------------ tema (sigue el tema de Streamlit: claro u oscuro)
 try:
@@ -92,14 +93,21 @@ st.markdown(f"""
 </style>""", unsafe_allow_html=True)
 
 
+LIGAS = {"laliga": "La Liga", "premier": "Premier League", "seriea": "Serie A", "bundesliga": "Bundesliga", "ligue1": "Ligue 1"}
+LIGAS_DISPONIBLES = {k: v for k, v in LIGAS.items() if os.path.exists(f"datos/bbdd_{k}.csv")} or {"laliga": "La Liga"}
+
+
 @st.cache_data(ttl=3600)
-def datos():
-    return mo.cargar()
+def datos(liga):
+    return mo.cargar(f"datos/bbdd_{liga}.csv")
 
 
-df = datos()
-lista = mo.equipos(df)
 ss = st.session_state
+ss.setdefault("liga", next(iter(LIGAS_DISPONIBLES)))
+if ss.liga not in LIGAS_DISPONIBLES:
+    ss.liga = next(iter(LIGAS_DISPONIBLES))
+df = datos(ss.liga)
+lista = mo.equipos(df)
 ss.setdefault("parlay", [])
 ss.setdefault("pagina", "Inicio")
 ss.setdefault("gen", 0)   # cambia para reiniciar los widgets al saltar de pagina
@@ -236,7 +244,7 @@ def registrar_uso(accion, detalle=""):
 
 usuarios = cfg_usuarios()
 if usuarios and "usuario" not in ss:
-    st.markdown("### Sports Book La Liga")
+    st.markdown("### Sports Book")
     st.markdown('<div class="card"><div class="t">Acceso</div><div class="small">Ingresa con tu usuario y contraseña.</div></div>', unsafe_allow_html=True)
     u = st.text_input("Usuario")
     c = st.text_input("Contraseña", type="password")
@@ -509,7 +517,7 @@ def tendencias(met, n=5):
 # ================================================================== navegacion
 paginas = ["Inicio", "Armar", "Analizar", "Tabla", "Diccionario"] + (["Admin"] if ES_ADMIN else [])
 top1, top2 = st.columns([3, 1])
-top1.markdown("### Sports Book La Liga")
+top1.markdown("### Sports Book")
 if usuarios:
     if top2.button(f"Salir · {ss.usuario}", width="stretch"):
         registrar_uso("logout")
@@ -521,6 +529,12 @@ else:
 pagina = st.segmented_control("Página", paginas, default=ss.pagina if ss.pagina in paginas else "Inicio",
                               label_visibility="collapsed", key=f"pag_w{ss.gen}") or ss.pagina
 ss.pagina = pagina
+if pagina not in ("Diccionario", "Admin"):
+    liga_sel = st.pills("Liga", list(LIGAS_DISPONIBLES), format_func=lambda k: LIGAS_DISPONIBLES[k], default=ss.liga,
+                        label_visibility="collapsed", key=f"liga_w{ss.gen}") or ss.liga
+    if liga_sel != ss.liga:
+        ss.liga = liga_sel; ss.gen += 1; st.rerun()
+LIGA = LIGAS_DISPONIBLES[ss.liga]
 
 
 def ir_a(pag):
@@ -540,7 +554,7 @@ def resumen_boleto():
 if pagina == "Inicio":
     temp = temporada_actual()
     ult = df["fecha"].max()
-    st.markdown(f'<div class="card flat"><div class="row"><div><div class="t">Temporada {temp}</div>'
+    st.markdown(f'<div class="card flat"><div class="row"><div><div class="t">{LIGA} · temporada {temp}</div>'
                 f'<div class="mid">{len(df[df.temporada_txt == temp])} partidos jugados</div></div>'
                 f'<div style="text-align:right"><div class="t">Datos al</div><div class="mid">{ult:%d/%m/%Y}</div></div></div></div>',
                 unsafe_allow_html=True)
@@ -559,7 +573,7 @@ if pagina == "Inicio":
     t = tabla_posiciones(temp)
     st.markdown('<div class="t" style="margin-top:8px">Tabla · top 6</div>', unsafe_allow_html=True)
     st.markdown(html_tabla(t.head(6), compacta=True), unsafe_allow_html=True)
-    ss.ctx_ia = (f"Vista: Inicio. Temporada {temp}, datos al {ult:%d/%m/%Y}. Tabla: " +
+    ss.ctx_ia = (f"Vista: Inicio. Liga {LIGA}. Temporada {temp}, datos al {ult:%d/%m/%Y}. Tabla: " +
                  "; ".join(f"{i + 1}. {f.equipo} {f.PTS} pts (J{f.J} G{f.G} E{f.E} P{f.P}, DG {f.DG:+d})" for i, f in t.iterrows()) +
                  ("\nBoleto actual: " + "; ".join(f"{l['mercado']} ({l['partido']}, modelo {l['prob']:.0%}, cuota {l['cuota']})" for l in ss.parlay) if ss.parlay else "\nBoleto vacío."))
 
@@ -626,7 +640,7 @@ elif pagina == "Tabla":
     temp = st.selectbox("Temporada", temps, label_visibility="collapsed")
     t = tabla_posiciones(temp)
     st.markdown(html_tabla(t), unsafe_allow_html=True)
-    st.caption("Calculada desde la BBDD (solo partidos cargados). Los partidos aplazados aparecen cuando se juegan.")
+    st.caption(f"{LIGA} · calculada desde la BBDD (solo partidos cargados). Zonas europeas y de descenso son orientativas (4 / 2 / 3).")
 
 # ================================================================== PAGINA ADMIN
 elif pagina == "Admin":
@@ -685,7 +699,7 @@ else:
     c1, c2 = st.columns(2)
     local = c1.selectbox("Local", lista, index=lista.index("Real Madrid") if "Real Madrid" in lista else 0)
     visitante = c2.selectbox("Visitante", [e for e in lista if e != local])
-    partido = f"{local} vs {visitante}"
+    partido = f"{local} vs {visitante} ({LIGA})"
     met = st.pills("Métrica", list(mo.METRICAS), format_func=lambda x: NOM[x], default=ss.get("met", "goles"),
                    label_visibility="collapsed", key="met_w") or "goles"
     ss.met = met
@@ -767,7 +781,7 @@ else:
                      f'<div class="row small"><span>modelo <span class="w">{mk["prob"]:.0%}</span> · justa <span class="w">{mo.cuota_justa(mk["prob"])}</span></span>'
                      f'<span>últ.{n}: <span class="w">{e["hl"]}/{e["nl"]}</span> {local[:10]} · <span class="w">{e["hv"]}/{e["nv"]}</span> {visitante[:10]}</span></div></div>')
         st.markdown(html + '<div class="small" style="padding-top:6px">barra = prob. modelo · marca blanca = % histórico</div></div>', unsafe_allow_html=True)
-        ss.ctx_ia = (f"Vista: Armar. Partido {partido}. Métrica {NOM[met]}. λ local {lam_l:.2f}, λ visitante {lam_v:.2f}, λ total {lam_l + lam_v:.2f}; "
+        ss.ctx_ia = (f"Vista: Armar. Liga {LIGA}. Partido {partido}. Métrica {NOM[met]}. λ local {lam_l:.2f}, λ visitante {lam_v:.2f}, λ total {lam_l + lam_v:.2f}; "
                      f"media liga local {ml['local']:.2f}, visita {ml['visitante']:.2f}, total {ml['total']:.2f}. Validación con últimos {n} partidos.\n"
                      "Mercados del grupo " + grp + ":\n" + "\n".join(
                          f"- {mk['mercado']}: prob modelo {mk['prob']:.0%}, cuota justa {mo.cuota_justa(mk['prob'])}, "
@@ -842,7 +856,7 @@ else:
         def _st(h):
             return (f"a favor media {h.a_favor.mean():.1f} mediana {h.a_favor.median():.1f} desv {h.a_favor.std(ddof=0):.1f}; "
                     f"en contra media {h.en_contra.mean():.1f}; total media {h.total.mean():.1f} máx {h.total.max()} mín {h.total.min()}") if len(h) else "sin partidos"
-        ss.ctx_ia = (f"Vista: Analizar. Partido {partido}. Métrica {NOM[met]}. Pata: {sel}. Prob modelo {mk['prob']:.0%}, cuota justa {mo.cuota_justa(mk['prob'])}, "
+        ss.ctx_ia = (f"Vista: Analizar. Liga {LIGA}. Partido {partido}. Métrica {NOM[met]}. Pata: {sel}. Prob modelo {mk['prob']:.0%}, cuota justa {mo.cuota_justa(mk['prob'])}, "
                      f"calificación {e['cal']}, cumplimiento histórico {e['tasa']:.0%} ({e['hl']}/{e['nl']} {local}, {e['hv']}/{e['nv']} {visitante}) "
                      f"en últimos {n} partidos, filtro {filtro}. λ {local} {lam_l:.2f}, λ {visitante} {lam_v:.2f}, media liga local {ml['local']:.2f} visita {ml['visitante']:.2f} total {ml['total']:.2f}.\n"
                      f"{local} últimos {len(hl)}: {_st(hl)}. Resultados (reciente→antiguo): " + ", ".join(f"{r_.condicion[0]} vs {r_.rival} {r_.marcador} ({int(r_.a_favor)}-{int(r_.en_contra)} {NOM[met].lower()})" for _, r_ in hl.iterrows()) +
@@ -889,6 +903,6 @@ with st.popover("Analista IA"):
     if b.button("Limpiar", width="stretch", key="ia_clear"):
         ss.chat = []; st.rerun()
 
-st.caption(f"{len(df)} partidos · último {df['fecha'].max():%d/%m/%Y} · football-data.co.uk · "
+st.caption(f"{LIGA}: {len(df)} partidos · último {df['fecha'].max():%d/%m/%Y} · football-data.co.uk · "
            "Calificación = 60% prob. modelo + 40% cumplimiento histórico · EV = prob × cuota − 1 · "
            "Kelly = ((cuota−1)·p − (1−p)) / (cuota−1)")
