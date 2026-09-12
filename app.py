@@ -554,8 +554,14 @@ def resumen_boleto():
 if pagina == "Inicio":
     temp = temporada_actual()
     ult = df["fecha"].max()
+    val_txt = ""
+    if os.path.exists("datos/validacion.json"):
+        import json
+        _v = json.load(open("datos/validacion.json")).get("ligas", {}).get(ss.liga)
+        if _v:
+            val_txt = f'<div class="small {"up" if _v.get("ok") and not _v.get("avisos") else "down"}">datos {"validados ✓" if _v.get("ok") else "con errores"} · {_v.get("vacias", 0)} vacíos</div>'
     st.markdown(f'<div class="card flat"><div class="row"><div><div class="t">{LIGA} · temporada {temp}</div>'
-                f'<div class="mid">{len(df[df.temporada_txt == temp])} partidos jugados</div></div>'
+                f'<div class="mid">{len(df[df.temporada_txt == temp])} partidos jugados</div>{val_txt}</div>'
                 f'<div style="text-align:right"><div class="t">Datos al</div><div class="mid">{ult:%d/%m/%Y}</div></div></div></div>',
                 unsafe_allow_html=True)
     rb = resumen_boleto()
@@ -644,6 +650,22 @@ elif pagina == "Tabla":
 
 # ================================================================== PAGINA ADMIN
 elif pagina == "Admin":
+    st.markdown('<div class="t">Calidad de datos</div>', unsafe_allow_html=True)
+    if os.path.exists("datos/validacion.json"):
+        import json
+        val = json.load(open("datos/validacion.json"))
+        filas_v = ""
+        for k, r in val["ligas"].items():
+            estado = ("ERROR", P["bad"]) if not r.get("ok") else (("AVISO", "#f59e0b") if r.get("avisos") else ("OK", P["ok"]))
+            det = "<br>".join(r.get("errores", []) + r.get("avisos", []))
+            filas_v += (f'<div class="mk"><div class="row"><div class="mid">{LIGAS.get(k, k)}</div><span class="tag" style="background:{estado[1]};color:#fff">{estado[0]}</span></div>'
+                        f'<div class="small">{r.get("partidos", 0)} partidos · {r.get("equipos", "?")} equipos · último {r.get("ultimo", "?")} · '
+                        f'{r.get("vacias", 0)} celdas vacías · {r.get("duplicados", 0)} duplicados</div>'
+                        + (f'<div class="small down">{det}</div>' if det else "") + '</div>')
+        st.markdown(f'<div class="card"><div class="small">Última validación: {val["fecha"]} · se revisa cada corrida del Action: vacíos, duplicados, descanso > final, tiros a puerta > tiros, negativos</div>{filas_v}</div>',
+                    unsafe_allow_html=True)
+    else:
+        st.info("Todavía no hay reporte de validación (se genera en la próxima corrida del Action).")
     st.markdown('<div class="t">Usuarios y uso</div>', unsafe_allow_html=True)
     if not usuarios:
         st.markdown('<div class="card"><div class="mid">Acceso abierto (sin usuarios configurados)</div>'
