@@ -1,13 +1,17 @@
 """
 app.py — Sports Book La Liga.
-  🎫 Armar   : mercados con linea configurable, prob, cuota justa, calificacion -> boleto.
-  📊 Analizar: estadisticas descriptivas (media, mediana, desviacion, min, max, % cumple) de la pata elegida,
-               con N, casa/fuera y linea configurables, barras partido a partido y distribucion del modelo.
+Paginas: Inicio · Armar · Analizar · Tabla · Admin (solo administradores).
+Usuarios y registro de uso: opcionales, se configuran en Streamlit Cloud -> Settings -> Secrets (ver pagina Admin).
 Local: streamlit run app.py
 """
 
+import base64
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 import numpy as np
 import pandas as pd
+import requests
 import streamlit as st
 
 import modelo as mo
@@ -19,36 +23,39 @@ try:
     TEMA = st.context.theme.type or "dark"
 except Exception:
     TEMA = "dark"
-P = {"dark": dict(card="#1c1f26", txt="#e6e6e6", mut="#9aa0a6", line="#2c313a", line2="#22262e", barbg="#2c313a",
-                  miss="#3a3f4a", mark="#ffffff", app="#0f1115"),
-     "light": dict(card="#f3f4f6", txt="#111827", mut="#4b5563", line="#d1d5db", line2="#e5e7eb", barbg="#d1d5db",
-                   miss="#9ca3af", mark="#111827", app="#ffffff")}[TEMA]
-W = P["txt"]
+P = {"dark": dict(card="#16181d", card2="#1e2128", txt="#f2f2f2", mut="#8b919a", line="#262a32", line2="#20242b",
+                  barbg="#262a32", miss="#2f343d", mark="#ffffff", app="#0b0c0f", ok="#22c55e", bad="#f05252", acc="#3b82f6"),
+     "light": dict(card="#ffffff", card2="#f4f5f7", txt="#111318", mut="#5b6270", line="#e3e5ea", line2="#eceef2",
+                   barbg="#e3e5ea", miss="#c9cdd4", mark="#111318", app="#f7f8fa", ok="#15803d", bad="#c62828", acc="#2563eb")}[TEMA]
 
 st.markdown(f"""
 <style>
-  .block-container {{padding: 3.2rem 0.8rem 4rem 0.8rem; max-width: 620px;}}
-  .card {{background:{P['card']}; border-radius:14px; padding:12px 14px; margin:8px 0; color:{P['txt']};}}
-  .t {{font-size:0.72rem; color:{P['mut']}; text-transform:uppercase; letter-spacing:.05em;}}
-  .row {{display:flex; justify-content:space-between; align-items:center; gap:8px;}}
-  .big {{font-size:1.7rem; font-weight:700; line-height:1.1;}}
+  .block-container {{padding: 3rem 0.9rem 4rem 0.9rem; max-width: 640px;}}
+  h3 {{font-weight:700; letter-spacing:-.01em;}}
+  .card {{background:{P['card']}; border:1px solid {P['line']}; border-radius:16px; padding:14px 16px; margin:10px 0; color:{P['txt']};}}
+  .card.flat {{background:{P['card2']}; border:none;}}
+  .t {{font-size:0.7rem; color:{P['mut']}; text-transform:uppercase; letter-spacing:.08em; font-weight:600;}}
+  .row {{display:flex; justify-content:space-between; align-items:center; gap:10px;}}
+  .big {{font-size:1.75rem; font-weight:700; line-height:1.1; letter-spacing:-.02em;}}
   .mid {{font-size:1rem; font-weight:600;}}
   .small {{font-size:0.78rem; color:{P['mut']};}}
   .w {{color:{P['txt']}; font-weight:600;}}
-  .bar {{height:8px; border-radius:4px; background:{P['barbg']}; position:relative; margin:5px 0 2px 0;}}
-  .bar > div {{height:8px; border-radius:4px;}}
-  .bar .mark {{position:absolute; top:-3px; width:2px; height:14px; background:{P['mark']}; opacity:.9;}}
-  .mk {{border-top:1px solid {P['line']}; padding:9px 0;}}
-  .tag {{display:inline-block; padding:2px 8px; border-radius:6px; font-size:0.72rem; font-weight:700; white-space:nowrap;}}
-  .exc {{background:#166534; color:#dcfce7;}} .bue {{background:#2e9e5b; color:#fff;}} .reg {{background:#b45309; color:#fff;}}
-  .mal {{background:#991b1b; color:#fee2e2;}} .pes {{background:#450a0a; color:#fca5a5;}}
-  .up {{color:{'#4ade80' if TEMA == 'dark' else '#15803d'};}} .down {{color:{'#f87171' if TEMA == 'dark' else '#b91c1c'};}}
+  .bar {{height:6px; border-radius:3px; background:{P['barbg']}; position:relative; margin:6px 0 3px 0;}}
+  .bar > div {{height:6px; border-radius:3px;}}
+  .bar .mark {{position:absolute; top:-3px; width:2px; height:12px; background:{P['mark']}; opacity:.9;}}
+  .mk {{border-top:1px solid {P['line2']}; padding:10px 0;}}
+  .mk:first-child {{border-top:none;}}
+  .tag {{display:inline-block; padding:3px 9px; border-radius:999px; font-size:0.7rem; font-weight:700; white-space:nowrap; letter-spacing:.02em;}}
+  .exc {{background:#14532d; color:#bbf7d0;}} .bue {{background:#166534; color:#dcfce7;}} .reg {{background:#78350f; color:#fde68a;}}
+  .mal {{background:#7f1d1d; color:#fecaca;}} .pes {{background:#450a0a; color:#fca5a5;}}
+  .up {{color:{P['ok']};}} .down {{color:{P['bad']};}}
   .sticky {{position:sticky; top:0; z-index:99; background:{P['app']}; padding:4px 0;}}
   table.st {{width:100%; border-collapse:collapse; font-size:0.82rem; color:{P['txt']};}}
-  table.st th {{text-align:right; font-weight:500; color:{P['mut']}; padding:5px 4px; border-bottom:1px solid {P['line']};}}
+  table.st th {{text-align:right; font-weight:500; color:{P['mut']}; padding:6px 4px; border-bottom:1px solid {P['line']};}}
   table.st th:first-child, table.st td:first-child {{text-align:left; color:{P['mut']};}}
-  table.st td {{text-align:right; padding:5px 4px; border-bottom:1px solid {P['line2']};}}
+  table.st td {{text-align:right; padding:6px 4px; border-bottom:1px solid {P['line2']};}}
   table.st tr.liga td {{color:{P['mut']}; font-style:italic;}}
+  table.st tr.me td {{background:{P['card2']}; font-weight:600;}}
   table.mx {{border-collapse:separate; border-spacing:3px; width:100%; font-size:0.78rem;}}
   table.mx td {{text-align:center; padding:6px 0; border-radius:6px; color:{P['txt']};}}
   table.mx th {{font-size:0.72rem; color:{P['mut']}; font-weight:500; padding:2px;}}
@@ -61,20 +68,27 @@ st.markdown(f"""
   .chart .ln span {{position:absolute; right:0; top:-14px; font-size:0.66rem; color:{P['txt']};}}
   .chart .lg {{position:absolute; left:0; right:0; border-top:2px dotted #f59e0b; opacity:.9;}}
   .chart .lg span {{position:absolute; left:0; top:-14px; font-size:0.66rem; color:#d97706;}}
-  .pl {{display:flex; align-items:center; gap:6px; padding:7px 0; border-bottom:1px solid {P['line2']}; font-size:0.8rem;}}
+  .pl {{display:flex; align-items:center; gap:6px; padding:8px 0; border-bottom:1px solid {P['line2']}; font-size:0.8rem;}}
   .pl:last-child {{border-bottom:none;}}
   .pl .dt {{width:46px; flex:none; font-size:0.64rem; color:{P['mut']}; line-height:1.2;}}
   .pl .tm {{flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:{P['mut']};}}
   .pl .tm.r {{text-align:right;}}
   .pl .tm.me {{font-weight:700; color:{P['txt']};}}
   .pl .sc {{width:46px; flex:none; text-align:center; font-weight:700; border-radius:6px; padding:4px 0; color:#fff; font-size:0.8rem; letter-spacing:.03em;}}
-  .sc.g {{background:#2e9e5b;}} .sc.p {{background:#c53030;}} .sc.e {{background:#6b7280;}}
+  .sc.g {{background:{P['ok']};}} .sc.p {{background:{P['bad']};}} .sc.e {{background:#6b7280;}}
   .pl .mv {{width:54px; flex:none; text-align:right; line-height:1.1;}}
   .pl .mv b {{font-size:1rem;}} .pl .mv .small {{font-size:0.62rem;}}
-  .mv.ok b {{color:{'#4ade80' if TEMA == 'dark' else '#15803d'};}} .mv.no b {{color:{P['mut']};}}
+  .mv.ok b {{color:{P['ok']};}} .mv.no b {{color:{P['mut']};}}
   .forma {{display:inline-flex; gap:3px; vertical-align:middle;}}
   .forma span {{width:18px; height:18px; border-radius:50%; font-size:0.62rem; font-weight:700; color:#fff; display:inline-flex; align-items:center; justify-content:center;}}
-  .forma .g {{background:#2e9e5b;}} .forma .p {{background:#c53030;}} .forma .e {{background:#6b7280;}}
+  .forma .g {{background:{P['ok']};}} .forma .p {{background:{P['bad']};}} .forma .e {{background:#6b7280;}}
+  .tb {{display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid {P['line2']}; font-size:0.84rem;}}
+  .tb:last-child {{border-bottom:none;}}
+  .tb .pos {{width:22px; text-align:center; color:{P['mut']}; font-weight:600;}}
+  .tb .eq {{flex:1; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}}
+  .tb .n {{width:26px; text-align:center; color:{P['mut']};}} .tb .pts {{width:30px; text-align:right; font-weight:700;}}
+  .tb .z {{width:3px; height:26px; border-radius:2px;}}
+  .kpi {{display:flex; gap:8px;}} .kpi > div {{flex:1; background:{P['card2']}; border-radius:12px; padding:10px 12px;}}
 </style>""", unsafe_allow_html=True)
 
 
@@ -87,11 +101,93 @@ df = datos()
 lista = mo.equipos(df)
 ss = st.session_state
 ss.setdefault("parlay", [])
-ss.setdefault("modo", "🎫 Armar")
-ss.setdefault("gen", 0)
-ss.setdefault("banca", 1000.0)   # cambia para reiniciar los widgets al saltar de modo
+ss.setdefault("pagina", "Inicio")
+ss.setdefault("gen", 0)   # cambia para reiniciar los widgets al saltar de pagina
+ss.setdefault("banca", 1000.0)
 GOL = ("goles", "goles_1t", "goles_2t")
 NOM = mo.NOMBRES
+HORA_GT = ZoneInfo("America/Guatemala")
+
+
+# ================================================================== usuarios y registro de uso (opcional, via Secrets)
+def cfg_usuarios():
+    try:
+        return dict(st.secrets["usuarios"])
+    except Exception:
+        return {}
+
+
+def cfg_admins():
+    try:
+        return [x.strip() for x in str(st.secrets.get("admins", "")).split(",") if x.strip()]
+    except Exception:
+        return []
+
+
+def gh():
+    """Config de GitHub para guardar el registro de uso en la rama `uso` (no redespliega la app)."""
+    try:
+        tok = st.secrets["GH_TOKEN"]
+    except Exception:
+        return None
+    repo = st.secrets.get("GH_REPO", "Erixfer98/laliga-modelo")
+    return {"h": {"Authorization": f"Bearer {tok}", "Accept": "application/vnd.github+json"},
+            "repo": repo, "rama": st.secrets.get("GH_RAMA_USO", "uso"), "archivo": "uso.csv"}
+
+
+def gh_leer_uso(g):
+    r = requests.get(f"https://api.github.com/repos/{g['repo']}/contents/{g['archivo']}?ref={g['rama']}", headers=g["h"], timeout=10)
+    if r.status_code != 200:
+        return None, "fecha,usuario,accion,detalle\n"
+    return r.json()["sha"], base64.b64decode(r.json()["content"]).decode()
+
+
+def gh_asegurar_rama(g):
+    r = requests.get(f"https://api.github.com/repos/{g['repo']}/git/ref/heads/{g['rama']}", headers=g["h"], timeout=10)
+    if r.status_code == 200:
+        return
+    main = requests.get(f"https://api.github.com/repos/{g['repo']}/git/ref/heads/main", headers=g["h"], timeout=10).json()
+    requests.post(f"https://api.github.com/repos/{g['repo']}/git/refs", headers=g["h"], timeout=10,
+                  json={"ref": f"refs/heads/{g['rama']}", "sha": main["object"]["sha"]})
+
+
+def registrar_uso(accion, detalle=""):
+    """Agrega una linea a uso.csv en la rama `uso`. Silencioso si no hay token configurado."""
+    g = gh()
+    if g is None:
+        return
+    try:
+        gh_asegurar_rama(g)
+        for _ in range(2):   # un reintento por si otro usuario escribio al mismo tiempo
+            sha, contenido = gh_leer_uso(g)
+            linea = f"{datetime.now(HORA_GT):%Y-%m-%d %H:%M:%S},{ss.get('usuario', 'invitado')},{accion},{str(detalle).replace(',', ';')}\n"
+            body = {"message": f"uso: {ss.get('usuario', 'invitado')} {accion}", "branch": g["rama"],
+                    "content": base64.b64encode((contenido + linea).encode()).decode()}
+            if sha:
+                body["sha"] = sha
+            r = requests.put(f"https://api.github.com/repos/{g['repo']}/contents/{g['archivo']}", headers=g["h"], json=body, timeout=10)
+            if r.status_code in (200, 201):
+                return
+    except Exception:
+        pass
+
+
+usuarios = cfg_usuarios()
+if usuarios and "usuario" not in ss:
+    st.markdown("### Sports Book La Liga")
+    st.markdown('<div class="card"><div class="t">Acceso</div><div class="small">Ingresa con tu usuario y contraseña.</div></div>', unsafe_allow_html=True)
+    u = st.text_input("Usuario")
+    c = st.text_input("Contraseña", type="password")
+    if st.button("Entrar", width="stretch"):
+        if u in usuarios and str(usuarios[u]) == c:
+            ss.usuario = u
+            registrar_uso("login")
+            st.rerun()
+        st.error("Usuario o contraseña incorrectos")
+    st.stop()
+if not usuarios:
+    ss.setdefault("usuario", "invitado")
+ES_ADMIN = ss.usuario in cfg_admins() or not usuarios
 
 
 # ================================================================== datos por equipo
@@ -274,7 +370,7 @@ def matriz_html(m, local, visitante, region, k=6):
             col = f"rgba(46,158,91,{a:.2f})" if region(x, y) else (f"rgba(90,98,112,{a * 0.7:.2f})" if TEMA == "dark" else f"rgba(156,163,175,{a * 0.8:.2f})")
             h += f'<td style="background:{col}">{p * 100:.0f}</td>'
         h += "</tr>"
-    return h + f'</table><div class="small" style="margin-top:4px">filas = {local} · columnas = {visitante} · cifra = % modelo · verde = gana la pata</div>'
+    return h + f'</table><div class="small" style="margin-top:4px">filas = {local} · columnas = {visitante} · cifra = % modelo · verde = marcador con el que gana la pata, gris = no gana · más intenso = más probable</div>'
 
 
 def distribucion_html(m, mk, etiqueta):
@@ -294,185 +390,340 @@ def distribucion_html(m, mk, etiqueta):
     return f'<div class="chart"><div class="bars">{bars}</div></div><div class="small">{etiqueta} según el modelo · verde = gana la pata</div>'
 
 
-# ================================================================== cabecera
-st.markdown("### ⚽ Sports Book La Liga")
-modo = st.segmented_control("Modo", ["🎫 Armar", "📊 Analizar"], default=ss.modo, label_visibility="collapsed", key=f"modo_w{ss.gen}") or ss.modo
-ss.modo = modo
-c1, c2 = st.columns(2)
-local = c1.selectbox("Local", lista, index=lista.index("Real Madrid") if "Real Madrid" in lista else 0)
-visitante = c2.selectbox("Visitante", [e for e in lista if e != local])
-partido = f"{local} vs {visitante}"
-met = st.pills("Métrica", list(mo.METRICAS), format_func=lambda x: NOM[x], default=ss.get("met", "goles"),
-               label_visibility="collapsed", key="met_w") or "goles"
-ss.met = met
-r = mo.analizar(df, local, visitante, met)
-lam_l, lam_v = r["lambda_local"], r["lambda_visitante"]
-ml = mo.medias_liga(df, met)
 
-# configuracion de lineas (compartida entre modos, por metrica)
-key_cfg = f"cfg_{met}_{local}_{visitante}"
-if key_cfg not in ss:
-    ss[key_cfg] = {"Total": [centro_defecto(lam_l + lam_v, met), 2 if met == "goles" else 1],
-                   local: [centro_defecto(lam_l, met), 1], visitante: [centro_defecto(lam_v, met), 1]}
-cfg = ss[key_cfg]
-lst = mercados(r, met, local, visitante, cfg)
-grupos = list(dict.fromkeys(x["grupo"] for x in lst))
+# ================================================================== tabla de posiciones y tendencias
+def temporada_actual():
+    return df.sort_values("fecha")["temporada_txt"].iloc[-1]
 
 
-def selector_lineas(grp, key):
-    """Centro y rango de lineas para el grupo. Compacto: dos controles en una fila."""
-    if grp == "Resultado":
-        return
-    a, b = st.columns([1, 1])
-    centro = a.number_input(f"Línea {grp[:14]}", 0.5, 60.5, float(cfg[grp][0]), 1.0, key=f"c_{key}_{grp}")
-    rango = b.selectbox("± líneas", [0, 1, 2, 3, 4], index=cfg[grp][1], key=f"r_{key}_{grp}")
-    if [centro, rango] != cfg[grp]:
-        cfg[grp] = [centro, rango]; st.rerun()
+def tabla_posiciones(temp):
+    d = df[df.temporada_txt == temp]
+    filas = {}
+    for _, g in d.sort_values("fecha").iterrows():
+        gl, gv = int(g.goles_local_val), int(g.goles_visitante_val)
+        for eq, gf, gc in ((g.equipo_local_txt, gl, gv), (g.equipo_visitante_txt, gv, gl)):
+            f = filas.setdefault(eq, {"equipo": eq, "J": 0, "G": 0, "E": 0, "P": 0, "GF": 0, "GC": 0, "PTS": 0, "forma": []})
+            f["J"] += 1; f["GF"] += gf; f["GC"] += gc
+            res = "g" if gf > gc else ("p" if gf < gc else "e")
+            f["G" if res == "g" else ("P" if res == "p" else "E")] += 1
+            f["PTS"] += 3 if res == "g" else (1 if res == "e" else 0)
+            f["forma"].append(res)
+    t = pd.DataFrame(filas.values())
+    if t.empty:
+        return t
+    t["DG"] = t.GF - t.GC
+    return t.sort_values(["PTS", "DG", "GF"], ascending=False).reset_index(drop=True)
 
 
-# ================================================================== MODO ARMAR
-if modo == "🎫 Armar":
+def html_tabla(t, resaltar=(), compacta=False):
+    n = len(t)
+    h = ('<div class="card"><div class="tb" style="border:none;padding:2px 0"><div class="z"></div><div class="pos"></div><div class="eq t">Equipo</div>'
+         '<div class="n t">J</div><div class="n t">G</div><div class="n t">E</div><div class="n t">P</div>'
+         + ('' if compacta else '<div class="n t" style="width:44px">GF-GC</div>') + '<div class="n t">DG</div><div class="pts t">PTS</div>'
+         + ('' if compacta else '<div class="forma" style="width:102px"></div>') + '</div>')
+    for i, f in t.iterrows():
+        pos = i + 1
+        z = P["ok"] if pos <= 4 else ("#f59e0b" if pos <= 6 else (P["bad"] if pos > n - 3 else "transparent"))
+        forma = "".join(f'<span class="{x}">{x.upper()}</span>' for x in f.forma[-5:])
+        h += (f'<div class="tb"{" style=background:" + P["card2"] if f.equipo in resaltar else ""}><div class="z" style="background:{z}"></div>'
+              f'<div class="pos">{pos}</div><div class="eq">{f.equipo}</div><div class="n">{f.J}</div><div class="n">{f.G}</div>'
+              f'<div class="n">{f.E}</div><div class="n">{f.P}</div>' + ('' if compacta else f'<div class="n" style="width:44px">{f.GF}-{f.GC}</div>')
+              + f'<div class="n">{f.DG:+d}</div><div class="pts">{f.PTS}</div>' + ('' if compacta else f'<div class="forma" style="width:102px">{forma}</div>') + '</div>')
+    return h + '<div class="small" style="margin-top:6px">verde = Champions · ámbar = Europa · rojo = descenso · forma: antiguo → reciente</div></div>'
+
+
+def tendencias(met, n=5):
+    """Equipos con mayor y menor promedio total de la metrica en sus ultimos n partidos, vs media liga."""
+    ml = mo.medias_liga(df, met)
+    filas = []
+    for eq in lista:
+        h = mo.ultimos_n(df, eq, met, n)
+        if len(h) >= 3:
+            filas.append({"equipo": eq, "prom": h.total.mean(), "favor": h.a_favor.mean(), "contra": h.en_contra.mean()})
+    t = pd.DataFrame(filas).sort_values("prom", ascending=False)
+    return t, ml["total"]
+
+
+# ================================================================== navegacion
+paginas = ["Inicio", "Armar", "Analizar", "Tabla"] + (["Admin"] if ES_ADMIN else [])
+top1, top2 = st.columns([3, 1])
+top1.markdown("### Sports Book La Liga")
+top2.markdown(f'<div class="small" style="text-align:right;padding-top:14px">{ss.usuario}</div>', unsafe_allow_html=True)
+pagina = st.segmented_control("Página", paginas, default=ss.pagina if ss.pagina in paginas else "Inicio",
+                              label_visibility="collapsed", key=f"pag_w{ss.gen}") or ss.pagina
+ss.pagina = pagina
+
+
+def ir_a(pag):
+    ss.pagina = pag; ss.gen += 1; st.rerun()
+
+
+def resumen_boleto():
+    """Devuelve (prob, cuota, ev) del boleto o None."""
     legs = ss.parlay
-    if legs:
-        prob = float(np.prod([l["prob"] for l in legs])); cuota = float(np.prod([l["cuota"] for l in legs])); ev = prob * cuota - 1
-        st.markdown(f'<div class="sticky"><div class="card" style="margin:0"><div class="row">'
-                    f'<div><div class="t">Boleto · {len(legs)} pata{"s" if len(legs) > 1 else ""}</div><div class="mid">cuota {cuota:.2f} · justa {mo.cuota_justa(prob)}</div></div>'
-                    f'<div style="text-align:right"><div class="t">modelo {prob:.0%}</div><div class="big {"up" if ev > 0 else "down"}">EV {ev:+.2f}</div></div>'
-                    f'</div></div></div>', unsafe_allow_html=True)
-        # --- stake sugerido (Kelly sobre el parlay completo)
-        f = kelly(prob, cuota)
-        a, b = st.columns([1, 2])
-        ss.banca = a.number_input("Banca", 1.0, 1e9, float(ss.banca), 50.0, format="%.0f", help="Tu banca total en Q")
-        if f <= 0:
-            b.markdown('<div class="card" style="margin:2px 0;padding:8px 12px"><div class="t">Stake sugerido</div>'
-                       '<div class="mid down">Sin valor: Kelly dice no apostar este parlay</div></div>', unsafe_allow_html=True)
-        else:
-            chips = "".join(f'<div style="text-align:center"><div class="t">{nm}</div><div class="mid">Q{ss.banca * f / d:,.0f}</div>'
-                            f'<div class="small">{f / d:.1%}</div></div>' for nm, d in (("Kelly", 1), ("½", 2), ("¼", 4), ("⅛", 8)))
-            b.markdown(f'<div class="card" style="margin:2px 0;padding:8px 12px"><div class="t">Stake sugerido · banca Q{ss.banca:,.0f}</div>'
-                       f'<div class="row" style="margin-top:4px">{chips}</div></div>', unsafe_allow_html=True)
-        with st.expander("Ver patas del boleto"):
-            for i, l in enumerate(legs):
-                a, b = st.columns([6, 1])
-                a.markdown(f'<div class="row" style="padding:4px 0"><div><div class="mid">{l["mercado"]}</div>'
-                           f'<div class="small">{l["partido"]} · {l["metrica"]} · modelo {l["prob"]:.0%} · justa {mo.cuota_justa(l["prob"])} · casa {l["cuota"]:.2f}</div></div>'
-                           f'<span class="tag {l["cls"]}">{l["cal"]}</span></div>', unsafe_allow_html=True)
-                if b.button("✕", key=f"del{i}"):
-                    legs.pop(i); st.rerun()
-            if len({l["partido"] for l in legs}) < len(legs):
-                st.caption("⚠️ Patas del mismo partido no son independientes; la prob. combinada real difiere.")
-            if st.button("Vaciar boleto"):
-                ss.parlay = []; st.rerun()
+    if not legs:
+        return None
+    prob = float(np.prod([l["prob"] for l in legs])); cuota = float(np.prod([l["cuota"] for l in legs]))
+    return prob, cuota, prob * cuota - 1
 
-    st.markdown(f'<div class="card"><div class="t">{NOM[met]} · esperado del modelo</div>'
-                f'<div class="mid">{local} <span class="w">{lam_l:.2f}</span> · {visitante} <span class="w">{lam_v:.2f}</span> · total <span class="w">{lam_l + lam_v:.2f}</span></div>'
-                f'<div class="small">media liga: local {ml["local"]:.1f} · visita {ml["visitante"]:.1f} · total {ml["total"]:.1f}</div></div>',
+
+# ================================================================== PAGINA INICIO
+if pagina == "Inicio":
+    temp = temporada_actual()
+    ult = df["fecha"].max()
+    st.markdown(f'<div class="card flat"><div class="row"><div><div class="t">Temporada {temp}</div>'
+                f'<div class="mid">{len(df[df.temporada_txt == temp])} partidos jugados</div></div>'
+                f'<div style="text-align:right"><div class="t">Datos al</div><div class="mid">{ult:%d/%m/%Y}</div></div></div></div>',
                 unsafe_allow_html=True)
-
-    grp = st.pills("Grupo", grupos, default=ss.get("grp", grupos[0]) if ss.get("grp") in grupos else grupos[0],
-                   label_visibility="collapsed", key=f"grp_w{ss.gen}") or grupos[0]
-    ss.grp = grp
-    selector_lineas(grp, "armar")
-    a, b = st.columns([1, 1])
-    n = a.selectbox("Validar con", [3, 5, 8, 10, 15, 20], index=1, format_func=lambda x: f"validar últ. {x}", label_visibility="collapsed")
-    solo = b.toggle("Solo Buena o mejor", value=False)
-    hl, hv = historial(local, met, n), historial(visitante, met, n)
-
-    html = '<div class="card">'
-    for mk in lst:
-        if mk["grupo"] != grp: continue
-        e = evaluar(mk, hl, hv)
-        if solo and e["cls"] not in ("exc", "bue"): continue
-        html += (f'<div class="mk"><div class="row"><div class="mid">{mk["mercado"]}</div><span class="tag {e["cls"]}">{e["cal"]}</span></div>'
-                 f'{barra(mk["prob"], e["tasa"], 1, "#2e9e5b" if mk["prob"] >= 0.6 else "#b45309")}'
-                 f'<div class="row small"><span>modelo <span class="w">{mk["prob"]:.0%}</span> · justa <span class="w">{mo.cuota_justa(mk["prob"])}</span></span>'
-                 f'<span>últ.{n}: <span class="w">{e["hl"]}/{e["nl"]}</span> {local[:10]} · <span class="w">{e["hv"]}/{e["nv"]}</span> {visitante[:10]}</span></div></div>')
-    st.markdown(html + '<div class="small" style="padding-top:6px">barra = prob. modelo · marca blanca = % histórico</div></div>', unsafe_allow_html=True)
-
-    st.markdown("**Agregar al boleto**")
-    nombres = [x["mercado"] for x in lst if x["grupo"] == grp]
-    sel = st.selectbox("Mercado", nombres, key=f"sel_{met}_{grp}", label_visibility="collapsed")
-    mk = next(x for x in lst if x["mercado"] == sel); e = evaluar(mk, hl, hv)
+    rb = resumen_boleto()
+    if rb:
+        prob, cuota, ev = rb
+        st.markdown(f'<div class="card"><div class="row"><div><div class="t">Boleto en curso · {len(ss.parlay)} patas</div>'
+                    f'<div class="mid">cuota {cuota:.2f} · modelo {prob:.0%}</div></div>'
+                    f'<div class="big {"up" if ev > 0 else "down"}">EV {ev:+.2f}</div></div></div>', unsafe_allow_html=True)
     a, b = st.columns(2)
-    cuota = a.number_input("Cuota casa", 1.01, 50.0, 1.90, 0.01, key=f"cuota_{met}_{grp}", label_visibility="collapsed")
-    ev = mk["prob"] * cuota - 1
-    b.markdown(f'<div style="padding-top:6px"><span class="tag {e["cls"]}">{e["cal"]}</span> &nbsp; EV <b class="{"up" if ev > 0 else "down"}">{ev:+.2f}</b>'
-               f'<br><span class="small">modelo {mk["prob"]:.0%} · justa {mo.cuota_justa(mk["prob"])}</span></div>', unsafe_allow_html=True)
-    a, b = st.columns(2)
-    if a.button("➕ Agregar al boleto", width="stretch"):
-        ss.parlay.append({"partido": partido, "metrica": NOM[met], "mercado": sel, "prob": mk["prob"], "cuota": cuota,
-                          "cal": e["cal"], "cls": e["cls"]})
-        st.rerun()
-    if b.button("🔍 Analizar esta pata", width="stretch"):
-        ss.modo, ss.an_mercado, ss.grp = "📊 Analizar", sel, grp; ss.gen += 1
-        st.rerun()
+    if a.button("Armar parlay", width="stretch"):
+        ir_a("Armar")
+    if b.button("Analizar una pata", width="stretch"):
+        ir_a("Analizar")
 
-# ================================================================== MODO ANALIZAR
+    t = tabla_posiciones(temp)
+    st.markdown('<div class="t" style="margin-top:8px">Tabla · top 6</div>', unsafe_allow_html=True)
+    st.markdown(html_tabla(t.head(6), compacta=True), unsafe_allow_html=True)
+
+    st.markdown('<div class="t" style="margin-top:8px">Tendencias · últimos 5 partidos</div>', unsafe_allow_html=True)
+    met_h = st.pills("Métrica tendencias", list(mo.METRICAS), format_func=lambda x: NOM[x], default="corners", label_visibility="collapsed")
+    if met_h:
+        tt, media = tendencias(met_h)
+        def fila(f):
+            return (f'<div class="mk"><div class="row"><div class="mid">{f.equipo}</div><div><span class="w">{f.prom:.1f}</span> '
+                    f'<span class="small">{f.prom - media:+.1f} vs liga</span></div></div>'
+                    f'{barra(f.prom, media, max(tt.prom.max(), media) * 1.1, P["ok"] if f.prom >= media else P["mut"])}'
+                    f'<div class="small">a favor {f.favor:.1f} · en contra {f.contra:.1f}</div></div>')
+        st.markdown(f'<div class="card"><div class="t">Más {NOM[met_h].lower()} por partido · media liga {media:.1f}</div>'
+                    + "".join(fila(f) for _, f in tt.head(4).iterrows()) + '</div>'
+                    f'<div class="card"><div class="t">Menos {NOM[met_h].lower()} por partido</div>'
+                    + "".join(fila(f) for _, f in tt.tail(4).iloc[::-1].iterrows()) + '</div>', unsafe_allow_html=True)
+        st.caption("Barra = promedio del equipo (a favor + en contra) en sus últimos 5 · marca blanca = media de la liga. "
+                   "Sirve para elegir qué partido y mercado analizar.")
+
+# ================================================================== PAGINA TABLA
+elif pagina == "Tabla":
+    temps = sorted(df.temporada_txt.unique(), reverse=True)
+    temp = st.selectbox("Temporada", temps, label_visibility="collapsed")
+    t = tabla_posiciones(temp)
+    st.markdown(html_tabla(t), unsafe_allow_html=True)
+    st.caption("Calculada desde la BBDD (solo partidos cargados). Los partidos aplazados aparecen cuando se juegan.")
+
+# ================================================================== PAGINA ADMIN
+elif pagina == "Admin":
+    st.markdown('<div class="t">Usuarios y uso</div>', unsafe_allow_html=True)
+    if not usuarios:
+        st.markdown('<div class="card"><div class="mid">Acceso abierto (sin usuarios configurados)</div>'
+                    '<div class="small" style="margin-top:6px">Para activar usuarios y el registro de uso, en Streamlit Cloud → tu app → Settings → Secrets pega:</div></div>',
+                    unsafe_allow_html=True)
+        st.code('admins = "erick"\nGH_TOKEN = "github_pat_xxx"      # token con permiso Contents: read/write sobre el repo\nGH_REPO = "Erixfer98/laliga-modelo"\n\n[usuarios]\nerick = "tu-contraseña"\namigo1 = "otra-contraseña"', language="toml")
+        st.caption("El uso se guarda en uso.csv dentro de la rama `uso` del repo (no toca `main`, así la app no se redespliega). "
+                   "Token: GitHub → Settings → Developer settings → Fine-grained tokens → solo este repo, permiso Contents read/write.")
+    else:
+        st.markdown('<div class="card"><div class="t">Usuarios activos</div><div class="mid">' + " · ".join(usuarios) + '</div>'
+                    '<div class="small" style="margin-top:6px">Se agregan o quitan en Streamlit Cloud → Settings → Secrets, bloque [usuarios]. El cambio aplica al instante.</div></div>',
+                    unsafe_allow_html=True)
+        g = gh()
+        if g is None:
+            st.warning("Sin GH_TOKEN en Secrets: los usuarios funcionan pero no se registra el uso.")
+        else:
+            _, contenido = gh_leer_uso(g)
+            from io import StringIO
+            uso = pd.read_csv(StringIO(contenido))
+            if uso.empty:
+                st.info("Todavía no hay registros de uso.")
+            else:
+                uso["fecha"] = pd.to_datetime(uso["fecha"])
+                hace7 = datetime.now(HORA_GT).replace(tzinfo=None) - pd.Timedelta(days=7)
+                res = uso.groupby("usuario").agg(eventos=("accion", "size"), logins=("accion", lambda s: (s == "login").sum()),
+                                                 boletos=("accion", lambda s: (s == "pata").sum()),
+                                                 ultimo=("fecha", "max")).sort_values("eventos", ascending=False)
+                res["últ. 7 días"] = uso[uso.fecha >= hace7].groupby("usuario").size().reindex(res.index).fillna(0).astype(int)
+                res["ultimo"] = res["ultimo"].dt.strftime("%d/%m %H:%M")
+                st.markdown(f'<div class="kpi"><div><div class="t">Eventos</div><div class="big">{len(uso)}</div></div>'
+                            f'<div><div class="t">Usuarios</div><div class="big">{uso.usuario.nunique()}</div></div>'
+                            f'<div><div class="t">Últ. 7 días</div><div class="big">{int((uso.fecha >= hace7).sum())}</div></div></div>',
+                            unsafe_allow_html=True)
+                st.dataframe(res.rename(columns={"eventos": "eventos", "ultimo": "último uso"}), width="stretch")
+                with st.expander("Últimos 50 eventos"):
+                    st.dataframe(uso.sort_values("fecha", ascending=False).head(50), hide_index=True, width="stretch")
+
+# ================================================================== ARMAR / ANALIZAR (comparten partido y metrica)
 else:
-    # --- que analizar
-    grp = st.pills("Grupo", grupos, default=ss.get("grp", grupos[0]) if ss.get("grp") in grupos else grupos[0],
-                   label_visibility="collapsed", key=f"grp_an{ss.gen}") or grupos[0]
-    ss.grp = grp
-    selector_lineas(grp, "an")
-    nombres = [x["mercado"] for x in lst if x["grupo"] == grp]
-    idx = nombres.index(ss.an_mercado) if ss.get("an_mercado") in nombres else 0
-    sel = st.selectbox("Pata", nombres, index=idx, key=f"an_{met}_{grp}{ss.gen}", label_visibility="collapsed")
-    mk = next(x for x in lst if x["mercado"] == sel)
+    c1, c2 = st.columns(2)
+    local = c1.selectbox("Local", lista, index=lista.index("Real Madrid") if "Real Madrid" in lista else 0)
+    visitante = c2.selectbox("Visitante", [e for e in lista if e != local])
+    partido = f"{local} vs {visitante}"
+    met = st.pills("Métrica", list(mo.METRICAS), format_func=lambda x: NOM[x], default=ss.get("met", "goles"),
+                   label_visibility="collapsed", key="met_w") or "goles"
+    ss.met = met
+    r = mo.analizar(df, local, visitante, met)
+    lam_l, lam_v = r["lambda_local"], r["lambda_visitante"]
+    ml = mo.medias_liga(df, met)
 
-    # --- filtros
-    a, b = st.columns([3, 2])
-    n = a.slider("Últimos N partidos", 3, 30, 10)
-    filtro = b.selectbox("Condición", ["Todos", "Como jugarán"], label_visibility="collapsed",
-                         help="Como jugarán = solo partidos del local en casa y del visitante fuera")
-    cond_l, cond_v = ("Casa", "Fuera") if filtro != "Todos" else (None, None)
-    hl, hv = historial(local, met, n, cond_l), historial(visitante, met, n, cond_v)
-    e = evaluar(mk, hl, hv)
+    key_cfg = f"cfg_{met}_{local}_{visitante}"
+    if key_cfg not in ss:
+        ss[key_cfg] = {"Total": [centro_defecto(lam_l + lam_v, met), 2 if met == "goles" else 1],
+                       local: [centro_defecto(lam_l, met), 1], visitante: [centro_defecto(lam_v, met), 1]}
+    cfg = ss[key_cfg]
+    lst = mercados(r, met, local, visitante, cfg)
+    grupos = list(dict.fromkeys(x["grupo"] for x in lst))
 
-    # --- veredicto (una tarjeta)
-    st.markdown(f'<div class="card"><div class="row"><div><div class="t">{sel} · {NOM[met]}</div>'
-                f'<div class="big">{mk["prob"]:.0%} <span class="small">modelo</span></div><div class="small">cuota justa {mo.cuota_justa(mk["prob"])}</div></div>'
-                f'<div style="text-align:right"><span class="tag {e["cls"]}">{e["cal"]}</span><div class="big" style="margin-top:4px">{e["tasa"]:.0%}</div>'
-                f'<div class="small">histórico · {e["hl"] + e["hv"]} de {e["nl"] + e["nv"]}</div></div></div>'
-                f'{barra(mk["prob"], e["tasa"], 1, "#2b6cb0")}'
-                f'<div class="small">λ {local} {lam_l:.2f} {delta(lam_l, ml["local"], 2)} · λ {visitante} {lam_v:.2f} {delta(lam_v, ml["visitante"], 2)} · λ total {lam_l + lam_v:.2f} {delta(lam_l + lam_v, ml["total"], 2)} (vs media liga)</div></div>',
-                unsafe_allow_html=True)
+    def selector_lineas(grp, key):
+        if grp == "Resultado":
+            return
+        a, b = st.columns([1, 1])
+        centro = a.number_input(f"Línea {grp[:14]}", 0.5, 60.5, float(cfg[grp][0]), 1.0, key=f"c_{key}_{grp}")
+        rango = b.selectbox("± líneas", [0, 1, 2, 3, 4], index=cfg[grp][1], key=f"r_{key}_{grp}")
+        if [centro, rango] != cfg[grp]:
+            cfg[grp] = [centro, rango]; st.rerun()
 
-    # --- por equipo: barras + stats
-    def bloque(nombre, h, hits_, lado, color):
-        col = mk["col_l"] if lado == "l" else mk["col_v"]
-        ref_f, ref_c = (ml["local"], ml["visitante"]) if lado == "l" else (ml["visitante"], ml["local"])
-        que = {"a_favor": "a favor", "en_contra": "en contra", "total": "total"}.get(col, sel)
-        ref_chart = {"a_favor": ref_f, "en_contra": ref_c}.get(col, ml["total"])
-        if col in ("a_favor", "en_contra", "total"):
-            chart = chart_barras(h, col, mk["linea"], ref_chart, mk["over"], color)
-            sub = f"{NOM[met].lower()} {que} por partido · verde = cumplió la pata"
-        else:
-            chart = chart_barras(h, "total", ml["total"], ml["total"], True, color)
-            sub = f"{NOM[met].lower()} total por partido · verde = sobre media liga"
-        return (f'<div class="card"><div class="row"><div class="mid">{nombre}</div>'
-                f'<div><span class="w">{hits_}/{len(h)}</span> <span class="small">cumplió</span></div></div>'
-                f'{chart}<div class="small">{sub} · antiguo → reciente · C casa / F fuera</div>'
-                f'<div style="margin-top:10px">{tabla_stats(h, mk["linea"], mk["over"], ref_f, ref_c, ml["total"])}</div></div>')
+    # ---------------------------------------------------------- ARMAR
+    if pagina == "Armar":
+        rb = resumen_boleto()
+        if rb:
+            prob, cuota, ev = rb; legs = ss.parlay
+            st.markdown(f'<div class="sticky"><div class="card" style="margin:0"><div class="row">'
+                        f'<div><div class="t">Boleto · {len(legs)} pata{"s" if len(legs) > 1 else ""}</div><div class="mid">cuota {cuota:.2f} · justa {mo.cuota_justa(prob)}</div></div>'
+                        f'<div style="text-align:right"><div class="t">modelo {prob:.0%}</div><div class="big {"up" if ev > 0 else "down"}">EV {ev:+.2f}</div></div>'
+                        f'</div></div></div>', unsafe_allow_html=True)
+            f = kelly(prob, cuota)
+            a, b = st.columns([1, 2])
+            ss.banca = a.number_input("Banca", 1.0, 1e9, float(ss.banca), 50.0, format="%.0f", help="Tu banca total en Q")
+            if f <= 0:
+                b.markdown('<div class="card flat" style="margin:2px 0;padding:8px 12px"><div class="t">Stake sugerido</div>'
+                           '<div class="mid down">Sin valor: Kelly dice no apostar este parlay</div></div>', unsafe_allow_html=True)
+            else:
+                chips = "".join(f'<div style="text-align:center"><div class="t">{nm}</div><div class="mid">Q{ss.banca * f / d:,.0f}</div>'
+                                f'<div class="small">{f / d:.1%}</div></div>' for nm, d in (("Kelly", 1), ("½", 2), ("¼", 4), ("⅛", 8)))
+                b.markdown(f'<div class="card flat" style="margin:2px 0;padding:8px 12px"><div class="t">Stake sugerido · banca Q{ss.banca:,.0f}</div>'
+                           f'<div class="row" style="margin-top:4px">{chips}</div></div>', unsafe_allow_html=True)
+            with st.expander("Ver patas del boleto"):
+                for i, l in enumerate(legs):
+                    a, b = st.columns([6, 1])
+                    a.markdown(f'<div class="row" style="padding:4px 0"><div><div class="mid">{l["mercado"]}</div>'
+                               f'<div class="small">{l["partido"]} · {l["metrica"]} · modelo {l["prob"]:.0%} · justa {mo.cuota_justa(l["prob"])} · casa {l["cuota"]:.2f}</div></div>'
+                               f'<span class="tag {l["cls"]}">{l["cal"]}</span></div>', unsafe_allow_html=True)
+                    if b.button("✕", key=f"del{i}"):
+                        legs.pop(i); st.rerun()
+                if len({l["partido"] for l in legs}) < len(legs):
+                    st.caption("Patas del mismo partido no son independientes; la prob. combinada real difiere.")
+                if st.button("Vaciar boleto"):
+                    ss.parlay = []; st.rerun()
 
-    st.markdown(bloque(local, hl, e["hl"], "l", "#2b6cb0") + bloque(visitante, hv, e["hv"], "v", "#7c3aed"), unsafe_allow_html=True)
+        st.markdown(f'<div class="card flat"><div class="t">{NOM[met]} · esperado del modelo</div>'
+                    f'<div class="mid">{local} <span class="w">{lam_l:.2f}</span> · {visitante} <span class="w">{lam_v:.2f}</span> · total <span class="w">{lam_l + lam_v:.2f}</span></div>'
+                    f'<div class="small">media liga: local {ml["local"]:.1f} · visita {ml["visitante"]:.1f} · total {ml["total"]:.1f}</div></div>',
+                    unsafe_allow_html=True)
 
-    # --- modelo
-    with st.expander("Qué dice el modelo", expanded=False):
-        if met in GOL and mk["grupo"] in ("Resultado", "Total"):
-            st.markdown(f'<div class="card">{matriz_html(r["matriz"], local, visitante, mk["region"])}</div>', unsafe_allow_html=True)
-        else:
-            st.markdown(f'<div class="card">{distribucion_html(r["matriz"], mk, NOM[met].lower() + (" total" if mk["grupo"] == "Total" else " " + mk["grupo"]))}</div>',
-                        unsafe_allow_html=True)
-    with st.expander("Partido a partido", expanded=True):
-        st.markdown(lista_partidos(local, hl, mk, "l") + lista_partidos(visitante, hv, mk, "v"), unsafe_allow_html=True)
+        grp = st.pills("Grupo", grupos, default=ss.get("grp", grupos[0]) if ss.get("grp") in grupos else grupos[0],
+                       label_visibility="collapsed", key=f"grp_w{ss.gen}") or grupos[0]
+        ss.grp = grp
+        selector_lineas(grp, "armar")
+        a, b = st.columns([1, 1])
+        n = a.selectbox("Validar con", [3, 5, 8, 10, 15, 20], index=1, format_func=lambda x: f"validar últ. {x}", label_visibility="collapsed")
+        solo = b.toggle("Solo Buena o mejor", value=False)
+        hl, hv = historial(local, met, n), historial(visitante, met, n)
 
-    a, b = st.columns(2)
-    cuota = a.number_input("Cuota casa", 1.01, 50.0, 1.90, 0.01, key=f"cuota_an_{met}", label_visibility="collapsed")
-    if b.button("➕ Agregar al boleto", width="stretch", key="add_an"):
-        ss.parlay.append({"partido": partido, "metrica": NOM[met], "mercado": sel, "prob": mk["prob"], "cuota": cuota,
-                          "cal": e["cal"], "cls": e["cls"]})
-        ss.modo, ss.grp = "🎫 Armar", grp; ss.gen += 1; st.rerun()
+        html = '<div class="card">'
+        for mk in lst:
+            if mk["grupo"] != grp: continue
+            e = evaluar(mk, hl, hv)
+            if solo and e["cls"] not in ("exc", "bue"): continue
+            html += (f'<div class="mk"><div class="row"><div class="mid">{mk["mercado"]}</div><span class="tag {e["cls"]}">{e["cal"]}</span></div>'
+                     f'{barra(mk["prob"], e["tasa"], 1, P["ok"] if mk["prob"] >= 0.6 else "#b45309")}'
+                     f'<div class="row small"><span>modelo <span class="w">{mk["prob"]:.0%}</span> · justa <span class="w">{mo.cuota_justa(mk["prob"])}</span></span>'
+                     f'<span>últ.{n}: <span class="w">{e["hl"]}/{e["nl"]}</span> {local[:10]} · <span class="w">{e["hv"]}/{e["nv"]}</span> {visitante[:10]}</span></div></div>')
+        st.markdown(html + '<div class="small" style="padding-top:6px">barra = prob. modelo · marca blanca = % histórico</div></div>', unsafe_allow_html=True)
+
+        st.markdown('<div class="t">Agregar al boleto</div>', unsafe_allow_html=True)
+        nombres = [x["mercado"] for x in lst if x["grupo"] == grp]
+        sel = st.selectbox("Mercado", nombres, key=f"sel_{met}_{grp}", label_visibility="collapsed")
+        mk = next(x for x in lst if x["mercado"] == sel); e = evaluar(mk, hl, hv)
+        a, b = st.columns(2)
+        cuota = a.number_input("Cuota casa", 1.01, 50.0, 1.90, 0.01, key=f"cuota_{met}_{grp}", label_visibility="collapsed")
+        ev = mk["prob"] * cuota - 1
+        b.markdown(f'<div style="padding-top:6px"><span class="tag {e["cls"]}">{e["cal"]}</span> &nbsp; EV <b class="{"up" if ev > 0 else "down"}">{ev:+.2f}</b>'
+                   f'<br><span class="small">modelo {mk["prob"]:.0%} · justa {mo.cuota_justa(mk["prob"])}</span></div>', unsafe_allow_html=True)
+        a, b = st.columns(2)
+        if a.button("Agregar al boleto", width="stretch"):
+            ss.parlay.append({"partido": partido, "metrica": NOM[met], "mercado": sel, "prob": mk["prob"], "cuota": cuota,
+                              "cal": e["cal"], "cls": e["cls"]})
+            registrar_uso("pata", f"{partido} | {sel} @ {cuota}")
+            st.rerun()
+        if b.button("Analizar esta pata", width="stretch"):
+            ss.an_mercado, ss.grp = sel, grp
+            ir_a("Analizar")
+
+    # ---------------------------------------------------------- ANALIZAR
+    else:
+        grp = st.pills("Grupo", grupos, default=ss.get("grp", grupos[0]) if ss.get("grp") in grupos else grupos[0],
+                       label_visibility="collapsed", key=f"grp_an{ss.gen}") or grupos[0]
+        ss.grp = grp
+        selector_lineas(grp, "an")
+        nombres = [x["mercado"] for x in lst if x["grupo"] == grp]
+        idx = nombres.index(ss.an_mercado) if ss.get("an_mercado") in nombres else 0
+        sel = st.selectbox("Pata", nombres, index=idx, key=f"an_{met}_{grp}{ss.gen}", label_visibility="collapsed")
+        mk = next(x for x in lst if x["mercado"] == sel)
+
+        a, b = st.columns([3, 2])
+        n = a.slider("Últimos N partidos", 3, 30, 10)
+        filtro = b.selectbox("Condición", ["Todos", "Como jugarán"], label_visibility="collapsed",
+                             help="Como jugarán = solo partidos del local en casa y del visitante fuera")
+        cond_l, cond_v = ("Casa", "Fuera") if filtro != "Todos" else (None, None)
+        hl, hv = historial(local, met, n, cond_l), historial(visitante, met, n, cond_v)
+        e = evaluar(mk, hl, hv)
+
+        st.markdown(f'<div class="card"><div class="row"><div><div class="t">{sel} · {NOM[met]}</div>'
+                    f'<div class="big">{mk["prob"]:.0%} <span class="small">modelo</span></div><div class="small">cuota justa {mo.cuota_justa(mk["prob"])}</div></div>'
+                    f'<div style="text-align:right"><span class="tag {e["cls"]}">{e["cal"]}</span><div class="big" style="margin-top:4px">{e["tasa"]:.0%}</div>'
+                    f'<div class="small">histórico · {e["hl"] + e["hv"]} de {e["nl"] + e["nv"]}</div></div></div>'
+                    f'{barra(mk["prob"], e["tasa"], 1, P["acc"])}'
+                    f'<div class="small">λ {local} {lam_l:.2f} {delta(lam_l, ml["local"], 2)} · λ {visitante} {lam_v:.2f} {delta(lam_v, ml["visitante"], 2)} · λ total {lam_l + lam_v:.2f} {delta(lam_l + lam_v, ml["total"], 2)} (vs media liga)</div></div>',
+                    unsafe_allow_html=True)
+
+        def bloque(nombre, h, hits_, lado, color):
+            col = mk["col_l"] if lado == "l" else mk["col_v"]
+            ref_f, ref_c = (ml["local"], ml["visitante"]) if lado == "l" else (ml["visitante"], ml["local"])
+            que = {"a_favor": "a favor", "en_contra": "en contra", "total": "total"}.get(col, sel)
+            ref_chart = {"a_favor": ref_f, "en_contra": ref_c}.get(col, ml["total"])
+            if col in ("a_favor", "en_contra", "total"):
+                chart = chart_barras(h, col, mk["linea"], ref_chart, mk["over"], color)
+                sub = f"{NOM[met].lower()} {que} por partido · verde = cumplió la pata"
+            else:
+                chart = chart_barras(h, "total", ml["total"], ml["total"], True, color)
+                sub = f"{NOM[met].lower()} total por partido · verde = sobre media liga"
+            return (f'<div class="card"><div class="row"><div class="mid">{nombre}</div>'
+                    f'<div><span class="w">{hits_}/{len(h)}</span> <span class="small">cumplió</span></div></div>'
+                    f'{chart}<div class="small">{sub} · antiguo → reciente · C casa / F fuera</div>'
+                    f'<div style="margin-top:10px">{tabla_stats(h, mk["linea"], mk["over"], ref_f, ref_c, ml["total"])}</div></div>')
+
+        st.markdown(bloque(local, hl, e["hl"], "l", P["acc"]) + bloque(visitante, hv, e["hv"], "v", "#8b5cf6"), unsafe_allow_html=True)
+
+        with st.expander("Partido a partido", expanded=True):
+            st.markdown(lista_partidos(local, hl, mk, "l") + lista_partidos(visitante, hv, mk, "v"), unsafe_allow_html=True)
+        with st.expander("Qué dice el modelo", expanded=False):
+            if met in GOL and mk["grupo"] in ("Resultado", "Total"):
+                st.markdown(f'<div class="card">{matriz_html(r["matriz"], local, visitante, mk["region"])}</div>', unsafe_allow_html=True)
+            else:
+                st.markdown(f'<div class="card">{distribucion_html(r["matriz"], mk, NOM[met].lower() + (" total" if mk["grupo"] == "Total" else " " + mk["grupo"]))}</div>',
+                            unsafe_allow_html=True)
+
+        a, b = st.columns(2)
+        cuota = a.number_input("Cuota casa", 1.01, 50.0, 1.90, 0.01, key=f"cuota_an_{met}", label_visibility="collapsed")
+        if b.button("Agregar al boleto", width="stretch", key="add_an"):
+            ss.parlay.append({"partido": partido, "metrica": NOM[met], "mercado": sel, "prob": mk["prob"], "cuota": cuota,
+                              "cal": e["cal"], "cls": e["cls"]})
+            registrar_uso("pata", f"{partido} | {sel} @ {cuota}")
+            ss.grp = grp
+            ir_a("Armar")
 
 st.caption(f"{len(df)} partidos · último {df['fecha'].max():%d/%m/%Y} · football-data.co.uk · "
            "Calificación = 60% prob. modelo + 40% cumplimiento histórico · EV = prob × cuota − 1 · "
-           "Kelly = (cuota−1)·p − (1−p) sobre cuota−1; ½, ¼ y ⅛ son fracciones más conservadoras")
+           "Kelly = ((cuota−1)·p − (1−p)) / (cuota−1)")
