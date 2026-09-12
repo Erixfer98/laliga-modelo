@@ -1,5 +1,5 @@
 """
-app.py — Parlay La Liga.
+app.py — Sports Book La Liga.
   🎫 Armar   : mercados con linea configurable, prob, cuota justa, calificacion -> boleto.
   📊 Analizar: estadisticas descriptivas (media, mediana, desviacion, min, max, % cumple) de la pata elegida,
                con N, casa/fuera y linea configurables, barras partido a partido y distribucion del modelo.
@@ -12,7 +12,7 @@ import streamlit as st
 
 import modelo as mo
 
-st.set_page_config(page_title="Parlay La Liga", page_icon="⚽", layout="centered", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Sports Book La Liga", page_icon="⚽", layout="centered", initial_sidebar_state="collapsed")
 
 # ------------------------------------------------------------------ tema (sigue el tema de Streamlit: claro u oscuro)
 try:
@@ -88,7 +88,8 @@ lista = mo.equipos(df)
 ss = st.session_state
 ss.setdefault("parlay", [])
 ss.setdefault("modo", "🎫 Armar")
-ss.setdefault("gen", 0)   # cambia para reiniciar los widgets al saltar de modo
+ss.setdefault("gen", 0)
+ss.setdefault("banca", 1000.0)   # cambia para reiniciar los widgets al saltar de modo
 GOL = ("goles", "goles_1t", "goles_2t")
 NOM = mo.NOMBRES
 
@@ -119,6 +120,12 @@ def calificar(p, tasa):
         if s >= lim:
             return txt, cls
     return "Pésima", "pes"
+
+
+def kelly(p, cuota):
+    """Fraccion de banca segun Kelly: (b*p - q) / b, con b = cuota - 1. Negativa = sin valor."""
+    b = cuota - 1
+    return (b * p - (1 - p)) / b if b > 0 else 0.0
 
 
 def evaluar(mk, hl, hv):
@@ -288,7 +295,7 @@ def distribucion_html(m, mk, etiqueta):
 
 
 # ================================================================== cabecera
-st.markdown("### ⚽ Parlay La Liga")
+st.markdown("### ⚽ Sports Book La Liga")
 modo = st.segmented_control("Modo", ["🎫 Armar", "📊 Analizar"], default=ss.modo, label_visibility="collapsed", key=f"modo_w{ss.gen}") or ss.modo
 ss.modo = modo
 c1, c2 = st.columns(2)
@@ -332,6 +339,18 @@ if modo == "🎫 Armar":
                     f'<div><div class="t">Boleto · {len(legs)} pata{"s" if len(legs) > 1 else ""}</div><div class="mid">cuota {cuota:.2f} · justa {mo.cuota_justa(prob)}</div></div>'
                     f'<div style="text-align:right"><div class="t">modelo {prob:.0%}</div><div class="big {"up" if ev > 0 else "down"}">EV {ev:+.2f}</div></div>'
                     f'</div></div></div>', unsafe_allow_html=True)
+        # --- stake sugerido (Kelly sobre el parlay completo)
+        f = kelly(prob, cuota)
+        a, b = st.columns([1, 2])
+        ss.banca = a.number_input("Banca", 1.0, 1e9, float(ss.banca), 50.0, format="%.0f", help="Tu banca total en Q")
+        if f <= 0:
+            b.markdown('<div class="card" style="margin:2px 0;padding:8px 12px"><div class="t">Stake sugerido</div>'
+                       '<div class="mid down">Sin valor: Kelly dice no apostar este parlay</div></div>', unsafe_allow_html=True)
+        else:
+            chips = "".join(f'<div style="text-align:center"><div class="t">{nm}</div><div class="mid">Q{ss.banca * f / d:,.0f}</div>'
+                            f'<div class="small">{f / d:.1%}</div></div>' for nm, d in (("Kelly", 1), ("½", 2), ("¼", 4), ("⅛", 8)))
+            b.markdown(f'<div class="card" style="margin:2px 0;padding:8px 12px"><div class="t">Stake sugerido · banca Q{ss.banca:,.0f}</div>'
+                       f'<div class="row" style="margin-top:4px">{chips}</div></div>', unsafe_allow_html=True)
         with st.expander("Ver patas del boleto"):
             for i, l in enumerate(legs):
                 a, b = st.columns([6, 1])
@@ -455,4 +474,5 @@ else:
         ss.modo, ss.grp = "🎫 Armar", grp; ss.gen += 1; st.rerun()
 
 st.caption(f"{len(df)} partidos · último {df['fecha'].max():%d/%m/%Y} · football-data.co.uk · "
-           "Calificación = 60% prob. modelo + 40% cumplimiento histórico · EV = prob × cuota − 1")
+           "Calificación = 60% prob. modelo + 40% cumplimiento histórico · EV = prob × cuota − 1 · "
+           "Kelly = (cuota−1)·p − (1−p) sobre cuota−1; ½, ¼ y ⅛ son fracciones más conservadoras")
