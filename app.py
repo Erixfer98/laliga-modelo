@@ -152,10 +152,10 @@ def gh_asegurar_rama(g):
 
 
 def registrar_uso(accion, detalle=""):
-    """Agrega una linea a uso.csv en la rama `uso`. Silencioso si no hay token configurado."""
+    """Agrega una linea a uso.csv en la rama `uso`. Devuelve un texto de diagnostico; silencioso para el usuario."""
     g = gh()
     if g is None:
-        return
+        return "sin GH_TOKEN"
     try:
         gh_asegurar_rama(g)
         for _ in range(2):   # un reintento por si otro usuario escribio al mismo tiempo
@@ -167,9 +167,12 @@ def registrar_uso(accion, detalle=""):
                 body["sha"] = sha
             r = requests.put(f"https://api.github.com/repos/{g['repo']}/contents/{g['archivo']}", headers=g["h"], json=body, timeout=10)
             if r.status_code in (200, 201):
-                return
-    except Exception:
-        pass
+                ss.uso_diag = f"OK {r.status_code}"
+                return ss.uso_diag
+            ss.uso_diag = f"PUT {r.status_code}: {r.text[:200]}"
+    except Exception as ex:
+        ss.uso_diag = f"error: {ex}"
+    return ss.uso_diag
 
 
 usuarios = cfg_usuarios()
@@ -540,6 +543,14 @@ elif pagina == "Admin":
         if g is None:
             st.warning("Sin GH_TOKEN en Secrets: los usuarios funcionan pero no se registra el uso.")
         else:
+            with st.expander("Diagnóstico del registro de uso"):
+                st.write(f"Repo: `{g['repo']}` · rama: `{g['rama']}` · último intento: `{ss.get('uso_diag', 'ninguno en esta sesión')}`")
+                if st.button("Probar registro ahora"):
+                    st.write("Resultado:", registrar_uso("prueba"))
+                    rr = requests.get(f"https://api.github.com/repos/{g['repo']}", headers=g["h"], timeout=10)
+                    st.write("Acceso al repo:", rr.status_code, "" if rr.status_code == 200 else rr.text[:200])
+                    rb = requests.get(f"https://api.github.com/repos/{g['repo']}/branches/{g['rama']}", headers=g["h"], timeout=10)
+                    st.write(f"Rama `{g['rama']}`:", rb.status_code, "existe" if rb.status_code == 200 else "no existe / sin permiso")
             _, contenido = gh_leer_uso(g)
             from io import StringIO
             uso = pd.read_csv(StringIO(contenido))
