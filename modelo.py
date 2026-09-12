@@ -167,3 +167,33 @@ if __name__ == "__main__":
         print(f"\n{NOMBRES[met]}: λ {local} = {r['lambda_local']:.2f} | λ {visitante} = {r['lambda_visitante']:.2f}")
         for k, v in r["mercados"].items():
             print(f"   {k:<24} {v:6.1%}   cuota justa {cuota_justa(v)}")
+
+
+# ------------------------------------------------------------------ descriptivos (para la app)
+def ultimos_n(df: pd.DataFrame, equipo: str, metrica: str, n: int = 10) -> pd.DataFrame:
+    """Ultimos n partidos del equipo: a favor, en contra y total de la metrica."""
+    col_l, col_v, _ = METRICAS[metrica]
+    d = df[(df["equipo_local_txt"] == equipo) | (df["equipo_visitante_txt"] == equipo)].dropna(subset=[col_l, col_v])
+    d = d.sort_values("fecha", ascending=False).head(n)
+    es_local = d["equipo_local_txt"] == equipo
+    out = pd.DataFrame({
+        "fecha": d["fecha"].dt.strftime("%d/%m/%y"),
+        "condicion": np.where(es_local, "Casa", "Fuera"),
+        "rival": np.where(es_local, d["equipo_visitante_txt"], d["equipo_local_txt"]),
+        "marcador": d["goles_local_val"].astype(int).astype(str) + "-" + d["goles_visitante_val"].astype(int).astype(str),
+        "a_favor": np.where(es_local, d[col_l], d[col_v]).astype(int),
+        "en_contra": np.where(es_local, d[col_v], d[col_l]).astype(int),
+    })
+    out["total"] = out["a_favor"] + out["en_contra"]
+    return out.reset_index(drop=True)
+
+
+def medias_liga(df: pd.DataFrame, metrica: str) -> dict:
+    col_l, col_v, _ = METRICAS[metrica]
+    d = df.dropna(subset=[col_l, col_v])
+    return {"local": d[col_l].mean(), "visitante": d[col_v].mean(), "total": (d[col_l] + d[col_v]).mean()}
+
+
+def prob_over(lam: float, linea: float, k_max: int = 60) -> float:
+    """P(Poisson(lam) > linea) para lineas de un solo equipo."""
+    return 1 - sum(poisson(lam, k) for k in range(int(math.floor(linea)) + 1))
