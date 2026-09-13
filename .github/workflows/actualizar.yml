@@ -1,4 +1,4 @@
-name: Actualizar BBDD 5 ligas
+name: Actualizar BBDD ligas
 on:
   schedule:
     - cron: "0 12 * * *"   # todos los dias 12:00 UTC = 6:00 am Guatemala

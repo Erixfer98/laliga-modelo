@@ -10,6 +10,7 @@ Archivos del paquete (todos van en la raíz del repositorio):
 | Archivo | Qué hace |
 |---|---|
 | `generar_bbdd_laliga.py` | Tu notebook, como script. Descarga football-data.co.uk y escribe `datos/bbdd_laliga.xlsx` y `.csv` |
+| `espn.py` | Fuente ESPN para Liga MX (scoreboard + summary de `mex.1`). Incremental: solo pide los días nuevos |
 | `modelo.py` | Poisson (+ Dixon-Coles en goles) para las 9 métricas. Rango bajo–alto de cada λ (promedio ± t·desv/√n, 80%), prob. pesimista/optimista por mercado y varianza de cada equipo vs la liga |
 | `app.py` | Web app (Streamlit) |
 | `requirements.txt` | Librerías que necesita la app |
@@ -97,6 +98,8 @@ dale **Fetch origin → Pull** cuando quieras la versión más reciente. El arch
 - **Cambiar cuánto pesa lo reciente**: `XI` en `modelo.py`. 0.005 = un partido de hace ~140 días
   pesa la mitad. Súbelo para que pese más lo reciente.
 - **Agregar una temporada**: una línea en `TEMPORADAS` de `generar_bbdd_laliga.py`.
+- **Liga MX desde cero** (primera vez o si se corrompe el CSV): `python generar_bbdd.py ligamx --completo`
+  (unos 3 minutos: consulta día por día desde el 1/1/2026). Después el Action solo pide los días nuevos.
 - **Agregar una liga**: copia `generar_bbdd_laliga.py`, cambia `SP1` por el código de la liga
   (E0 Premier, I1 Serie A, D1 Bundesliga, F1 Ligue 1) y el diccionario `EQUIPOS`; agrega un paso
   al workflow y un selector de liga en la app.

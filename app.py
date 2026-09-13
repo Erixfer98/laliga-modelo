@@ -103,7 +103,7 @@ st.markdown(f"""
 </style>""", unsafe_allow_html=True)
 
 
-LIGAS = {"laliga": "La Liga", "premier": "Premier League", "seriea": "Serie A", "bundesliga": "Bundesliga", "ligue1": "Ligue 1"}
+LIGAS = {"laliga": "La Liga", "premier": "Premier League", "seriea": "Serie A", "bundesliga": "Bundesliga", "ligue1": "Ligue 1", "ligamx": "Liga MX"}
 LIGAS_DISPONIBLES = {k: v for k, v in LIGAS.items() if os.path.exists(f"datos/bbdd_{k}.csv")} or {"laliga": "La Liga"}
 
 
@@ -741,10 +741,10 @@ elif pagina == "Diccionario":
         ("Banca", "Kelly", "Fracción de banca que maximiza el crecimiento si la probabilidad fuera exacta: ((cuota−1)·p − (1−p)) / (cuota−1). Se calcula con la prob. pesimista del boleto (producto de las pesimistas de cada pata): si con esa aún hay valor, el stake aguanta un modelo demasiado optimista."),
         ("Banca", "½, ¼, ⅛ Kelly", "La mitad, un cuarto y un octavo del Kelly completo. Para parlays usa ¼ o ⅛: menos crecimiento pero mucha menos probabilidad de quebrar."),
         ("Banca", "Patas no independientes", "Dos patas del mismo partido (ej. gana Madrid + over 2.5) están relacionadas; multiplicar sus probabilidades da un número inexacto."),
-        ("Datos", "Fuente", "football-data.co.uk. Se descarga todos los días a las 6:00 am (Guatemala) por GitHub Actions y regenera la base completa."),
+        ("Datos", "Fuente", "football-data.co.uk para las 5 ligas europeas; ESPN para Liga MX. Se descarga todos los días a las 6:00 am (Guatemala) por GitHub Actions."),
         ("Datos", "Columnas _val", "goles, goles 1er/2do tiempo, tiros, tiros a puerta, corners, faltas, amarillas y rojas, cada una para local y visitante."),
         ("Datos", "Jornada", "Estimada: partido n-ésimo de cada equipo en la temporada. Un aplazado se cuenta cuando se jugó."),
-        ("Datos", "Temporada", "Formato 2025-26 (agosto a mayo)."),
+        ("Datos", "Temporada", "Europa: formato 2025-26 (agosto a mayo). Liga MX: Clausura AAAA (enero-junio) y Apertura AAAA (julio-diciembre), Liguilla incluida."),
     ]
     q = st.text_input("Buscar", placeholder="Buscar un término…", label_visibility="collapsed").strip().lower()
     grupos_d = list(dict.fromkeys(g for g, _, _ in DIC))

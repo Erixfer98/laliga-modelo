@@ -1,8 +1,11 @@
 """
-generar_bbdd.py — descarga football-data.co.uk y regenera datos/bbdd_<liga>.xlsx + .csv para las 5 grandes ligas
-(28 columnas, hojas partidos + diccionario). Cada corrida borra y reescribe todo.
-Uso: python generar_bbdd.py            (todas las ligas)
-     python generar_bbdd.py premier    (solo una)
+generar_bbdd.py — regenera datos/bbdd_<liga>.xlsx + .csv (28 columnas, hojas partidos + diccionario).
+  - 5 grandes ligas europeas: football-data.co.uk (se borra y reescribe todo en cada corrida).
+  - Liga MX: ESPN via espn.py (football-data no publica sus estadisticas). Incremental: solo pide los
+    dias nuevos y los mezcla con el CSV existente; con --completo rehace desde el inicio del torneo.
+Uso: python generar_bbdd.py                    (todas las ligas)
+     python generar_bbdd.py premier            (solo una)
+     python generar_bbdd.py ligamx --completo  (Liga MX desde cero)
 """
 from datetime import datetime
 from io import StringIO
@@ -10,6 +13,8 @@ from zoneinfo import ZoneInfo
 
 import pandas as pd
 import requests
+
+import espn
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
@@ -63,6 +68,9 @@ LIGAS = {
     "seriea":     {"div": "I1",  "nombre": "Serie A",    "pais": "Italia",     "tz": "Europe/Rome",   "equipos": EQUIPOS_SERIEA},
     "bundesliga": {"div": "D1",  "nombre": "Bundesliga", "pais": "Alemania",   "tz": "Europe/Berlin", "equipos": EQUIPOS_BUNDESLIGA},
     "ligue1":     {"div": "F1",  "nombre": "Ligue 1",    "pais": "Francia",    "tz": "Europe/Paris",  "equipos": EQUIPOS_LIGUE1},
+    # fuente ESPN: los nombres ya salen normalizados de espn.py (ALIAS_LIGAMX). inicio = primer dia a consultar en --completo
+    "ligamx":     {"fuente": "espn", "espn": "mex.1", "inicio": "2026-01-01", "nombre": "Liga MX", "pais": "Mexico",
+                   "tz": "America/Mexico_City", "equipos": {}},
 }
 EQUIPOS = EQUIPOS_LALIGA   # se reasigna por liga en el ciclo principal
 TZ_LOCAL = "Europe/Madrid"
@@ -122,9 +130,12 @@ def transformar(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     df["_fecha"] = pd.to_datetime(df["Date"], dayfirst=True)
     df = jornada_estimada(df)
-    horas = [a_horas(d, t) for d, t in zip(df["Date"], df.get("Time", pd.Series([""] * len(df))))]
-    df["hora_local_txt"] = [h[0] for h in horas]
-    df["hora_utc_txt"] = [h[1] for h in horas]
+    if "hora_utc" in df.columns:      # fuente ESPN: ya trae hora local y UTC
+        df["hora_local_txt"], df["hora_utc_txt"] = df["Time"].fillna(""), df["hora_utc"].fillna("")
+    else:                             # football-data: hora en Reino Unido
+        horas = [a_horas(d, t) for d, t in zip(df["Date"], df.get("Time", pd.Series([""] * len(df))))]
+        df["hora_local_txt"] = [h[0] for h in horas]
+        df["hora_utc_txt"] = [h[1] for h in horas]
     faltantes = set(df["HomeTeam"]) | set(df["AwayTeam"])
     faltantes -= EQUIPOS.keys()
     if faltantes:
@@ -255,13 +266,20 @@ if __name__ == "__main__":
     import os
     import sys
     os.makedirs("datos", exist_ok=True)
-    claves = sys.argv[1:] or list(LIGAS)
+    completo = "--completo" in sys.argv
+    claves = [a for a in sys.argv[1:] if not a.startswith("--")] or list(LIGAS)
     for clave in claves:
         liga = LIGAS[clave]
-        EQUIPOS, TZ_LOCAL = liga["equipos"], liga["tz"]
-        print(f"== {liga['nombre']} ({liga['div']})")
+        EQUIPOS, TZ_LOCAL = liga["equipos"] or {k: k for k in espn.ALIAS_LIGAMX}, liga["tz"]
+        print(f"== {liga['nombre']} ({liga.get('div') or liga.get('espn')})")
         try:
-            crudo = pd.concat([descargar(c, liga["div"]) for c in TEMPORADAS], ignore_index=True)
+            if liga.get("fuente") == "espn":
+                csv = f"datos/bbdd_{clave}.csv"
+                existente = None if completo or not os.path.exists(csv) else csv
+                crudo = espn.descargar(liga["espn"], datetime.strptime(liga["inicio"], "%Y-%m-%d").date(), datetime.now().date(),
+                                       espn.ALIAS_LIGAMX, utc_offset=-6, existente=existente)
+            else:
+                crudo = pd.concat([descargar(c, liga["div"]) for c in TEMPORADAS], ignore_index=True)
             generar(transformar(crudo), salida=f"datos/bbdd_{clave}.xlsx")
         except Exception as ex:
             print(f"ERROR en {liga['nombre']}: {ex}")   # una liga caida no detiene a las demas
