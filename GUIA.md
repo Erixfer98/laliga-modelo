@@ -1,6 +1,6 @@
 # Guía de implementación — Modelo Poisson La Liga (end to end)
 
-Resultado final: cada lunes a las 6:00 am (Guatemala) el Excel se regenera solo con el mismo
+Resultado final: todos los días a las 6:00 am (Guatemala) el Excel se regenera solo con el mismo
 nombre, y una web app te muestra el Poisson + Dixon-Coles de las 9 métricas para cualquier partido.
 
 Costo: $0. Tiempo de montaje: ~45 minutos, una sola vez.
@@ -10,10 +10,10 @@ Archivos del paquete (todos van en la raíz del repositorio):
 | Archivo | Qué hace |
 |---|---|
 | `generar_bbdd_laliga.py` | Tu notebook, como script. Descarga football-data.co.uk y escribe `datos/bbdd_laliga.xlsx` y `.csv` |
-| `modelo.py` | Poisson (+ Dixon-Coles en goles) para las 9 métricas |
+| `modelo.py` | Poisson (+ Dixon-Coles en goles) para las 9 métricas. Rango bajo–alto de cada λ (promedio ± t·desv/√n, 80%), prob. pesimista/optimista por mercado y varianza de cada equipo vs la liga |
 | `app.py` | Web app (Streamlit) |
 | `requirements.txt` | Librerías que necesita la app |
-| `.github/workflows/actualizar.yml` | El reloj: corre el script cada lunes |
+| `.github/workflows/actualizar.yml` | El reloj: corre el script todos los días a las 6:00 am Guatemala |
 | `datos/` | Aquí viven el Excel y el CSV. Se sobrescriben en cada corrida |
 
 ---
@@ -57,8 +57,8 @@ Qué debes ver: en github.com aparece tu repositorio `laliga-modelo` con todos l
 4. Espera 1-2 minutos. Debe salir con un check verde.
 5. Entra a `datos/` en el repositorio: el Excel debe tener un commit nuevo "BBDD actualizada dd/mm/aaaa".
 
-Desde ahora corre solo cada lunes. Para cambiar el día u hora edita la línea `cron` en
-`.github/workflows/actualizar.yml` (formato: `minuto hora * * díasemana`, en UTC; lunes=1, viernes=5).
+Desde ahora corre solo todos los días a las 12:00 UTC (6:00 am Guatemala). Para cambiar el día u hora edita la línea `cron` en
+`.github/workflows/actualizar.yml` (formato: `minuto hora * * díasemana`, en UTC; `*` = todos los días, lunes=1, viernes=5).
 
 Nota: GitHub apaga el reloj si el repositorio pasa 60 días sin ningún commit tuyo. Si eso pasa,
 vuelves a Actions y le das "Enable workflow". Con la corrida semanal normalmente no ocurre.
@@ -73,7 +73,7 @@ vuelves a Actions y le das "Enable workflow". Con la corrida semanal normalmente
 4. **Deploy**. Tarda 2-3 minutos la primera vez.
 
 Qué debes ver: una URL tipo `https://tu-usuario-laliga-modelo.streamlit.app` con la app.
-Cada vez que el lunes se actualice el Excel, la app se redespliega sola con los datos nuevos.
+Cada vez que se actualice el Excel (cada mañana), la app se redespliega sola con los datos nuevos.
 
 Si quieres que solo tú la veas: en la app → Settings → Sharing → "Only specific people".
 
@@ -92,6 +92,8 @@ dale **Fetch origin → Pull** cuando quieras la versión más reciente. El arch
 - **Ver un partido**: abre la app, elige local y visitante. Arriba están las λ de las 9 métricas;
   abajo, por pestaña, los mercados con cuota justa, las fuerzas de ambos equipos y la matriz.
 - **Ajustar ρ (Dixon-Coles)**: campo arriba a la derecha. Solo afecta goles y goles 1T.
+- **Rangos y varianza**: `CONFIANZA` (0.90 = percentiles 10 y 90), `PJ_MIN` (5 partidos efectivos mínimos para fiarse del
+  rango) y `CORTES_VAR` (0.8 / 1.2 = estable / volátil) en `modelo.py`. El Kelly del boleto usa la prob. pesimista.
 - **Cambiar cuánto pesa lo reciente**: `XI` en `modelo.py`. 0.005 = un partido de hace ~140 días
   pesa la mitad. Súbelo para que pese más lo reciente.
 - **Agregar una temporada**: una línea en `TEMPORADAS` de `generar_bbdd_laliga.py`.
@@ -105,5 +107,5 @@ dale **Fetch origin → Pull** cuando quieras la versión más reciente. El arch
 |---|---|---|
 | Action en rojo | football-data.co.uk caído o cambió columnas | Abre el log del Action, pega el error aquí |
 | App dice "KeyError: equipo" | Equipo nuevo sin nombre normalizado | Agrégalo a `EQUIPOS` y vuelve a correr |
-| App no cambia el lunes | Streamlit no detectó el commit | En share.streamlit.io → Reboot app |
+| App no cambia tras la actualización diaria | Streamlit no detectó el commit | En share.streamlit.io → Reboot app |
 | Excel se ve vacío en columnas calculadas | Estás leyendo con pandas un archivo viejo con fórmulas | Ya no pasa: el script escribe valores |
