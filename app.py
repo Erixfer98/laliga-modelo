@@ -1,6 +1,6 @@
 """
-app.py — Kuota · Parlays con Datos. Las 5 grandes ligas.
-Paginas: Inicio · Armar · Analizar · Tabla · Admin (solo administradores).
+app.py — Kuota · Parlays con Datos. Las 5 grandes ligas + Liga MX.
+Paginas: Inicio · Armar · Analizar · Cara a cara · Tabla · Diccionario · Admin (solo administradores).
 Usuarios y registro de uso: opcionales, se configuran en Streamlit Cloud -> Settings -> Secrets (ver pagina Admin).
 Local: streamlit run app.py
 """
@@ -100,6 +100,14 @@ st.markdown(f"""
     .forma {{gap:2px;}}
   }}
   .kpi {{display:flex; gap:8px;}} .kpi > div {{flex:1; background:{P['card2']}; border-radius:12px; padding:10px 12px;}}
+  .kpi.esc > div {{padding:8px 4px; text-align:center;}}
+  .sec {{border-top:1px solid {P['line2']}; margin-top:10px; padding-top:10px;}} .sec .t {{margin-bottom:6px;}}
+  .tri {{display:flex; height:8px; border-radius:4px; overflow:hidden; background:{P['barbg']}; margin:8px 0 6px 0;}} .tri > div {{height:8px;}}
+  .fm {{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:5px 0; border-bottom:1px solid {P['line2']}; font-size:0.86rem;}}
+  .fm:last-child {{border-bottom:none;}}
+  .fm .lbl {{flex:1; text-align:center; color:{P['mut']}; font-size:0.8rem;}}
+  .fm .pill {{min-width:36px; text-align:center; padding:3px 8px; border-radius:999px; font-weight:700; color:{P['txt']};}}
+  .fm .pill.on {{color:#fff;}}
 </style>""", unsafe_allow_html=True)
 
 
@@ -152,6 +160,9 @@ ss.setdefault("chat", [])       # historial del asistente IA
 ss.setdefault("ctx_ia", "")     # contexto de la vista actual que se le pasa a la IA
 GOL = ("goles", "goles_1t", "goles_2t")
 NOM = mo.NOMBRES
+NOM_CORTO = {"goles": "Goles", "goles_1t": "Goles 1T", "goles_2t": "Goles 2T", "tiros": "Tiros", "tiros_a_puerta": "Tiros a puerta",
+             "corners": "Corners", "faltas": "Faltas", "amarillas": "Amarillas", "rojas": "Rojas"}
+COLOR_VIS = "#8b5cf6"   # color del visitante en graficos y cara a cara (el local usa P["acc"])
 HORA_GT = ZoneInfo("America/Guatemala")
 
 
@@ -443,6 +454,61 @@ def delta(v, ref, dec=1):
     return f'<span class="{"up" if v - ref >= 0 else "down"}">{v - ref:+.{dec}f}</span>'
 
 
+def corto(nombre, n=12):
+    return nombre if len(nombre) <= n else nombre[:n - 1] + "…"
+
+
+def tabla_lambdas(local, visitante, lam_l, lam_v, rango_l, rango_v, ml, var):
+    """Esperado del modelo en tabla: una fila por equipo y el total. λ · rango bajo–alto · media liga · Δ vs liga · varianza."""
+    (ll, lh), (vl, vh) = rango_l, rango_v
+    filas = [(local, lam_l, ll, lh, ml["local"], chip_var(var, local, "casa")),
+             (visitante, lam_v, vl, vh, ml["visitante"], chip_var(var, visitante, "fuera")),
+             ("Total", lam_l + lam_v, ll + vl, lh + vh, ml["total"], "")]
+    h = '<table class="st"><tr><th></th><th>λ</th><th>bajo–alto</th><th>liga</th><th>Δ</th><th>var.</th></tr>'
+    for nm, lam, lo, hi, ref, chip in filas:
+        h += (f'<tr><td>{corto(nm)}</td><td class="w">{lam:.2f}</td><td>{lo:.2f}–{hi:.2f}</td><td>{ref:.2f}</td>'
+              f'<td>{delta(lam, ref, 2)}</td><td>{chip}</td></tr>')
+    return h + "</table>"
+
+
+def escenarios_html(mk, e):
+    """Cuadricula pesimista · modelo · optimista (· Elo): probabilidad y cuota justa de cada escenario."""
+    tiles = [(nm, mk[k], f"justa {mo.cuota_justa(mk[k]):.2f}") for nm, k in (("Pesimista", "lo"), ("Modelo", "prob"), ("Optimista", "hi"))]
+    if mk.get("elo") is not None:
+        tiles.append(("Elo", mk["elo"], '<span class="down">⚠ difiere</span>' if e["alerta"] else "coincide"))
+    return '<div class="kpi esc">' + "".join(f'<div><div class="t">{nm}</div><div class="mid">{p:.0%}</div><div class="small">{s}</div></div>'
+                                             for nm, p, s in tiles) + "</div>"
+
+
+def medias_html():
+    """Medias de la liga por metrica (todas las temporadas cargadas) y % de partidos por encima de la linea tipica del total."""
+    h = '<table class="st"><tr><th></th><th>Local</th><th>Visit.</th><th>Total</th><th>Línea</th><th>Over</th></tr>'
+    for met, (col_l, col_v, _) in mo.METRICAS.items():
+        d = df.dropna(subset=[col_l, col_v]); tot = d[col_l] + d[col_v]
+        ln = float(np.floor(tot.mean()) + 0.5)          # la linea .5 mas cercana a la media del total
+        dec = 2 if met in GOL or met == "rojas" else 1
+        h += (f'<tr><td>{NOM_CORTO[met]}</td><td>{d[col_l].mean():.{dec}f}</td><td>{d[col_v].mean():.{dec}f}</td><td class="w">{tot.mean():.{dec}f}</td>'
+              f'<td>{ln}</td><td class="w">{(tot > ln).mean():.0%}</td></tr>')
+    return h + "</table>"
+
+
+def stats_partido_html(g, a, b):
+    """Ficha de un partido estilo FotMob: valor del local · metrica · valor del visitante. La pastilla de color = el que hizo mas."""
+    home, away = g.equipo_local_txt, g.equipo_visitante_txt
+    c_home, c_away = (P["acc"], COLOR_VIS) if home == a else (COLOR_VIS, P["acc"])
+    h = (f'<div class="row" style="margin-bottom:4px"><div class="mid" style="color:{c_home}">{corto(home)}</div>'
+         f'<div class="small">{g.temporada_txt} · {g.fecha:%d/%m/%Y}</div><div class="mid" style="color:{c_away}">{corto(away)}</div></div>')
+    for met, (col_l, col_v, _) in mo.METRICAS.items():
+        vl, vv = g[col_l], g[col_v]
+        if pd.isna(vl) or pd.isna(vv):
+            continue
+        vl, vv = int(vl), int(vv)
+        pl = f'<span class="pill on" style="background:{c_home}">{vl}</span>' if vl > vv else f'<span class="pill">{vl}</span>'
+        pv = f'<span class="pill on" style="background:{c_away}">{vv}</span>' if vv > vl else f'<span class="pill">{vv}</span>'
+        h += f'<div class="fm">{pl}<div class="lbl">{NOM_CORTO[met]}</div>{pv}</div>'
+    return h
+
+
 def chart_barras(h, col, linea, media_liga, over, color):
     """Barras partido a partido (antiguo -> reciente). Linea blanca punteada = linea del mercado; naranja = media liga."""
     vals = h[col].iloc[::-1].tolist()
@@ -456,7 +522,7 @@ def chart_barras(h, col, linea, media_liga, over, color):
         bars += (f'<div style="height:{max(v / mx * 100, 2):.0f}%;background:{c}" title="{g.rival} {g.fecha}">'
                  f'<span class="v">{v:.0f}</span><span class="x">{"C" if g.condicion == "Casa" else "F"}</span></div>')
     return (f'<div class="chart"><div class="bars">{bars}</div>'
-            f'<div class="ln" style="bottom:{linea / mx * 100:.0f}%"><span>línea {linea}</span></div>'
+            f'<div class="ln" style="bottom:{linea / mx * 100:.0f}%"><span>línea {linea:.1f}</span></div>'
             f'<div class="lg" style="bottom:{media_liga / mx * 100:.0f}%"><span>liga {media_liga:.1f}</span></div></div>')
 
 
@@ -622,7 +688,7 @@ def tendencias(met, n=5):
 
 
 # ================================================================== navegacion
-paginas = ["Inicio", "Armar", "Analizar", "Tabla", "Diccionario"] + (["Admin"] if ES_ADMIN else [])
+paginas = ["Inicio", "Armar", "Analizar", "Cara a cara", "Tabla", "Diccionario"] + (["Admin"] if ES_ADMIN else [])
 top1, top2 = st.columns([3, 1])
 top1.markdown('### Kuota <span class="small" style="font-weight:400">· Parlays con Datos</span>', unsafe_allow_html=True)
 if usuarios:
@@ -646,6 +712,24 @@ LIGA = LIGAS_DISPONIBLES[ss.liga]
 
 def ir_a(pag):
     ss.pagina = pag; ss.gen += 1; st.rerun()
+
+
+def selector_partido():
+    """Local y visitante. El partido elegido se recuerda al cambiar de pagina (y por liga)."""
+    c1, c2 = st.columns(2)
+    rec = ss.setdefault("partido_liga", {}).get(ss.liga, {})
+    ini_l = rec.get("local") if rec.get("local") in lista else ("Real Madrid" if "Real Madrid" in lista else lista[0])
+    local = c1.selectbox("Local", lista, index=lista.index(ini_l))
+    otros = [e for e in lista if e != local]
+    ini_v = rec.get("visitante") if rec.get("visitante") in otros else otros[0]
+    visitante = c2.selectbox("Visitante", otros, index=otros.index(ini_v))
+    ss.partido_liga[ss.liga] = {"local": local, "visitante": visitante}
+    return local, visitante
+
+
+def torneos_recientes():
+    """Torneo vigente y el anterior (los dos ultimos por fecha), en orden cronologico."""
+    return df.groupby("temporada_txt")["fecha"].max().sort_values().index.tolist()[-2:]
 
 
 def resumen_boleto():
@@ -685,11 +769,18 @@ if pagina == "Inicio":
     if b.button("Analizar una pata", width="stretch"):
         ir_a("Analizar")
 
+    st.markdown('<div class="t" style="margin-top:8px">Medias de liga · por partido</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="card">{medias_html()}</div>', unsafe_allow_html=True)
+    st.caption(f"{LIGA} · {len(df)} partidos cargados ({' y '.join(torneos_recientes())}). Línea = la .5 más cercana a la media del total · "
+               "Over = % de partidos con total por encima de esa línea.")
+
     t = tabla_posiciones(temp)
     st.markdown('<div class="t" style="margin-top:8px">Tabla · top 6</div>', unsafe_allow_html=True)
     st.markdown(html_tabla(t.head(6), compacta=True), unsafe_allow_html=True)
     ss.ctx_titulo = f"Inicio · {LIGA} · tabla {temp}"
-    ss.ctx_ia = (f"Vista: Inicio. Liga {LIGA}. Temporada {temp}, datos al {ult:%d/%m/%Y}. Tabla: " +
+    medias_ia = "; ".join(f"{NOM[m]} local {mo.medias_liga(df, m)['local']:.2f} visita {mo.medias_liga(df, m)['visitante']:.2f} total {mo.medias_liga(df, m)['total']:.2f}"
+                          for m in mo.METRICAS)
+    ss.ctx_ia = (f"Vista: Inicio. Liga {LIGA}. Temporada {temp}, datos al {ult:%d/%m/%Y}. Medias de liga por partido: {medias_ia}. Tabla: " +
                  "; ".join(f"{i + 1}. {f.equipo} {f.PTS} pts (J{f.J} G{f.G} E{f.E} P{f.P}, DG {f.DG:+d})" for i, f in t.iterrows()) +
                  ("\nBoleto actual: " + "; ".join(f"{l['mercado']} ({l['partido']}, modelo {l['prob']:.0%}, cuota {l['cuota']})" for l in ss.parlay) if ss.parlay else "\nBoleto vacío."))
 
@@ -737,6 +828,9 @@ elif pagina == "Diccionario":
         ("Validación", "Como jugarán", "Filtro: solo partidos del local jugando en casa y del visitante jugando fuera."),
         ("Validación", "Media / mediana / desv. est.", "Media = promedio. Mediana = valor del medio (resiste goleadas raras). Desviación estándar = qué tanto varía de partido a partido; alta = equipo irregular."),
         ("Validación", "Media liga", "Promedio de todos los partidos cargados. Referencia para saber si un equipo está por encima o por debajo de lo normal."),
+        ("Validación", "Línea típica y % Over (Inicio)", "Línea .5 más cercana a la media de la liga de esa métrica (ej. 2.5 goles, 9.5 corners). % Over = en qué porcentaje de los partidos cargados el total superó esa línea. Sirve para saber qué tan normal es un Over antes de mirar a los equipos."),
+        ("Validación", "Cara a cara", "Enfrentamientos directos entre los dos equipos solo en el torneo vigente y el anterior. Récord, promedio de cada métrica en esos partidos (Δ = diferencia del total vs media liga) y la ficha de cada partido: la pastilla de color marca al equipo que hizo más. Son pocos partidos (2 o 3): contexto, no prueba."),
+        ("Validación", "Tabla de λ", "Una fila por equipo y el total: λ = esperado del modelo, bajo–alto = hasta dónde puede estar equivocado ese promedio, liga = media de la liga en esa condición, Δ = λ menos la media liga, var. = varianza del equipo vs liga (🟢🟡🔴⚪ y ×N)."),
         ("Banca", "Banca", "Dinero total destinado a apostar. Todo el stake se calcula como porcentaje de esto."),
         ("Banca", "Kelly", "Fracción de banca que maximiza el crecimiento si la probabilidad fuera exacta: ((cuota−1)·p − (1−p)) / (cuota−1). Se calcula con la prob. pesimista del boleto (producto de las pesimistas de cada pata): si con esa aún hay valor, el stake aguanta un modelo demasiado optimista."),
         ("Banca", "½, ¼, ⅛ Kelly", "La mitad, un cuarto y un octavo del Kelly completo. Para parlays usa ¼ o ⅛: menos crecimiento pero mucha menos probabilidad de quebrar."),
@@ -845,17 +939,77 @@ elif pagina == "Admin":
                 with st.expander("Últimos 50 eventos"):
                     st.dataframe(uso.sort_values("fecha", ascending=False).head(50), hide_index=True, width="stretch")
 
+# ================================================================== PAGINA CARA A CARA (torneo vigente + anterior)
+elif pagina == "Cara a cara":
+    local, visitante = selector_partido()
+    temps = torneos_recientes()
+    par = df[df.temporada_txt.isin(temps) & (((df.equipo_local_txt == local) & (df.equipo_visitante_txt == visitante)) |
+                                             ((df.equipo_local_txt == visitante) & (df.equipo_visitante_txt == local)))].sort_values("fecha", ascending=False)
+    solo_casa = st.toggle(f"Solo con {local} en casa", value=False)
+    if solo_casa:
+        par = par[par.equipo_local_txt == local]
+    es_a = par.equipo_local_txt == local                                   # True donde el local elegido jugo en casa
+    ga = np.where(es_a, par.goles_local_val, par.goles_visitante_val)
+    gb = np.where(es_a, par.goles_visitante_val, par.goles_local_val)
+    G, E, Pp = int((ga > gb).sum()), int((ga == gb).sum()), int((ga < gb).sum())
+    n = len(par)
+    txt_temps = " y ".join(temps)
+    res_ia = []
+    iv = lambda x: "?" if pd.isna(x) else int(x)
+
+    # 1) record estilo FotMob: victorias · empates · victorias + barra tricolor
+    if n == 0:
+        st.markdown(f'<div class="card"><div class="mid">Sin enfrentamientos</div><div class="small">{local} y {visitante} no se han cruzado en {txt_temps}'
+                    + (" con el local en casa" if solo_casa else "") + '.</div></div>', unsafe_allow_html=True)
+    else:
+        tri = "".join(f'<div style="width:{x / n * 100:.0f}%;background:{c}"></div>' for x, c in ((G, P["acc"]), (E, "#6b7280"), (Pp, COLOR_VIS)))
+        st.markdown(f'<div class="card"><div class="row" style="text-align:center">'
+                    f'<div style="flex:1"><div class="big" style="color:{P["acc"]}">{G}</div><div class="small">{corto(local, 14)}</div></div>'
+                    f'<div style="flex:1"><div class="big" style="color:#6b7280">{E}</div><div class="small">empate{"s" if E != 1 else ""}</div></div>'
+                    f'<div style="flex:1"><div class="big" style="color:{COLOR_VIS}">{Pp}</div><div class="small">{corto(visitante, 14)}</div></div></div>'
+                    f'<div class="tri">{tri}</div><div class="small">{n} partido{"s" if n != 1 else ""} · {txt_temps}</div></div>', unsafe_allow_html=True)
+
+        # 2) resumen por mercado: promedio de cada metrica en esos partidos, desde cada equipo, total y media liga
+        h = (f'<table class="st"><tr><th></th><th style="white-space:nowrap;color:{P["acc"]}">{corto(local, 11)}</th>'
+             f'<th style="white-space:nowrap;color:{COLOR_VIS}">{corto(visitante, 11)}</th><th>Total</th><th>Δ liga</th></tr>')
+        for met, (col_l, col_v, _) in mo.METRICAS.items():
+            d = par.dropna(subset=[col_l, col_v])
+            if d.empty:
+                continue
+            e_a = d.equipo_local_txt == local
+            a = float(np.where(e_a, d[col_l], d[col_v]).mean()); b = float(np.where(e_a, d[col_v], d[col_l]).mean())
+            liga = mo.medias_liga(df, met)["total"]
+            dec = 2 if met in GOL or met == "rojas" else 1
+            h += (f'<tr><td>{NOM_CORTO[met]}</td><td>{a:.{dec}f}</td><td>{b:.{dec}f}</td><td class="w">{a + b:.{dec}f}</td>'
+                  f'<td>{delta(a + b, liga, dec)}</td></tr>')
+            res_ia.append(f"{NOM[met]} {local} {a:.2f} {visitante} {b:.2f} total {a + b:.2f} (liga {liga:.2f})")
+        st.markdown(f'<div class="card"><div class="t" style="margin-bottom:4px">Promedio por mercado · en estos {n} partidos</div>{h}</table></div>',
+                    unsafe_allow_html=True)
+        st.caption("Cada columna es lo que hizo ese equipo (jugara de local o de visita) · Δ liga = total de estos partidos menos la media de la liga.")
+
+        # 3) partido a partido: toca uno para ver su ficha completa (estilo FotMob)
+        st.markdown('<div class="t" style="margin-top:8px">Partidos · toca uno para ver sus estadísticas</div>', unsafe_allow_html=True)
+        for _, g in par.iterrows():
+            gl, gv = int(g.goles_local_val), int(g.goles_visitante_val)
+            a_, b_ = (gl, gv) if g.equipo_local_txt == local else (gv, gl)
+            punto = "🟢" if a_ > b_ else ("🔴" if a_ < b_ else "⚪")
+            with st.expander(f"{punto} {g.fecha:%d/%m/%y} · {g.equipo_local_txt} {gl}-{gv} {g.equipo_visitante_txt} · {g.temporada_txt}"):
+                st.markdown(stats_partido_html(g, local, visitante), unsafe_allow_html=True)
+        st.caption(f"🟢 ganó {local} · 🔴 ganó {visitante} · ⚪ empate · en la ficha, la pastilla de color marca al equipo que hizo más.")
+
+    ss.ctx_titulo = f"Cara a cara · {local} vs {visitante}"
+    ss.ctx_ia = (f"Vista: Cara a cara. Liga {LIGA}. {local} vs {visitante}, solo {txt_temps}" + (f", solo con {local} en casa" if solo_casa else "") +
+                 f". Récord: {local} {G} victorias, {E} empates, {visitante} {Pp} victorias en {n} partidos. "
+                 + (("Promedios: " + "; ".join(res_ia) + ". Partidos (reciente→antiguo): " +
+                     "; ".join(f"{g.fecha:%d/%m/%y} {g.equipo_local_txt} {iv(g.goles_local_val)}-{iv(g.goles_visitante_val)} {g.equipo_visitante_txt} "
+                               f"(tiros {iv(g.tiros_local_val)}-{iv(g.tiros_visitante_val)}, corners {iv(g.corners_local_val)}-{iv(g.corners_visitante_val)}, "
+                               f"faltas {iv(g.faltas_local_val)}-{iv(g.faltas_visitante_val)}, amarillas {iv(g.amarillas_local_val)}-{iv(g.amarillas_visitante_val)})"
+                               for _, g in par.iterrows())) if n else "Sin partidos.")
+                 + ("\nBoleto actual: " + "; ".join(f"{l['mercado']} ({l['partido']}, modelo {l['prob']:.0%}, cuota {l['cuota']})" for l in ss.parlay) if ss.parlay else "\nBoleto vacío."))
+
 # ================================================================== ARMAR / ANALIZAR (comparten partido y metrica)
 else:
-    c1, c2 = st.columns(2)
-    # el partido elegido se recuerda al cambiar de pagina (y por liga)
-    rec = ss.setdefault("partido_liga", {}).get(ss.liga, {})
-    ini_l = rec.get("local") if rec.get("local") in lista else ("Real Madrid" if "Real Madrid" in lista else lista[0])
-    local = c1.selectbox("Local", lista, index=lista.index(ini_l))
-    otros = [e for e in lista if e != local]
-    ini_v = rec.get("visitante") if rec.get("visitante") in otros else otros[0]
-    visitante = c2.selectbox("Visitante", otros, index=otros.index(ini_v))
-    ss.partido_liga[ss.liga] = {"local": local, "visitante": visitante}
+    local, visitante = selector_partido()
     partido = f"{local} vs {visitante} ({LIGA})"
     met = st.pills("Métrica", list(mo.METRICAS), format_func=lambda x: NOM[x], default=ss.get("met", "goles"),
                    label_visibility="collapsed", key="met_w") or "goles"
@@ -866,7 +1020,6 @@ else:
     (ll, lh), (vl, vh) = r["rango"]["lam_l"], r["rango"]["lam_v"]      # rangos bajo-alto de las λ
     tl, th = ll + vl, lh + vh
     vol = {local: var.loc[local, "estado_casa"] == "volátil", visitante: var.loc[visitante, "estado_fuera"] == "volátil"}
-    chip_l, chip_v = chip_var(var, local, "casa"), chip_var(var, visitante, "fuera")
     ml = mo.medias_liga(df, met)
     rk = elos(ss.liga).get(met)                      # ranking Elo de la metrica (None si no aplica)
     elo_ok = rk is not None and local in rk.index and visitante in rk.index
@@ -923,14 +1076,10 @@ else:
                 if st.button("Vaciar boleto"):
                     ss.parlay = []; st.rerun()
 
-        elo_txt = (f'<div class="small" style="margin-top:2px">Elo {el.DUELO[met]}: {local} <span class="w">{rk.loc[local, "elo"]:.0f}</span> (#{int(rk.loc[local, "pos"])}) · '
+        elo_txt = (f'<div class="small" style="margin-top:6px">Elo {el.DUELO[met]} · {local} <span class="w">{rk.loc[local, "elo"]:.0f}</span> (#{int(rk.loc[local, "pos"])}) · '
                    f'{visitante} <span class="w">{rk.loc[visitante, "elo"]:.0f}</span> (#{int(rk.loc[visitante, "pos"])})</div>') if elo_ok else ""
-        st.markdown(f'<div class="card flat"><div class="t">{NOM[met]} · esperado del modelo · central (bajo–alto)</div>'
-                    f'<div class="mid">{local} <span class="w">{lam_l:.2f}</span> {rango_txt(ll, lh, False)} {chip_l}</div>'
-                    f'<div class="mid">{visitante} <span class="w">{lam_v:.2f}</span> {rango_txt(vl, vh, False)} {chip_v}</div>'
-                    f'<div class="mid">total <span class="w">{lam_l + lam_v:.2f}</span> {rango_txt(tl, th, False)}</div>'
-                    f'<div class="small">media liga: local {ml["local"]:.1f} · visita {ml["visitante"]:.1f} · total {ml["total"]:.1f} · '
-                    f'🟢 estable 🟡 normal 🔴 volátil ⚪ pocos datos · ×N = varianza vs liga</div>{elo_txt}</div>',
+        st.markdown(f'<div class="card flat"><div class="t" style="margin-bottom:4px">{NOM[met]} · esperado del modelo</div>'
+                    f'{tabla_lambdas(local, visitante, lam_l, lam_v, r["rango"]["lam_l"], r["rango"]["lam_v"], ml, var)}{elo_txt}</div>',
                     unsafe_allow_html=True)
 
         grp = st.pills("Grupo", grupos, default=ss.get("grp", grupos[0]) if ss.get("grp") in grupos else grupos[0],
@@ -942,19 +1091,23 @@ else:
         solo = b.toggle("Solo Buena o mejor", value=False)
         hl, hv = historial(local, met, n), historial(visitante, met, n)
 
-        html = '<div class="card">'
+        # una fila por mercado, tres columnas fijas: mercado + justa (+ Elo) · modelo % con rango · calificación + aciertos
+        html = (f'<div class="card" style="padding-top:12px"><div class="t">{grp} · validado con últ. {n}</div>'
+                f'<div class="small" style="margin-bottom:4px">aciertos = {local} · {visitante}</div>')
         for mk in lst:
             if mk["grupo"] != grp: continue
             e = evaluar(mk, hl, hv, vol)
             if solo and e["cls"] not in ("exc", "bue"): continue
             elo_mk = f' · Elo <span class="w">{mk["elo"]:.0%}</span>' if mk.get("elo") is not None else ""
-            html += (f'<div class="mk"><div class="row"><div class="mid">{mk["mercado"]}</div><span class="tag {e["cls"]}">{e["tag"]}</span></div>'
-                     f'{barra(mk["prob"], e["tasa"], 1, P["ok"] if mk["prob"] >= 0.6 else "#b45309")}'
-                     f'<div class="row small"><span>modelo <span class="w">{mk["prob"]:.0%}</span> {rango_txt(mk["lo"], mk["hi"])}{elo_mk} · justa <span class="w">{mo.cuota_justa(mk["prob"])}</span></span>'
-                     f'<span>últ.{n}: <span class="w">{e["hl"]}/{e["nl"]}</span> {local[:10]} · <span class="w">{e["hv"]}/{e["nv"]}</span> {visitante[:10]}</span></div></div>')
-        st.markdown(html + '<div class="small" style="padding-top:6px">barra = prob. modelo · marca blanca = % histórico · (pesimista–optimista) · ↕ = equipo volátil vs liga (baja un nivel)'
-                    + (' · Elo = segunda opinión · ⚠ = Poisson y Elo difieren más de 10 pts (baja un nivel)' if any(x.get("elo") is not None for x in lst if x["grupo"] == grp) else '')
-                    + '</div></div>', unsafe_allow_html=True)
+            html += (f'<div class="mk"><div class="row"><div style="flex:1;min-width:0"><div class="mid">{mk["mercado"]}</div>'
+                     f'<div class="small">justa <span class="w">{mo.cuota_justa(mk["prob"]):.2f}</span>{elo_mk}</div></div>'
+                     f'<div style="width:60px;text-align:right;flex:none"><div class="mid">{mk["prob"]:.0%}</div><div class="small">{mk["lo"]:.0%}–{mk["hi"]:.0%}</div></div>'
+                     f'<div style="min-width:84px;text-align:right;flex:none"><span class="tag {e["cls"]}">{e["tag"]}</span>'
+                     f'<div class="small" style="margin-top:3px"><span class="w">{e["hl"]}/{e["nl"]}</span> · <span class="w">{e["hv"]}/{e["nv"]}</span></div></div></div>'
+                     f'{barra(mk["prob"], e["tasa"], 1, P["ok"] if mk["prob"] >= 0.6 else "#b45309")}</div>')
+        st.markdown(html + '</div>', unsafe_allow_html=True)
+        st.caption("Barra = prob. modelo · marca blanca = % histórico · bajo el % va el rango pesimista–optimista. "
+                   "⚠ Elo difiere y ↕ equipo volátil bajan un nivel la calificación (ver Diccionario).")
         ss.ctx_titulo = f"Armar · {partido} · {NOM[met]} · {grp}"
         ss.ctx_ia = (f"Vista: Armar. Liga {LIGA}. Partido {partido}. Métrica {NOM[met]}. λ local {lam_l:.2f} (rango bajo-alto {ll:.2f}-{lh:.2f}, "
                      f"varianza {var.loc[local, 'estado_casa']} {var.loc[local, 'ratio_casa']:.1f}x la liga, {var.loc[local, 'n_ef_casa']:.0f} partidos efectivos en casa), "
@@ -1010,20 +1163,17 @@ else:
         hl, hv = historial(local, met, n, cond_l), historial(visitante, met, n, cond_v)
         e = evaluar(mk, hl, hv, vol)
 
-        st.markdown(f'<div class="card"><div class="row"><div><div class="t">{sel} · {NOM[met]}</div>'
-                    f'<div class="big">{mk["prob"]:.0%} <span class="small">modelo</span></div>'
-                    f'<div class="small">pesimista <span class="w">{mk["lo"]:.0%}</span> · optimista <span class="w">{mk["hi"]:.0%}</span></div>'
-                    f'<div class="small">cuota justa {mo.cuota_justa(mk["prob"])} (pesimista {mo.cuota_justa(mk["lo"])})'
-                    + (f' · Elo {mk["elo"]:.0%}' + (' ⚠ difiere' if e["alerta"] else '') if mk.get("elo") is not None else '') + '</div></div>'
-                    f'<div style="text-align:right"><span class="tag {e["cls"]}">{e["tag"]}</span><div class="big" style="margin-top:4px">{e["tasa"]:.0%}</div>'
-                    f'<div class="small">histórico · {e["hl"] + e["hv"]} de {e["nl"] + e["nv"]}</div></div></div>'
+        # tarjeta en tres bloques: 1) veredicto (modelo vs histórico + calificación) 2) escenarios 3) esperado del modelo en tabla
+        st.markdown(f'<div class="card"><div class="row"><div class="t">{sel} · {NOM[met]}</div><span class="tag {e["cls"]}">{e["tag"]}</span></div>'
+                    f'<div class="row" style="margin-top:6px"><div><div class="big">{mk["prob"]:.0%}</div><div class="small">modelo · justa {mo.cuota_justa(mk["prob"]):.2f}</div></div>'
+                    f'<div style="text-align:right"><div class="big">{e["tasa"]:.0%}</div><div class="small">histórico · {e["hl"] + e["hv"]} de {e["nl"] + e["nv"]}</div></div></div>'
                     f'{barra(mk["prob"], e["tasa"], 1, P["acc"])}'
-                    f'<div class="small">λ {local} <span class="w">{lam_l:.2f}</span> ({ll:.2f}–{lh:.2f}) {chip_l} {delta(lam_l, ml["local"], 2)} · '
-                    f'λ {visitante} <span class="w">{lam_v:.2f}</span> ({vl:.2f}–{vh:.2f}) {chip_v} {delta(lam_v, ml["visitante"], 2)} · '
-                    f'λ total <span class="w">{lam_l + lam_v:.2f}</span> ({tl:.2f}–{th:.2f}) {delta(lam_l + lam_v, ml["total"], 2)} (vs media liga)</div>'
-                    f'<div class="small">rango = bajo–alto de la λ · 🟢 estable 🟡 normal 🔴 volátil ⚪ pocos datos · ×N = varianza del equipo vs liga'
-                    + (' · ↕ baja un nivel por equipo volátil' if e["volatil"] else '') + '</div></div>',
+                    f'<div class="sec"><div class="t">Escenarios</div>{escenarios_html(mk, e)}</div>'
+                    f'<div class="sec"><div class="t">Esperado del modelo · {NOM[met].lower()}</div>'
+                    f'{tabla_lambdas(local, visitante, lam_l, lam_v, r["rango"]["lam_l"], r["rango"]["lam_v"], ml, var)}</div></div>',
                     unsafe_allow_html=True)
+        st.caption("Barra = prob. modelo · marca blanca = % histórico · pesimista / optimista = Poisson con la λ del extremo en contra / a favor · "
+                   "rango, Δ vs liga, var. y Elo: ver Diccionario.")
 
         def bloque(nombre, h, hits_, lado, color):
             col = mk["col_l"] if lado == "l" else mk["col_v"]
