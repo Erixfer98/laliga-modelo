@@ -829,7 +829,7 @@ elif pagina == "Diccionario":
         ("Validación", "Media / mediana / desv. est.", "Media = promedio. Mediana = valor del medio (resiste goleadas raras). Desviación estándar = qué tanto varía de partido a partido; alta = equipo irregular."),
         ("Validación", "Media liga", "Promedio de todos los partidos cargados. Referencia para saber si un equipo está por encima o por debajo de lo normal."),
         ("Validación", "Línea típica y % Over (Inicio)", "Línea .5 más cercana a la media de la liga de esa métrica (ej. 2.5 goles, 9.5 corners). % Over = en qué porcentaje de los partidos cargados el total superó esa línea. Sirve para saber qué tan normal es un Over antes de mirar a los equipos."),
-        ("Validación", "Cara a cara", "Enfrentamientos directos entre los dos equipos solo en el torneo vigente y el anterior. Récord, promedio de cada métrica en esos partidos (Δ = diferencia del total vs media liga) y la ficha de cada partido: la pastilla de color marca al equipo que hizo más. Son pocos partidos (2 o 3): contexto, no prueba."),
+        ("Validación", "Cara a cara", "Enfrentamientos directos entre los dos equipos solo en el torneo vigente y el anterior. Récord y la ficha completa de cada partido (las 9 métricas): la pastilla de color marca al equipo que hizo más. Son pocos partidos (2 o 3): contexto, no prueba."),
         ("Validación", "Tabla de λ", "Una fila por equipo y el total: λ = esperado del modelo, bajo–alto = hasta dónde puede estar equivocado ese promedio, liga = media de la liga en esa condición, Δ = λ menos la media liga, var. = varianza del equipo vs liga (🟢🟡🔴⚪ y ×N)."),
         ("Banca", "Banca", "Dinero total destinado a apostar. Todo el stake se calcula como porcentaje de esto."),
         ("Banca", "Kelly", "Fracción de banca que maximiza el crecimiento si la probabilidad fuera exacta: ((cuota−1)·p − (1−p)) / (cuota−1). Se calcula con la prob. pesimista del boleto (producto de las pesimistas de cada pata): si con esa aún hay valor, el stake aguanta un modelo demasiado optimista."),
@@ -954,7 +954,6 @@ elif pagina == "Cara a cara":
     G, E, Pp = int((ga > gb).sum()), int((ga == gb).sum()), int((ga < gb).sum())
     n = len(par)
     txt_temps = " y ".join(temps)
-    res_ia = []
     iv = lambda x: "?" if pd.isna(x) else int(x)
 
     # 1) record estilo FotMob: victorias · empates · victorias + barra tricolor
@@ -969,38 +968,20 @@ elif pagina == "Cara a cara":
                     f'<div style="flex:1"><div class="big" style="color:{COLOR_VIS}">{Pp}</div><div class="small">{corto(visitante, 14)}</div></div></div>'
                     f'<div class="tri">{tri}</div><div class="small">{n} partido{"s" if n != 1 else ""} · {txt_temps}</div></div>', unsafe_allow_html=True)
 
-        # 2) resumen por mercado: promedio de cada metrica en esos partidos, desde cada equipo, total y media liga
-        h = (f'<table class="st"><tr><th></th><th style="white-space:nowrap;color:{P["acc"]}">{corto(local, 11)}</th>'
-             f'<th style="white-space:nowrap;color:{COLOR_VIS}">{corto(visitante, 11)}</th><th>Total</th><th>Δ liga</th></tr>')
-        for met, (col_l, col_v, _) in mo.METRICAS.items():
-            d = par.dropna(subset=[col_l, col_v])
-            if d.empty:
-                continue
-            e_a = d.equipo_local_txt == local
-            a = float(np.where(e_a, d[col_l], d[col_v]).mean()); b = float(np.where(e_a, d[col_v], d[col_l]).mean())
-            liga = mo.medias_liga(df, met)["total"]
-            dec = 2 if met in GOL or met == "rojas" else 1
-            h += (f'<tr><td>{NOM_CORTO[met]}</td><td>{a:.{dec}f}</td><td>{b:.{dec}f}</td><td class="w">{a + b:.{dec}f}</td>'
-                  f'<td>{delta(a + b, liga, dec)}</td></tr>')
-            res_ia.append(f"{NOM[met]} {local} {a:.2f} {visitante} {b:.2f} total {a + b:.2f} (liga {liga:.2f})")
-        st.markdown(f'<div class="card"><div class="t" style="margin-bottom:4px">Promedio por mercado · en estos {n} partidos</div>{h}</table></div>',
-                    unsafe_allow_html=True)
-        st.caption("Cada columna es lo que hizo ese equipo (jugara de local o de visita) · Δ liga = total de estos partidos menos la media de la liga.")
-
-        # 3) partido a partido: toca uno para ver su ficha completa (estilo FotMob)
-        st.markdown('<div class="t" style="margin-top:8px">Partidos · toca uno para ver sus estadísticas</div>', unsafe_allow_html=True)
+        # 2) partido a partido: la ficha completa de cada enfrentamiento, ya abierta (estilo FotMob)
+        st.markdown('<div class="t" style="margin-top:8px">Partidos</div>', unsafe_allow_html=True)
         for _, g in par.iterrows():
             gl, gv = int(g.goles_local_val), int(g.goles_visitante_val)
             a_, b_ = (gl, gv) if g.equipo_local_txt == local else (gv, gl)
             punto = "🟢" if a_ > b_ else ("🔴" if a_ < b_ else "⚪")
-            with st.expander(f"{punto} {g.fecha:%d/%m/%y} · {g.equipo_local_txt} {gl}-{gv} {g.equipo_visitante_txt} · {g.temporada_txt}"):
+            with st.expander(f"{punto} {g.fecha:%d/%m/%y} · {g.equipo_local_txt} {gl}-{gv} {g.equipo_visitante_txt} · {g.temporada_txt}", expanded=True):
                 st.markdown(stats_partido_html(g, local, visitante), unsafe_allow_html=True)
         st.caption(f"🟢 ganó {local} · 🔴 ganó {visitante} · ⚪ empate · en la ficha, la pastilla de color marca al equipo que hizo más.")
 
     ss.ctx_titulo = f"Cara a cara · {local} vs {visitante}"
     ss.ctx_ia = (f"Vista: Cara a cara. Liga {LIGA}. {local} vs {visitante}, solo {txt_temps}" + (f", solo con {local} en casa" if solo_casa else "") +
                  f". Récord: {local} {G} victorias, {E} empates, {visitante} {Pp} victorias en {n} partidos. "
-                 + (("Promedios: " + "; ".join(res_ia) + ". Partidos (reciente→antiguo): " +
+                 + (("Partidos (reciente→antiguo): " +
                      "; ".join(f"{g.fecha:%d/%m/%y} {g.equipo_local_txt} {iv(g.goles_local_val)}-{iv(g.goles_visitante_val)} {g.equipo_visitante_txt} "
                                f"(tiros {iv(g.tiros_local_val)}-{iv(g.tiros_visitante_val)}, corners {iv(g.corners_local_val)}-{iv(g.corners_visitante_val)}, "
                                f"faltas {iv(g.faltas_local_val)}-{iv(g.faltas_visitante_val)}, amarillas {iv(g.amarillas_local_val)}-{iv(g.amarillas_visitante_val)})"
