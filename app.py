@@ -28,42 +28,75 @@ try:
     TEMA = st.context.theme.type or "dark"
 except Exception:
     TEMA = "dark"
-P = {"dark": dict(card="#16181d", card2="#1e2128", txt="#f2f2f2", mut="#8b919a", line="#262a32", line2="#20242b",
-                  barbg="#262a32", miss="#2f343d", mark="#ffffff", app="#0b0c0f", ok="#22c55e", bad="#f05252", acc="#3b82f6"),
-     "light": dict(card="#ffffff", card2="#f4f5f7", txt="#111318", mut="#5b6270", line="#e3e5ea", line2="#eceef2",
-                   barbg="#e3e5ea", miss="#c9cdd4", mark="#111318", app="#f7f8fa", ok="#15803d", bad="#c62828", acc="#2563eb")}[TEMA]
+P = {"dark": dict(app="#0b0d12", card="#141821", card2="#1b2130", txt="#eef1f6", mut="#9aa3b5", mut2="#7c8598", line="#252b3a", line2="#1f2533",
+                  barbg="#262c3a", miss="#303748", mark="#ffffff", ok="#22c55e", bad="#f05252", warn="#f59e0b", acc="#3b82f6", vis="#a78bfa"),
+     "light": dict(app="#f4f5f8", card="#ffffff", card2="#f1f3f6", txt="#111318", mut="#5b6373", mut2="#7a8291", line="#e1e4ea", line2="#eceef2",
+                   barbg="#e3e6eb", miss="#c9cdd4", mark="#111318", ok="#15803d", bad="#c62828", warn="#b45309", acc="#2563eb", vis="#7c3aed")}[TEMA]
+NUM = '"Barlow Condensed","Inter",sans-serif'   # tipografia condensada para numeros grandes (estilo marcador deportivo)
 
 st.markdown(f"""
 <style>
-  .block-container {{padding: 3rem 0.9rem 4rem 0.9rem; max-width: 640px;}}
-  h3 {{font-weight:700; letter-spacing:-.01em;}}
-  .card {{background:{P['card']}; border:1px solid {P['line']}; border-radius:16px; padding:14px 16px; margin:10px 0; color:{P['txt']};}}
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap');
+  .stApp {{font-family:"Inter",-apple-system,"Segoe UI",Roboto,sans-serif;}}
+  [data-testid="stHeader"] {{display:none;}}
+  .block-container {{padding:0.3rem 0.9rem 5rem 0.9rem; max-width:640px;}}
+  /* barra superior fija: marca + navegacion (+ boleto en Armar) */
+  .st-key-topbar {{position:sticky; top:0; z-index:100; background:{P['app']}; margin:0 -0.9rem 4px -0.9rem; padding:6px 0.9rem 8px 0.9rem; border-bottom:1px solid {P['line']};}}
+  .st-key-topbar [data-testid="stVerticalBlock"] {{gap:0.4rem;}}
+  .brand {{display:flex; align-items:baseline; gap:8px; padding-top:8px; white-space:nowrap;}}
+  .brand .logo {{font-family:{NUM}; font-weight:700; font-size:1.6rem; letter-spacing:.01em; color:{P['txt']}; line-height:1;}}
+  .brand .slogan {{font-size:0.78rem; color:{P['mut']};}}
+  .brand .user {{margin-left:auto; font-size:0.78rem; color:{P['mut']};}}
+  .slip {{background:{P['card']}; border:1px solid {P['line']}; border-radius:12px; padding:8px 12px;}}
+  .slip .evb {{text-align:right; flex:none; min-width:74px; margin-left:10px;}}
+  /* encabezado de seccion: titulo + descripcion legible */
+  .sh {{margin:14px 0 4px 0;}}
+  .sh .h {{font-size:1.02rem; font-weight:700; color:{P['txt']}; letter-spacing:-.01em;}}
+  .sh .d {{font-size:0.84rem; color:{P['mut']}; line-height:1.45; margin-top:2px; max-width:64ch;}}
+  .card {{background:{P['card']}; border:1px solid {P['line']}; border-radius:14px; padding:14px 16px; margin:8px 0; color:{P['txt']};}}
   .card.flat {{background:{P['card2']}; border:none;}}
-  .t {{font-size:0.7rem; color:{P['mut']}; text-transform:uppercase; letter-spacing:.08em; font-weight:600;}}
+  .t {{font-size:0.74rem; color:{P['mut2']}; font-weight:600; letter-spacing:.01em; line-height:1.3;}}
   .row {{display:flex; justify-content:space-between; align-items:center; gap:10px;}}
-  .big {{font-size:1.75rem; font-weight:700; line-height:1.1; letter-spacing:-.02em;}}
-  .mid {{font-size:1rem; font-weight:600;}}
-  .small {{font-size:0.78rem; color:{P['mut']};}}
+  .big {{font-family:{NUM}; font-size:2.2rem; font-weight:700; line-height:1; font-variant-numeric:tabular-nums;}}
+  .pct {{font-family:{NUM}; font-size:1.45rem; font-weight:700; line-height:1.05; font-variant-numeric:tabular-nums;}}
+  .mid {{font-size:0.98rem; font-weight:600; line-height:1.25;}}
+  .small {{font-size:0.8rem; color:{P['mut']}; line-height:1.4;}}
+  .rg {{font-size:0.72rem; color:{P['mut']}; line-height:1.3; font-variant-numeric:tabular-nums;}}
+  .lg-r .rg, .slip .rg, .trio .rg {{white-space:nowrap;}}
   .w {{color:{P['txt']}; font-weight:600;}}
-  .bar {{height:6px; border-radius:3px; background:{P['barbg']}; position:relative; margin:6px 0 3px 0;}}
+  .note {{font-size:0.8rem; color:{P['mut']}; line-height:1.45; border-top:1px solid {P['line2']}; margin-top:10px; padding-top:8px;}}
+  .dot {{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; vertical-align:middle; position:relative; top:-1px;}}
+  .bar {{height:6px; border-radius:3px; background:{P['barbg']}; position:relative; margin:8px 0 2px 0;}}
   .bar > div {{height:6px; border-radius:3px;}}
   .bar .mark {{position:absolute; top:-3px; width:2px; height:12px; background:{P['mark']}; opacity:.9;}}
   .mk {{border-top:1px solid {P['line2']}; padding:10px 0;}}
-  .mk:first-child {{border-top:none;}}
-  .tag {{display:inline-block; padding:3px 9px; border-radius:999px; font-size:0.7rem; font-weight:700; white-space:nowrap; letter-spacing:.02em;}}
+  .mk:first-child, .lg-h + .mk {{border-top:none;}}
+  .tag {{display:inline-block; padding:3px 9px; border-radius:7px; font-size:0.7rem; font-weight:700; white-space:nowrap; letter-spacing:.01em;}}
   .exc {{background:#14532d; color:#bbf7d0;}} .bue {{background:#166534; color:#dcfce7;}} .reg {{background:#78350f; color:#fde68a;}}
   .mal {{background:#7f1d1d; color:#fecaca;}} .pes {{background:#450a0a; color:#fca5a5;}}
   .up {{color:{P['ok']};}} .down {{color:{P['bad']};}}
-  .sticky {{position:sticky; top:0; z-index:99; background:{P['app']}; padding:4px 0;}}
-  table.st {{width:100%; border-collapse:collapse; font-size:0.82rem; color:{P['txt']};}}
-  table.st th {{text-align:right; font-weight:500; color:{P['mut']}; padding:6px 4px; border-bottom:1px solid {P['line']};}}
-  table.st th:first-child, table.st td:first-child {{text-align:left; color:{P['mut']};}}
-  table.st td {{text-align:right; padding:6px 4px; border-bottom:1px solid {P['line2']};}}
+  /* libro de mercados: encabezado + una fila por mercado, columnas fijas alineadas */
+  .lg-h {{display:flex; align-items:flex-end; gap:8px; padding:0 0 6px 0; border-bottom:1px solid {P['line']};}}
+  .lg-r {{display:flex; align-items:center; gap:8px;}}
+  .c1 {{flex:1; min-width:0;}} .cn {{width:62px; text-align:right; flex:none;}} .cq {{width:96px; text-align:right; flex:none;}}
+  /* veredicto: tres numeros grandes en fila */
+  .trio {{display:flex; margin:12px 0 6px 0;}} .trio > div {{flex:1; text-align:center; padding:2px 4px;}} .trio > div + div {{border-left:1px solid {P['line2']};}}
+  .trio .t {{margin-top:5px;}}
+  .kpi {{display:flex; gap:8px;}} .kpi > div {{flex:1; background:{P['card2']}; border-radius:10px; padding:10px 12px;}}
+  .kpi.esc > div {{padding:9px 4px; text-align:center;}}
+  .sec {{border-top:1px solid {P['line2']}; margin-top:12px; padding-top:10px;}} .sec > .t {{margin-bottom:6px;}}
+  table.st {{width:100%; border-collapse:collapse; font-size:0.82rem; color:{P['txt']}; font-variant-numeric:tabular-nums;}}
+  table.st th {{text-align:right; font-weight:500; color:{P['mut2']}; padding:6px 4px; border-bottom:1px solid {P['line']}; font-size:0.74rem;}}
+  table.st th:first-child, table.st td:first-child {{text-align:left;}}
+  table.st td:first-child {{color:{P['txt']};}}
+  table.st td {{text-align:right; padding:7px 4px; border-bottom:1px solid {P['line2']};}}
+  table.st tr:last-child td {{border-bottom:none;}}
+  table.st tr.grp td {{color:{P['mut2']}; font-size:0.74rem; font-weight:600; text-align:left; padding:10px 4px 4px 4px; border-bottom:1px solid {P['line']};}}
   table.st tr.liga td {{color:{P['mut']}; font-style:italic;}}
   table.st tr.me td {{background:{P['card2']}; font-weight:600;}}
-  table.mx {{border-collapse:separate; border-spacing:3px; width:100%; font-size:0.78rem;}}
+  table.mx {{border-collapse:separate; border-spacing:3px; width:100%; font-size:0.78rem; font-variant-numeric:tabular-nums;}}
   table.mx td {{text-align:center; padding:6px 0; border-radius:6px; color:{P['txt']};}}
-  table.mx th {{font-size:0.72rem; color:{P['mut']}; font-weight:500; padding:2px;}}
+  table.mx th {{font-size:0.72rem; color:{P['mut2']}; font-weight:500; padding:2px;}}
   .chart {{position:relative; height:110px; margin:26px 0 22px 0;}}
   .chart .bars {{display:flex; align-items:flex-end; gap:3px; height:100%;}}
   .chart .bars > div {{flex:1; border-radius:4px 4px 0 0; position:relative; min-width:6px;}}
@@ -79,7 +112,7 @@ st.markdown(f"""
   .pl .tm {{flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:{P['mut']};}}
   .pl .tm.r {{text-align:right;}}
   .pl .tm.me {{font-weight:700; color:{P['txt']};}}
-  .pl .sc {{width:46px; flex:none; text-align:center; font-weight:700; border-radius:6px; padding:4px 0; color:#fff; font-size:0.8rem; letter-spacing:.03em;}}
+  .pl .sc {{width:46px; flex:none; text-align:center; font-weight:700; border-radius:6px; padding:4px 0; color:#fff; font-size:0.8rem; letter-spacing:.03em; font-variant-numeric:tabular-nums;}}
   .sc.g {{background:{P['ok']};}} .sc.p {{background:{P['bad']};}} .sc.e {{background:#6b7280;}}
   .pl .mv {{width:54px; flex:none; text-align:right; line-height:1.1;}}
   .pl .mv b {{font-size:1rem;}} .pl .mv .small {{font-size:0.62rem;}}
@@ -87,13 +120,12 @@ st.markdown(f"""
   .forma {{display:inline-flex; gap:3px; vertical-align:middle;}}
   .forma span {{width:18px; height:18px; border-radius:50%; font-size:0.62rem; font-weight:700; color:#fff; display:inline-flex; align-items:center; justify-content:center;}}
   .forma .g {{background:{P['ok']};}} .forma .p {{background:{P['bad']};}} .forma .e {{background:#6b7280;}}
-  .tb {{display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid {P['line2']}; font-size:0.84rem;}}
+  .tb {{display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid {P['line2']}; font-size:0.84rem; font-variant-numeric:tabular-nums;}}
   .tb:last-child {{border-bottom:none;}}
   .tb .pos {{width:22px; text-align:center; color:{P['mut']}; font-weight:600;}}
-  .tb .eq {{flex:1; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}}
+  .tb .eq {{flex:1; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:70px;}}
   .tb .n {{width:26px; text-align:center; color:{P['mut']};}} .tb .pts {{width:30px; text-align:right; font-weight:700;}}
   .tb .z {{width:3px; height:26px; border-radius:2px;}}
-  .tb .eq {{min-width:70px;}}
   @media (max-width: 520px) {{
     .tb {{gap:5px; font-size:0.8rem;}}
     .tb .gfgc {{display:none;}}
@@ -102,15 +134,17 @@ st.markdown(f"""
     .forma span {{width:14px; height:14px; font-size:0.52rem;}}
     .forma {{gap:2px;}}
   }}
-  .kpi {{display:flex; gap:8px;}} .kpi > div {{flex:1; background:{P['card2']}; border-radius:12px; padding:10px 12px;}}
-  .kpi.esc > div {{padding:8px 4px; text-align:center;}}
-  .sec {{border-top:1px solid {P['line2']}; margin-top:10px; padding-top:10px;}} .sec .t {{margin-bottom:6px;}}
-  .tri {{display:flex; height:8px; border-radius:4px; overflow:hidden; background:{P['barbg']}; margin:8px 0 6px 0;}} .tri > div {{height:8px;}}
+  .tri {{display:flex; height:8px; border-radius:4px; overflow:hidden; background:{P['barbg']}; margin:10px 0 6px 0;}} .tri > div {{height:8px;}}
   .fm {{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:5px 0; border-bottom:1px solid {P['line2']}; font-size:0.86rem;}}
   .fm:last-child {{border-bottom:none;}}
   .fm .lbl {{flex:1; text-align:center; color:{P['mut']}; font-size:0.8rem;}}
-  .fm .pill {{min-width:36px; text-align:center; padding:3px 8px; border-radius:999px; font-weight:700; color:{P['txt']};}}
+  .fm .pill {{min-width:36px; text-align:center; padding:3px 8px; border-radius:999px; font-weight:700; color:{P['txt']}; font-variant-numeric:tabular-nums;}}
   .fm .pill.on {{color:#fff;}}
+  /* widgets de Streamlit: solo lo justo para que casen con las tarjetas */
+  div.stButton > button {{border-radius:10px; font-weight:600;}}
+  [data-testid="stExpander"] details {{border:1px solid {P['line']}; border-radius:14px; background:{P['card']};}}
+  [data-testid="stExpander"] summary {{font-weight:600;}}
+  [data-testid="stCaptionContainer"] p {{font-size:0.82rem; line-height:1.45; color:{P['mut']};}}
 </style>""", unsafe_allow_html=True)
 
 
@@ -151,7 +185,23 @@ def chip_var(v, equipo, cond):
 
 
 def rango_txt(lo, hi, pct=True):
-    return f'<span class="small">({lo:.0%}–{hi:.0%})</span>' if pct else f'<span class="small">({lo:.2f}–{hi:.2f})</span>'
+    return f'<span class="rg">({lo:.0%}–{hi:.0%})</span>' if pct else f'<span class="rg">({lo:.2f}–{hi:.2f})</span>'
+
+
+def sec(titulo, desc=""):
+    """Encabezado de seccion: titulo + una linea de descripcion legible (que es y para que sirve)."""
+    st.markdown(f'<div class="sh"><div class="h">{titulo}</div>' + (f'<div class="d">{desc}</div>' if desc else "") + "</div>", unsafe_allow_html=True)
+
+
+def nota(txt):
+    """Nota al pie dentro de una tarjeta (como leerla)."""
+    return f'<div class="note">{txt}</div>'
+
+
+def eq(nombre, lado, n=None):
+    """Nombre del equipo con su punto de color: local azul, visitante violeta."""
+    c = P["acc"] if lado == "l" else COLOR_VIS
+    return f'<span class="dot" style="background:{c}"></span>{corto(nombre, n) if n else nombre}'
 
 
 ss = st.session_state
@@ -171,8 +221,9 @@ MAYOR_NUMERO = ("tiros", "tiros_a_puerta", "corners", "faltas", "amarillas")   #
 NOM = mo.NOMBRES
 NOM_CORTO = {"goles": "Goles", "goles_1t": "Goles 1T", "goles_2t": "Goles 2T", "tiros": "Tiros", "tiros_a_puerta": "Tiros a puerta",
              "corners": "Corners", "faltas": "Faltas", "amarillas": "Amarillas", "rojas": "Rojas"}
-COLOR_VIS = "#8b5cf6"   # color del visitante en graficos y cara a cara (el local usa P["acc"])
+COLOR_VIS = P["vis"]   # color del visitante en graficos y cara a cara (el local usa P["acc"])
 HORA_GT = ZoneInfo("America/Guatemala")
+MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]
 
 
 # ================================================================== asistente IA flotante (todas las vistas)
@@ -487,52 +538,47 @@ def corto(nombre, n=12):
     return nombre if len(nombre) <= n else nombre[:n - 1] + "…"
 
 
-def tabla_lambdas(local, visitante, lam_l, lam_v, rango_l, rango_v, ml, var):
-    """Esperado del modelo en tabla: una fila por equipo y el total. λ · rango bajo–alto · media liga · Δ vs liga · varianza."""
+def tabla_modelos(local, visitante, lam_l, lam_v, rango_l, rango_v, ml, var, mbm=None):
+    """Esperado por modelo en UNA tabla con columnas alineadas: bloque Poisson (λ · rango 80% · liga · Δ · var.) y,
+    si hay modelo, bloque Bayes (λ · intervalo 5%–95% · liga · Δ). Una fila por equipo y el total."""
     (ll, lh), (vl, vh) = rango_l, rango_v
-    filas = [(local, lam_l, ll, lh, ml["local"], chip_var(var, local, "casa")),
-             (visitante, lam_v, vl, vh, ml["visitante"], chip_var(var, visitante, "fuera")),
-             ("Total", lam_l + lam_v, ll + vl, lh + vh, ml["total"], "")]
-    h = '<table class="st"><tr><th>Poisson</th><th>λ</th><th>bajo–alto</th><th>liga</th><th>Δ</th><th>var.</th></tr>'
-    for nm, lam, lo, hi, ref, chip in filas:
-        h += (f'<tr><td>{corto(nm)}</td><td class="w">{lam:.2f}</td><td>{lo:.2f}–{hi:.2f}</td><td>{ref:.2f}</td>'
-              f'<td>{delta(lam, ref, 2)}</td><td>{chip}</td></tr>')
-    return h + "</table>"
-
-
-def tabla_bayes(mbm, local, visitante, ml):
-    """λ bayesianas en tabla, mismo formato que la Poisson: una fila por equipo y el total · λ · intervalo 5%–95% · media liga · Δ. Vacio si no hay modelo."""
-    if mbm is None:
-        return ""
-    b_l, b_v = mbm.lambdas(local, visitante)
-    filas = [(local, b_l, ml["local"]), (visitante, b_v, ml["visitante"]), ("Total", b_l + b_v, ml["total"])]
-    h = '<table class="st" style="margin-top:8px"><tr><th>Bayes</th><th>λ</th><th>5%–95%</th><th>liga</th><th>Δ</th></tr>'
-    for nm, s, ref in filas:
-        h += (f'<tr><td>{corto(nm)}</td><td class="w">{s.mean():.2f}</td><td>{np.percentile(s, 5):.2f}–{np.percentile(s, 95):.2f}</td>'
-              f'<td>{ref:.2f}</td><td>{delta(s.mean(), ref, 2)}</td></tr>')
-    nuevos = [t for t in (local, visitante) if t not in mbm.idx]
-    return h + (f'</table><div class="small" style="margin-top:4px">ρ {mbm.m["rho"].mean():.2f}'
-                + (f' · sin partidos en el modelo: {", ".join(nuevos)}' if nuevos else "") + '</div>')
+    h = '<table class="st"><tr><th>Equipo</th><th>λ</th><th>rango</th><th>liga</th><th>Δ</th><th>var.</th></tr>'
+    h += '<tr class="grp"><td colspan="6">Poisson · rango de confianza 80%</td></tr>'
+    for nm, lam, lo, hi, ref, chip in ((eq(local, "l", 13), lam_l, ll, lh, ml["local"], chip_var(var, local, "casa")),
+                                       (eq(visitante, "v", 13), lam_v, vl, vh, ml["visitante"], chip_var(var, visitante, "fuera")),
+                                       ("Total", lam_l + lam_v, ll + vl, lh + vh, ml["total"], "")):
+        h += f'<tr><td>{nm}</td><td class="w">{lam:.2f}</td><td>{lo:.2f}–{hi:.2f}</td><td>{ref:.2f}</td><td>{delta(lam, ref, 2)}</td><td>{chip}</td></tr>'
+    pie = ""
+    if mbm is not None:
+        b_l, b_v = mbm.lambdas(local, visitante)
+        h += '<tr class="grp"><td colspan="6">Bayes · intervalo 5%–95% (1,000 escenarios)</td></tr>'
+        for nm, s, ref in ((eq(local, "l", 13), b_l, ml["local"]), (eq(visitante, "v", 13), b_v, ml["visitante"]), ("Total", b_l + b_v, ml["total"])):
+            h += (f'<tr><td>{nm}</td><td class="w">{s.mean():.2f}</td><td>{np.percentile(s, 5):.2f}–{np.percentile(s, 95):.2f}</td>'
+                  f'<td>{ref:.2f}</td><td>{delta(s.mean(), ref, 2)}</td><td></td></tr>')
+        nuevos = [t for t in (local, visitante) if t not in mbm.idx]
+        pie = f' · ρ Bayes {mbm.m["rho"].mean():.2f}' + (f' · sin partidos en el modelo Bayes: {", ".join(nuevos)}' if nuevos else "")
+    return h + "</table>" + nota("λ = cantidad esperada · liga = media de la liga en esa condición · Δ = λ menos la media · "
+                                "var. = qué tan variable es el equipo frente a la liga (🟢 estable 🟡 normal 🔴 volátil ⚪ pocos datos)" + pie)
 
 
 def html_bayes(mbm, resaltar=()):
     """Fuerzas bayesianas por equipo (1.00 = promedio de la liga) con intervalo 5%-95%, ordenadas por ataque."""
     f = mbm.fuerzas().sort_values("ataque", ascending=False)
     h = '<div class="card"><table class="st"><tr><th>#</th><th style="text-align:left">Equipo</th><th>Ataque</th><th>5%–95%</th><th>Defensa</th><th>5%–95%</th></tr>'
-    for i, (eq, x) in enumerate(f.iterrows(), 1):
-        h += (f'<tr{" class=me" if eq in resaltar else ""}><td>{i}</td><td style="text-align:left;color:{P["txt"]}">{eq}</td>'
+    for i, (equipo, x) in enumerate(f.iterrows(), 1):
+        h += (f'<tr{" class=me" if equipo in resaltar else ""}><td style="color:{P["mut"]}">{i}</td><td style="text-align:left">{equipo}</td>'
               f'<td class="w">{x.ataque:.2f}</td><td>{x.ataque_bajo:.2f}–{x.ataque_alto:.2f}</td>'
               f'<td class="w">{x.defensa:.2f}</td><td>{x.defensa_bajo:.2f}–{x.defensa_alto:.2f}</td></tr>')
     d = mbm.meta.get("diag", {})
-    return h + (f'</table><div class="small" style="margin-top:6px">1.00 = promedio de la liga · ataque > 1 produce más · defensa > 1 concede más · '
-                f'ventaja local {np.exp(mbm.m["ventaja_local"].mean()):.2f}× · ajustado con datos al {mbm.meta.get("fecha_max", "?")} '
-                f'({mbm.meta.get("n_partidos", "?")} partidos) · convergencia {d.get("veredicto", "?")}</div></div>')
+    return h + "</table>" + nota(f'1.00 = promedio de la liga · ataque > 1 produce más · defensa > 1 concede más · '
+                                 f'ventaja local {np.exp(mbm.m["ventaja_local"].mean()):.2f}× · ajustado con datos al {mbm.meta.get("fecha_max", "?")} '
+                                 f'({mbm.meta.get("n_partidos", "?")} partidos) · convergencia {d.get("veredicto", "?")}') + "</div>"
 
 
 def escenarios_html(mk):
     """Cuadricula pesimista · Poisson · optimista: probabilidad y cuota justa de cada escenario."""
     tiles = [(nm, mk[k], f"justa {mo.cuota_justa(mk[k]):.2f}") for nm, k in (("Pesimista", "lo"), ("Poisson", "prob"), ("Optimista", "hi"))]
-    return '<div class="kpi esc">' + "".join(f'<div><div class="t">{nm}</div><div class="mid">{p:.0%}</div><div class="small">{s}</div></div>'
+    return '<div class="kpi esc">' + "".join(f'<div><div class="t">{nm}</div><div class="pct">{p:.0%}</div><div class="rg">{s}</div></div>'
                                              for nm, p, s in tiles) + "</div>"
 
 
@@ -627,11 +673,11 @@ def lista_partidos(equipo, h, mk, lado):
     G, E, Pp = forma.count("g"), forma.count("e"), forma.count("p")
     dots = "".join(f'<span class="{x}">{x.upper()}</span>' for x in forma[::-1])
     que = {"a_favor": "a favor", "en_contra": "en contra", "total": "total"}.get(col, "cumple")
-    return (f'<div class="card"><div class="row"><div class="mid">{equipo}</div>'
+    return (f'<div class="card"><div class="row"><div class="mid">{eq(equipo, lado)}</div>'
             f'<div class="small">{G}G {E}E {Pp}P</div></div>'
             f'<div class="row" style="margin:4px 0 6px 0"><div class="forma">{dots}</div>'
             f'<div class="small">{NOM[met].lower()} {que} · <span class="w">{int(serie.sum())}/{len(h)}</span> cumplió</div></div>'
-            f'{filas}<div class="small" style="margin-top:6px">racha: antiguo → reciente · marcador verde = ganó, rojo = perdió, gris = empate · valor verde = cumplió la pata</div></div>')
+            f'{filas}' + nota("Racha: antiguo → reciente. Marcador verde = ganó, rojo = perdió, gris = empate. Valor en verde = en ese partido se cumplió la pata.") + '</div>')
 
 
 def matriz_html(m, local, visitante, region, k=6):
@@ -644,7 +690,7 @@ def matriz_html(m, local, visitante, region, k=6):
             col = f"rgba(46,158,91,{a:.2f})" if region(x, y) else (f"rgba(90,98,112,{a * 0.7:.2f})" if TEMA == "dark" else f"rgba(156,163,175,{a * 0.8:.2f})")
             h += f'<td style="background:{col}">{p * 100:.0f}</td>'
         h += "</tr>"
-    return h + f'</table><div class="small" style="margin-top:4px">filas = {local} · columnas = {visitante} · cifra = % modelo · verde = marcador con el que gana la pata, gris = no gana · más intenso = más probable</div>'
+    return h + "</table>" + nota(f"Filas = {local} · columnas = {visitante}. Cada celda es el % de ese marcador exacto según Poisson. Verde = marcadores con los que gana la pata; más intenso = más probable.")
 
 
 def distribucion_html(m, mk, etiqueta):
@@ -661,7 +707,7 @@ def distribucion_html(m, mk, etiqueta):
     mx = dist[:hi].max()
     bars = "".join(f'<div style="height:{max(dist[s] / mx * 100, 2):.0f}%;background:{"#2e9e5b" if cond(s) else P["miss"]}">'
                    f'<span class="v">{dist[s]:.0%}</span><span class="x">{s}</span></div>' for s in range(hi))
-    return f'<div class="chart"><div class="bars">{bars}</div></div><div class="small">{etiqueta} según el modelo · verde = gana la pata</div>'
+    return f'<div class="chart"><div class="bars">{bars}</div></div>' + nota(f"Probabilidad de cada cantidad de {etiqueta} según Poisson. Verde = cantidades con las que gana la pata.")
 
 
 
@@ -678,7 +724,7 @@ def diferencia_html(m, mk, local, visitante, etiqueta):
     bars = "".join(f'<div style="height:{max(dist[i] / mx * 100, 2):.0f}%;background:{"#2e9e5b" if mk["region"](max(ds[i], 0), max(-ds[i], 0)) else P["miss"]}">'
                    f'<span class="v">{dist[i]:.0%}</span><span class="x">{ds[i]:+d}</span></div>' for i in range(lo, hi))
     return (f'<div class="chart"><div class="bars">{bars}</div></div>'
-            f'<div class="small">{etiqueta}: {local} menos {visitante} según el modelo · + = más el local, − = más el visitante · verde = gana la pata</div>')
+            + nota(f"Diferencia de {etiqueta}: {local} menos {visitante}, según Poisson. Positivo = más el local, negativo = más el visitante. Verde = gana la pata."))
 
 
 # ================================================================== tabla de posiciones y tendencias
@@ -719,7 +765,7 @@ def html_tabla(t, resaltar=(), compacta=False):
               f'<div class="pos">{pos}</div><div class="eq">{f.equipo}</div><div class="n">{f.J}</div><div class="n">{f.G}</div>'
               f'<div class="n">{f.E}</div><div class="n">{f.P}</div>' + ('' if compacta else f'<div class="n gfgc" style="width:44px">{f.GF}-{f.GC}</div>')
               + f'<div class="n">{f.DG:+d}</div><div class="pts">{f.PTS}</div>' + ('' if compacta else f'<div class="forma" style="width:102px">{forma}</div>') + '</div>')
-    return h + '<div class="small" style="margin-top:6px">verde = Champions · ámbar = Europa · rojo = descenso · forma: antiguo → reciente</div></div>'
+    return h + nota("Franja verde = Champions · ámbar = Europa · roja = descenso (orientativo). Forma: antiguo → reciente.") + "</div>"
 
 
 def tendencias(met, n=5):
@@ -734,21 +780,62 @@ def tendencias(met, n=5):
     return t, ml["total"]
 
 
-# ================================================================== navegacion
+# ================================================================== boleto (se usa en la barra superior y en Inicio)
+def resumen_boleto():
+    """Devuelve (prob, cuota, ev, prob_pesimista, prob_optimista) del boleto o None.
+    Pesimista / optimista = producto de la prob. pesimista / optimista de cada pata."""
+    legs = ss.parlay
+    if not legs:
+        return None
+    prob = float(np.prod([l["prob"] for l in legs])); cuota = float(np.prod([l["cuota"] for l in legs]))
+    lo = float(np.prod([l.get("lo", l["prob"]) for l in legs])); hi = float(np.prod([l.get("hi", l["prob"]) for l in legs]))
+    return prob, cuota, prob * cuota - 1, lo, hi
+
+
+def boleto_bayes():
+    """(prob_bayes, ev_bayes) del boleto: producto de la prob. bayesiana de cada pata (si una pata no la tiene, usa su prob. Poisson)."""
+    legs = ss.parlay
+    if not legs or all(l.get("bayes") is None for l in legs):
+        return None
+    pb = float(np.prod([l["bayes"] if l.get("bayes") is not None else l["prob"] for l in legs]))
+    return pb, pb * float(np.prod([l["cuota"] for l in legs])) - 1
+
+
+def slip_html(detalle=False):
+    """Resumen del boleto en una fila: patas y cuota a la izquierda, EV Poisson y EV Bayes (mismo tamaño) a la derecha.
+    detalle=True agrega la linea pesimista / optimista."""
+    rb = resumen_boleto()
+    if not rb:
+        return ""
+    prob, cuota, ev, plo, phi = rb
+    bb = boleto_bayes()
+    evs = [("Poisson", prob, ev)] + ([("Bayes", bb[0], bb[1])] if bb else [])
+    h = (f'<div class="slip"><div class="row"><div class="c1"><div class="t">Boleto · {len(ss.parlay)} pata{"s" if len(ss.parlay) > 1 else ""}</div>'
+         f'<div class="mid">cuota {cuota:.2f}</div><div class="rg">justa {mo.cuota_justa(prob)}</div></div>'
+         + "".join(f'<div class="evb"><div class="t">EV {nm} · {p:.0%}</div><div class="pct {"up" if v > 0 else "down"}">{v:+.2f}</div></div>' for nm, p, v in evs) + "</div>")
+    if detalle:
+        h += f'<div class="small" style="margin-top:6px">pesimista {plo:.0%} (EV {plo * cuota - 1:+.2f}) · optimista {phi:.0%} (EV {phi * cuota - 1:+.2f})</div>'
+    return h + "</div>"
+
+
+# ================================================================== navegacion (barra superior fija)
 paginas = ["Inicio", "Armar", "Analizar", "Cara a cara", "Tabla", "Diccionario"] + (["Admin"] if ES_ADMIN else [])
-top1, top2 = st.columns([3, 1])
-top1.markdown('### Kuota <span class="small" style="font-weight:400">· Parlays con Datos</span>', unsafe_allow_html=True)
-if usuarios:
-    if top2.button(f"Salir · {ss.usuario}", width="stretch"):
-        registrar_uso("logout")
-        for k in list(ss.keys()):
-            del ss[k]
-        st.rerun()
-else:
-    top2.markdown(f'<div class="small" style="text-align:right;padding-top:14px">{ss.usuario}</div>', unsafe_allow_html=True)
-pagina = st.segmented_control("Página", paginas, default=ss.pagina if ss.pagina in paginas else "Inicio",
-                              label_visibility="collapsed", key=f"pag_w{ss.gen}") or ss.pagina
-ss.pagina = pagina
+with st.container(key="topbar"):
+    top1, top2 = st.columns([3, 1])
+    top1.markdown('<div class="brand"><span class="logo">Kuota</span><span class="slogan">Parlays con datos</span></div>', unsafe_allow_html=True)
+    if usuarios:
+        if top2.button(f"Salir · {ss.usuario}", width="stretch"):
+            registrar_uso("logout")
+            for k in list(ss.keys()):
+                del ss[k]
+            st.rerun()
+    else:
+        top2.markdown(f'<div class="brand"><span class="user">{ss.usuario}</span></div>', unsafe_allow_html=True)
+    pagina = st.segmented_control("Página", paginas, default=ss.pagina if ss.pagina in paginas else "Inicio",
+                                  label_visibility="collapsed", key=f"pag_w{ss.gen}") or ss.pagina
+    ss.pagina = pagina
+    if pagina == "Armar" and ss.parlay:      # el boleto viaja fijo con la barra mientras armas
+        st.markdown(slip_html(), unsafe_allow_html=True)
 if pagina not in ("Diccionario", "Admin"):
     liga_sel = st.pills("Liga", list(LIGAS_DISPONIBLES), format_func=lambda k: LIGAS_DISPONIBLES[k], default=ss.liga,
                         label_visibility="collapsed", key=f"liga_w{ss.gen}") or ss.liga
@@ -779,60 +866,39 @@ def torneos_recientes():
     return df.groupby("temporada_txt")["fecha"].max().sort_values().index.tolist()[-2:]
 
 
-def resumen_boleto():
-    """Devuelve (prob, cuota, ev, prob_pesimista, prob_optimista) del boleto o None.
-    Pesimista / optimista = producto de la prob. pesimista / optimista de cada pata."""
-    legs = ss.parlay
-    if not legs:
-        return None
-    prob = float(np.prod([l["prob"] for l in legs])); cuota = float(np.prod([l["cuota"] for l in legs]))
-    lo = float(np.prod([l.get("lo", l["prob"]) for l in legs])); hi = float(np.prod([l.get("hi", l["prob"]) for l in legs]))
-    return prob, cuota, prob * cuota - 1, lo, hi
-
-
-def boleto_bayes():
-    """(prob_bayes, ev_bayes) del boleto: producto de la prob. bayesiana de cada pata (si una pata no la tiene, usa su prob. Poisson)."""
-    legs = ss.parlay
-    if not legs or all(l.get("bayes") is None for l in legs):
-        return None
-    pb = float(np.prod([l["bayes"] if l.get("bayes") is not None else l["prob"] for l in legs]))
-    return pb, pb * float(np.prod([l["cuota"] for l in legs])) - 1
-
-
 # ================================================================== PAGINA INICIO
 if pagina == "Inicio":
     temp = temporada_actual()
     ult = df["fecha"].max()
+    n_temp = len(df[df.temporada_txt == temp])
     val_txt = ""
     if os.path.exists("datos/validacion.json"):
         import json
         _v = json.load(open("datos/validacion.json")).get("ligas", {}).get(ss.liga)
         if _v:
-            val_txt = f'<div class="small {"up" if _v.get("ok") and not _v.get("avisos") else "down"}">datos {"validados ✓" if _v.get("ok") else "con errores"} · {_v.get("vacias", 0)} vacíos</div>'
-    st.markdown(f'<div class="card flat"><div class="row"><div><div class="t">{LIGA} · temporada {temp}</div>'
-                f'<div class="mid">{len(df[df.temporada_txt == temp])} partidos jugados</div>{val_txt}</div>'
-                f'<div style="text-align:right"><div class="t">Datos al</div><div class="mid">{ult:%d/%m/%Y}</div></div></div></div>',
+            val_txt = (f'<span class="{"up" if _v.get("ok") and not _v.get("avisos") else "down"}">datos {"validados ✓" if _v.get("ok") else "con errores"}</span>'
+                       f' · {_v.get("vacias", 0)} celdas vacías · ')
+    st.markdown(f'<div class="card"><div class="row"><div class="mid">{LIGA}</div><div class="small">temporada {temp}</div></div>'
+                f'<div class="trio"><div><div class="big">{n_temp}</div><div class="t">partidos jugados</div></div>'
+                f'<div><div class="big">{ult:%d} {MESES[ult.month - 1]}</div><div class="t">último dato</div></div>'
+                f'<div><div class="big">{len(lista)}</div><div class="t">equipos</div></div></div>'
+                + nota(f'{val_txt}{len(df)} partidos cargados en total ({" y ".join(torneos_recientes())}). Se actualiza todos los días a las 6:00 am.') + '</div>',
                 unsafe_allow_html=True)
-    rb = resumen_boleto()
-    if rb:
-        prob, cuota, ev, plo, phi = rb
-        bb = boleto_bayes()
-        st.markdown(f'<div class="card"><div class="row"><div><div class="t">Boleto en curso · {len(ss.parlay)} patas</div>'
-                    f'<div class="mid">cuota {cuota:.2f} · Poisson {prob:.0%} {rango_txt(plo, phi)}' + (f' · Bayes {bb[0]:.0%} (EV {bb[1]:+.2f})' if bb else '') + '</div></div>'
-                    f'<div style="text-align:right"><div class="t">EV Poisson</div><div class="big {"up" if ev > 0 else "down"}">{ev:+.2f}</div></div></div></div>', unsafe_allow_html=True)
+    if ss.parlay:
+        sec("Boleto en curso", "Lo que llevas armado. Sigue en Armar para agregar patas o revisar el stake.")
+        st.markdown(slip_html(detalle=True), unsafe_allow_html=True)
     a, b = st.columns(2)
     if a.button("Armar parlay", width="stretch"):
         ir_a("Armar")
     if b.button("Analizar una pata", width="stretch"):
         ir_a("Analizar")
 
-    st.markdown('<div class="t" style="margin-top:8px">Medias de liga · por partido</div>', unsafe_allow_html=True)
+    sec("Medias de liga por partido", "Promedio de todos los partidos cargados. Línea = la .5 más cercana a la media del total; "
+        "Over = en qué porcentaje de partidos el total superó esa línea. Sirve para saber qué tan normal es un Over antes de mirar a los equipos.")
     st.markdown(f'<div class="card">{medias_html()}</div>', unsafe_allow_html=True)
-    st.caption(f"{LIGA} · {len(df)} partidos cargados ({' y '.join(torneos_recientes())}). Línea = la .5 más cercana a la media del total · "
-               "Over = % de partidos con total por encima de esa línea.")
 
     t = tabla_posiciones(temp)
-    st.markdown('<div class="t" style="margin-top:8px">Tabla · top 6</div>', unsafe_allow_html=True)
+    sec("Tabla · top 6", f"Calculada con los partidos cargados de la temporada {temp}. La tabla completa está en la página Tabla.")
     st.markdown(html_tabla(t.head(6), compacta=True), unsafe_allow_html=True)
     ss.ctx_titulo = f"Inicio · {LIGA} · tabla {temp}"
     medias_ia = "; ".join(f"{NOM[m]} local {mo.medias_liga(df, m)['local']:.2f} visita {mo.medias_liga(df, m)['visitante']:.2f} total {mo.medias_liga(df, m)['total']:.2f}"
@@ -841,19 +907,18 @@ if pagina == "Inicio":
                  "; ".join(f"{i + 1}. {f.equipo} {f.PTS} pts (J{f.J} G{f.G} E{f.E} P{f.P}, DG {f.DG:+d})" for i, f in t.iterrows()) +
                  ("\nBoleto actual: " + "; ".join(f"{l['mercado']} ({l['partido']}, modelo {l['prob']:.0%}, cuota {l['cuota']})" for l in ss.parlay) if ss.parlay else "\nBoleto vacío."))
 
-    st.markdown('<div class="t" style="margin-top:8px">Tendencias · últimos 5 partidos</div>', unsafe_allow_html=True)
+    sec("Tendencias · últimos 5 partidos", "Promedio del equipo (a favor + en contra) en sus últimos 5 partidos, comparado con la media de la liga. "
+        "Sirve para elegir qué partido y mercado analizar.")
     met_h = st.pills("Métrica tendencias", list(mo.METRICAS), format_func=lambda x: NOM[x], default="corners", label_visibility="collapsed")
     if met_h:
         tt, media = tendencias(met_h)
         def fila(f):
-            return (f'<div class="mk"><div class="row"><div class="mid">{f.equipo}</div><div><span class="w">{f.prom:.1f}</span> '
-                    f'<span class="small">{f.prom - media:+.1f} vs liga</span></div></div>'
+            return (f'<div class="mk"><div class="row"><div class="mid">{f.equipo}</div><div class="pct">{f.prom:.1f} '
+                    f'<span class="rg">{f.prom - media:+.1f} vs liga</span></div></div>'
                     f'{barra(f.prom, media, max(tt.prom.max(), media) * 1.1, P["ok"] if f.prom >= media else P["mut"])}'
-                    f'<div class="small">a favor {f.favor:.1f} · en contra {f.contra:.1f}</div></div>')
-        st.markdown(f'<div class="card"><div class="t">{NOM[met_h]} por partido · todos los equipos · media liga {media:.1f}</div>'
-                    + "".join(fila(f) for _, f in tt.iterrows()) + '</div>', unsafe_allow_html=True)
-        st.caption("Ordenados de mayor a menor. Barra = promedio del equipo (a favor + en contra) en sus últimos 5 · marca blanca = media de la liga. "
-                   "Sirve para elegir qué partido y mercado analizar.")
+                    f'<div class="rg">a favor {f.favor:.1f} · en contra {f.contra:.1f}</div></div>')
+        st.markdown(f'<div class="card"><div class="row" style="margin-bottom:4px"><div class="t">{NOM[met_h]} por partido · todos los equipos</div><div class="t">media liga {media:.1f}</div></div>'
+                    + "".join(fila(f) for _, f in tt.iterrows()) + nota("Ordenados de mayor a menor. Barra = promedio del equipo; marca vertical = media de la liga.") + '</div>', unsafe_allow_html=True)
 
 # ================================================================== PAGINA DICCIONARIO
 elif pagina == "Diccionario":
@@ -897,14 +962,19 @@ elif pagina == "Diccionario":
         ("Datos", "Jornada", "Estimada: partido n-ésimo de cada equipo en la temporada. Un aplazado se cuenta cuando se jugó."),
         ("Datos", "Temporada", "Europa: formato 2025-26 (agosto a mayo). Liga MX: Clausura AAAA (enero-junio) y Apertura AAAA (julio-diciembre), Liguilla incluida."),
     ]
+    sec("Diccionario", "Qué significa cada término que ves en la app, en palabras simples. Escribe para filtrar.")
     q = st.text_input("Buscar", placeholder="Buscar un término…", label_visibility="collapsed").strip().lower()
     grupos_d = list(dict.fromkeys(g for g, _, _ in DIC))
+    DESC_G = {"Modelo": "Cómo se calculan las probabilidades.", "Mercados": "Qué es cada apuesta y cómo leer cuota y EV.",
+              "Validación": "Cómo se comprueba una pata contra el historial y qué significa la calificación.",
+              "Banca": "Cuánto apostar.", "Datos": "De dónde salen los datos y cómo se ordenan."}
     for g in grupos_d:
         items = [(t_, d_) for gg, t_, d_ in DIC if gg == g and (not q or q in t_.lower() or q in d_.lower())]
         if not items:
             continue
-        st.markdown(f'<div class="t" style="margin-top:8px">{g}</div><div class="card">' +
-                    "".join(f'<div class="mk"><div class="mid">{t_}</div><div class="small" style="margin-top:2px;color:{P["txt"]};opacity:.85">{d_}</div></div>' for t_, d_ in items)
+        sec(g, DESC_G.get(g, ""))
+        st.markdown('<div class="card">' +
+                    "".join(f'<div class="mk"><div class="mid">{t_}</div><div style="margin-top:3px;font-size:0.86rem;line-height:1.5;color:{P["txt"]}">{d_}</div></div>' for t_, d_ in items)
                     + '</div>', unsafe_allow_html=True)
 
 # ================================================================== PAGINA TABLA
@@ -916,10 +986,9 @@ elif pagina == "Tabla":
         mets_b = [m for m in mo.METRICAS if m in bayes(ss.liga)]
         met_b = st.pills("Métrica Bayes", mets_b, format_func=lambda x: NOM[x], default="goles" if "goles" in mets_b else mets_b[0], label_visibility="collapsed") or mets_b[0]
         mbm_t = bayes(ss.liga)[met_b]
-        st.markdown(f'<div class="t">Bayes · {NOM[met_b]} · fuerzas por equipo</div>', unsafe_allow_html=True)
+        sec(f"Bayes · {NOM[met_b]} · fuerzas por equipo", f"{LIGA}. Ataque y defensa de cada equipo estimados todos a la vez; con pocos datos el equipo se acerca "
+            "al promedio. El intervalo 5%–95% dice cuánto se sabe de cada uno: más angosto = más seguro. Se reajusta cada martes.")
         st.markdown(html_bayes(mbm_t), unsafe_allow_html=True)
-        st.caption(f"{LIGA} · modelo bayesiano jerárquico: un ataque y una defensa por equipo, estimados a la vez y encogidos hacia el promedio "
-                   "cuando hay pocos datos. El intervalo dice cuánto se sabe de cada equipo. Se muestra a la par del Poisson en Armar y Analizar; se reajusta cada martes.")
         f_ = mbm_t.fuerzas().sort_values("ataque", ascending=False)
         ss.ctx_titulo = f"Tabla Bayes · {LIGA} · {NOM[met_b]}"
         ss.ctx_ia = (f"Vista: Tabla Bayes. Liga {LIGA}. Métrica {NOM[met_b]}. Fuerzas bayesianas (1.00 = promedio liga, con intervalo 5-95%): " +
@@ -928,12 +997,12 @@ elif pagina == "Tabla":
         temps = sorted(df.temporada_txt.unique(), reverse=True)
         temp = st.selectbox("Temporada", temps, label_visibility="collapsed")
         t = tabla_posiciones(temp)
+        sec(f"Posiciones · {temp}", f"{LIGA}. Calculada con los partidos cargados en la base. Las zonas de Champions, Europa y descenso son orientativas (4 / 2 / 3).")
         st.markdown(html_tabla(t), unsafe_allow_html=True)
-        st.caption(f"{LIGA} · calculada desde la BBDD (solo partidos cargados). Zonas europeas y de descenso son orientativas (4 / 2 / 3).")
 
 # ================================================================== PAGINA ADMIN
 elif pagina == "Admin":
-    st.markdown('<div class="t">Calidad de datos</div>', unsafe_allow_html=True)
+    sec("Calidad de datos", "Resultado de la última revisión automática de cada base: vacíos, duplicados, descanso > final, tiros a puerta > tiros y negativos.")
     if os.path.exists("datos/validacion.json"):
         import json
         val = json.load(open("datos/validacion.json"))
@@ -945,11 +1014,10 @@ elif pagina == "Admin":
                         f'<div class="small">{r.get("partidos", 0)} partidos · {r.get("equipos", "?")} equipos · último {r.get("ultimo", "?")} · '
                         f'{r.get("vacias", 0)} celdas vacías · {r.get("duplicados", 0)} duplicados</div>'
                         + (f'<div class="small down">{det}</div>' if det else "") + '</div>')
-        st.markdown(f'<div class="card"><div class="small">Última validación: {val["fecha"]} · se revisa cada corrida del Action: vacíos, duplicados, descanso > final, tiros a puerta > tiros, negativos</div>{filas_v}</div>',
-                    unsafe_allow_html=True)
+        st.markdown(f'<div class="card"><div class="t" style="margin-bottom:4px">Última validación · {val["fecha"]}</div>{filas_v}</div>', unsafe_allow_html=True)
     else:
         st.info("Todavía no hay reporte de validación (se genera en la próxima corrida del Action).")
-    st.markdown('<div class="t">Usuarios y uso</div>', unsafe_allow_html=True)
+    sec("Usuarios y uso", "Quién puede entrar y cuánto usa la app. Se configura en Streamlit Cloud → Settings → Secrets.")
     if not usuarios:
         st.markdown('<div class="card"><div class="mid">Acceso abierto (sin usuarios configurados)</div>'
                     '<div class="small" style="margin-top:6px">Para activar usuarios y el registro de uso, en Streamlit Cloud → tu app → Settings → Secrets pega:</div></div>',
@@ -1017,26 +1085,27 @@ elif pagina == "Cara a cara":
     iv = lambda x: "?" if pd.isna(x) else int(x)
 
     # 1) record estilo FotMob: victorias · empates · victorias + barra tricolor
+    sec("Récord directo", f"Solo {txt_temps}" + (f", con {local} en casa" if solo_casa else "") + ". Son pocos partidos: sirven como contexto, no como prueba.")
     if n == 0:
         st.markdown(f'<div class="card"><div class="mid">Sin enfrentamientos</div><div class="small">{local} y {visitante} no se han cruzado en {txt_temps}'
                     + (" con el local en casa" if solo_casa else "") + '.</div></div>', unsafe_allow_html=True)
     else:
         tri = "".join(f'<div style="width:{x / n * 100:.0f}%;background:{c}"></div>' for x, c in ((G, P["acc"]), (E, "#6b7280"), (Pp, COLOR_VIS)))
-        st.markdown(f'<div class="card"><div class="row" style="text-align:center">'
-                    f'<div style="flex:1"><div class="big" style="color:{P["acc"]}">{G}</div><div class="small">{corto(local, 14)}</div></div>'
-                    f'<div style="flex:1"><div class="big" style="color:#6b7280">{E}</div><div class="small">empate{"s" if E != 1 else ""}</div></div>'
-                    f'<div style="flex:1"><div class="big" style="color:{COLOR_VIS}">{Pp}</div><div class="small">{corto(visitante, 14)}</div></div></div>'
-                    f'<div class="tri">{tri}</div><div class="small">{n} partido{"s" if n != 1 else ""} · {txt_temps}</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="card"><div class="trio" style="margin-top:0">'
+                    f'<div><div class="big" style="color:{P["acc"]}">{G}</div><div class="t">{eq(local, "l", 14)}</div></div>'
+                    f'<div><div class="big" style="color:#6b7280">{E}</div><div class="t">empate{"s" if E != 1 else ""}</div></div>'
+                    f'<div><div class="big" style="color:{COLOR_VIS}">{Pp}</div><div class="t">{eq(visitante, "v", 14)}</div></div></div>'
+                    f'<div class="tri">{tri}</div><div class="small">{n} partido{"s" if n != 1 else ""} · victorias de cada uno y empates</div></div>', unsafe_allow_html=True)
 
         # 2) partido a partido: la ficha completa de cada enfrentamiento, ya abierta (estilo FotMob)
-        st.markdown('<div class="t" style="margin-top:8px">Partidos</div>', unsafe_allow_html=True)
+        sec("Partido a partido", f"La ficha completa de cada enfrentamiento (las 9 métricas). 🟢 ganó {local} · 🔴 ganó {visitante} · ⚪ empate. "
+            "La pastilla de color marca al equipo que hizo más en esa métrica.")
         for _, g in par.iterrows():
             gl, gv = int(g.goles_local_val), int(g.goles_visitante_val)
             a_, b_ = (gl, gv) if g.equipo_local_txt == local else (gv, gl)
             punto = "🟢" if a_ > b_ else ("🔴" if a_ < b_ else "⚪")
             with st.expander(f"{punto} {g.fecha:%d/%m/%y} · {g.equipo_local_txt} {gl}-{gv} {g.equipo_visitante_txt} · {g.temporada_txt}", expanded=True):
                 st.markdown(stats_partido_html(g, local, visitante), unsafe_allow_html=True)
-        st.caption(f"🟢 ganó {local} · 🔴 ganó {visitante} · ⚪ empate · en la ficha, la pastilla de color marca al equipo que hizo más.")
 
     ss.ctx_titulo = f"Cara a cara · {local} vs {visitante}"
     ss.ctx_ia = (f"Vista: Cara a cara. Liga {LIGA}. {local} vs {visitante}, solo {txt_temps}" + (f", solo con {local} en casa" if solo_casa else "") +
@@ -1071,6 +1140,9 @@ else:
     cfg = ss[key_cfg]
     lst = mercados(r, met, local, visitante, cfg, mbm)
     grupos = list(dict.fromkeys(x["grupo"] for x in lst))
+    tabla_esp = tabla_modelos(local, visitante, lam_l, lam_v, r["rango"]["lam_l"], r["rango"]["lam_v"], ml, var, mbm)
+    desc_esp = (f"Cuántos {NOM[met].lower()} espera cada modelo para este partido (λ). Poisson trae su rango de confianza del 80%; "
+                f"Bayes, el intervalo 5%–95% de sus escenarios. Cuanto más angosto el rango, más seguro el número.")
 
     def selector_lineas(grp, key):
         if grp in ("Resultado", "Mayor número"):
@@ -1081,48 +1153,48 @@ else:
         if [centro, rango] != cfg[grp]:
             cfg[grp] = [centro, rango]; st.rerun()
 
+    def ev_html(mk, e, cuota):
+        """Tarjeta de EV para una pata con la cuota de la casa: EV Poisson y EV Bayes al mismo tamaño + calificacion."""
+        ev, ev_lo = mk["prob"] * cuota - 1, mk["lo"] * cuota - 1
+        tiles = [("EV Poisson", ev, f'prob. {mk["prob"]:.0%} · justa {mo.cuota_justa(mk["prob"])}')]
+        if mk.get("bayes") is not None:
+            tiles.append(("EV Bayes", mk["bayes"] * cuota - 1, f'prob. {mk["bayes"]:.0%}'))
+        tiles.append(("EV pesimista", ev_lo, f'prob. {mk["lo"]:.0%}'))
+        kpi = "".join(f'<div><div class="t">{nm}</div><div class="pct {"up" if v > 0 else "down"}">{v:+.2f}</div><div class="rg">{s}</div></div>' for nm, v, s in tiles)
+        return (f'<div class="card flat" style="margin:4px 0"><div class="row" style="margin-bottom:8px"><div class="mid">{mk["mercado"]}</div>'
+                f'<span class="tag {e["cls"]}">{e["tag"]}</span></div><div class="kpi esc">{kpi}</div></div>')
+
     # ---------------------------------------------------------- ARMAR
     if pagina == "Armar":
-        rb = resumen_boleto()
-        if rb:
-            prob, cuota, ev, plo, phi = rb; legs = ss.parlay
-            ev_lo, ev_hi = plo * cuota - 1, phi * cuota - 1
-            bb = boleto_bayes()
-            # un bloque por modelo, mismo tamaño: nombre + prob. del boleto arriba, EV en grande
-            bloques = [("Poisson", prob, ev)] + ([("Bayes", bb[0], bb[1])] if bb else [])
-            kpi = "".join(f'<div><div class="t">{nm} {p:.0%}</div><div class="big {"up" if v > 0 else "down"}">EV {v:+.2f}</div></div>' for nm, p, v in bloques)
-            st.markdown(f'<div class="sticky"><div class="card" style="margin:0">'
-                        f'<div class="t">Boleto · {len(legs)} pata{"s" if len(legs) > 1 else ""} · cuota {cuota:.2f} · justa {mo.cuota_justa(prob)}</div>'
-                        f'<div class="kpi" style="margin:6px 0">{kpi}</div>'
-                        f'<div class="small">pesimista {plo:.0%} (EV {ev_lo:+.2f}) · optimista {phi:.0%} (EV {ev_hi:+.2f})</div>'
-                        f'</div></div>', unsafe_allow_html=True)
+        if ss.parlay:
+            rb = resumen_boleto(); prob, cuota, ev, plo, phi = rb; legs = ss.parlay
             f = kelly(plo, cuota)   # stake con la probabilidad pesimista: si aun asi hay valor, la apuesta aguanta
-            a, b = st.columns([1, 2])
-            ss.banca = a.number_input("Banca", 1.0, 1e9, float(ss.banca), 50.0, format="%.0f", help="Tu banca total en Q")
+            sec("Stake sugerido", "Kelly calculado con la probabilidad pesimista del boleto: si con esa todavía hay valor, la apuesta aguanta un modelo "
+                "demasiado optimista. Para parlays usa ¼ o ⅛ de Kelly.")
+            a, b = st.columns([1, 1])
+            ss.banca = a.number_input("Banca (Q)", 1.0, 1e9, float(ss.banca), 50.0, format="%.0f", help="Tu banca total en Q")
+            b.markdown(f'<div class="card flat" style="margin:28px 0 0 0;padding:8px 12px"><div class="t">Boleto</div><div class="mid">cuota {cuota:.2f}</div><div class="rg">prob. pesimista {plo:.0%}</div></div>', unsafe_allow_html=True)
             if f <= 0:
-                b.markdown('<div class="card flat" style="margin:2px 0;padding:8px 12px"><div class="t">Stake sugerido · prob. pesimista</div>'
-                           '<div class="mid down">Sin valor con la prob. pesimista: Kelly dice no apostar</div></div>', unsafe_allow_html=True)
+                st.markdown('<div class="card flat"><div class="t">Con la probabilidad pesimista</div><div class="mid down">Sin valor: Kelly dice no apostar</div></div>', unsafe_allow_html=True)
             else:
-                chips = "".join(f'<div style="text-align:center"><div class="t">{nm}</div><div class="mid">Q{ss.banca * f / d:,.0f}</div>'
-                                f'<div class="small">{f / d:.1%}</div></div>' for nm, d in (("Kelly", 1), ("½", 2), ("¼", 4), ("⅛", 8)))
-                b.markdown(f'<div class="card flat" style="margin:2px 0;padding:8px 12px"><div class="t">Stake sugerido · prob. pesimista · banca Q{ss.banca:,.0f}</div>'
-                           f'<div class="row" style="margin-top:4px">{chips}</div></div>', unsafe_allow_html=True)
-            with st.expander("Ver patas del boleto"):
+                chips = "".join(f'<div><div class="t">{nm}</div><div class="pct">Q{ss.banca * f / d:,.0f}</div><div class="rg">{f / d:.1%}</div></div>'
+                                for nm, d in (("Kelly", 1), ("½ Kelly", 2), ("¼ Kelly", 4), ("⅛ Kelly", 8)))
+                st.markdown(f'<div class="kpi esc">{chips}</div>', unsafe_allow_html=True)
+            with st.expander(f"Patas del boleto · {len(legs)} · pesimista {plo:.0%} (EV {plo * cuota - 1:+.2f}) · optimista {phi:.0%} (EV {phi * cuota - 1:+.2f})"):
                 for i, l in enumerate(legs):
                     a, b = st.columns([6, 1])
-                    a.markdown(f'<div class="row" style="padding:4px 0"><div><div class="mid">{l["mercado"]}</div>'
+                    a.markdown(f'<div class="row" style="padding:4px 0"><div class="c1"><div class="mid">{l["mercado"]}</div>'
                                f'<div class="small">{l["partido"]} · {l["metrica"]} · Poisson {l["prob"]:.0%}' + (f' ({l["lo"]:.0%}–{l["hi"]:.0%})' if "lo" in l else '') + (f' · Bayes {l["bayes"]:.0%}' if l.get("bayes") is not None else '') + f' · justa {mo.cuota_justa(l["prob"])} · casa {l["cuota"]:.2f}</div></div>'
                                f'<span class="tag {l["cls"]}">{l["cal"]}</span></div>', unsafe_allow_html=True)
                     if b.button("✕", key=f"del{i}"):
                         legs.pop(i); st.rerun()
                 if len({l["partido"] for l in legs}) < len(legs):
-                    st.caption("Patas del mismo partido no son independientes; la prob. combinada real difiere.")
+                    st.caption("Patas del mismo partido no son independientes; la probabilidad combinada real difiere.")
                 if st.button("Vaciar boleto"):
                     ss.parlay = []; st.rerun()
 
-        st.markdown(f'<div class="card flat"><div class="t" style="margin-bottom:4px">{NOM[met]} · esperado por modelo</div>'
-                    f'{tabla_lambdas(local, visitante, lam_l, lam_v, r["rango"]["lam_l"], r["rango"]["lam_v"], ml, var)}{tabla_bayes(mbm, local, visitante, ml)}</div>',
-                    unsafe_allow_html=True)
+        sec(f"Esperado por modelo · {NOM[met].lower()}", desc_esp)
+        st.markdown(f'<div class="card">{tabla_esp}</div>', unsafe_allow_html=True)
 
         grp = st.pills("Grupo", grupos, default=ss.get("grp", grupos[0]) if ss.get("grp") in grupos else grupos[0],
                        label_visibility="collapsed", key=f"grp_w{ss.gen}") or grupos[0]
@@ -1133,29 +1205,30 @@ else:
         solo = b.toggle("Solo Buena o mejor", value=False)
         hl, hv = historial(local, met, n), historial(visitante, met, n)
 
-        # una fila por mercado: mercado + justa · Poisson % con rango · Bayes % con intervalo (misma columna, mismo tamaño) · calificación + aciertos
+        sec(f"Mercados · {grp}", f"Probabilidad de cada mercado según Poisson y Bayes, y en cuántos de los últimos {n} partidos de cada equipo se habría cumplido "
+            f"({local} · {visitante}). Calificación = 60% probabilidad Poisson + 40% cumplimiento.")
+        # libro de mercados: encabezado + una fila por mercado con columnas fijas (mercado · Poisson · Bayes · calificacion)
         con_bayes = mbm is not None
-        COL = 'style="width:60px;text-align:right;flex:none"'
-        RG = 'class="small" style="font-size:0.7rem"'   # rango bajo el %: un poco mas chico para que Poisson y Bayes no se peguen en movil
-        html = (f'<div class="card" style="padding-top:12px"><div class="t">{grp} · validado con últ. {n}</div>'
-                f'<div class="row" style="margin-bottom:4px"><div class="small" style="flex:1;min-width:0">aciertos = {local} · {visitante}</div>'
-                f'<div class="t" {COL}>Poisson</div>' + (f'<div class="t" {COL}>Bayes</div>' if con_bayes else '') + '<div style="min-width:84px;flex:none"></div></div>')
+        html = (f'<div class="card"><div class="lg-h"><div class="c1 t">Mercado</div><div class="cn t">Poisson</div>'
+                + ('<div class="cn t">Bayes</div>' if con_bayes else '') + '<div class="cq t">Calificación</div></div>')
+        filas_n = 0
         for mk in lst:
             if mk["grupo"] != grp: continue
             e = evaluar(mk, hl, hv, vol)
             if solo and e["cls"] not in ("exc", "bue"): continue
-            col_b = (f'<div {COL}><div class="mid{" down" if e["alerta"] else ""}">{mk["bayes"]:.0%}</div>'
-                     f'<div {RG}>{mk["bayes_lo"]:.0%}–{mk["bayes_hi"]:.0%}</div></div>') if mk.get("bayes") is not None else ''
-            html += (f'<div class="mk"><div class="row"><div style="flex:1;min-width:0"><div class="mid">{mk["mercado"]}</div>'
-                     f'<div class="small">justa <span class="w">{mo.cuota_justa(mk["prob"]):.2f}</span></div></div>'
-                     f'<div {COL}><div class="mid">{mk["prob"]:.0%}</div><div {RG}>{mk["lo"]:.0%}–{mk["hi"]:.0%}</div></div>'
+            filas_n += 1
+            col_b = (f'<div class="cn"><div class="pct{" down" if e["alerta"] else ""}">{mk["bayes"]:.0%}</div>'
+                     f'<div class="rg">{mk["bayes_lo"]:.0%}–{mk["bayes_hi"]:.0%}</div></div>') if mk.get("bayes") is not None else ''
+            html += (f'<div class="mk"><div class="lg-r"><div class="c1"><div class="mid">{mk["mercado"]}</div><div class="small">justa <span class="w">{mo.cuota_justa(mk["prob"]):.2f}</span></div></div>'
+                     f'<div class="cn"><div class="pct">{mk["prob"]:.0%}</div><div class="rg">{mk["lo"]:.0%}–{mk["hi"]:.0%}</div></div>'
                      f'{col_b}'
-                     f'<div style="min-width:84px;text-align:right;flex:none"><span class="tag {e["cls"]}">{e["tag"]}</span>'
-                     f'<div class="small" style="margin-top:3px"><span class="w">{e["hl"]}/{e["nl"]}</span> · <span class="w">{e["hv"]}/{e["nv"]}</span></div></div></div>'
-                     f'{barra(mk["prob"], e["tasa"], 1, P["ok"] if mk["prob"] >= 0.6 else "#b45309")}</div>')
+                     f'<div class="cq"><span class="tag {e["cls"]}">{e["tag"]}</span><div class="rg" style="margin-top:3px">{e["hl"]}/{e["nl"]} · {e["hv"]}/{e["nv"]}</div></div></div>'
+                     f'{barra(mk["prob"], e["tasa"], 1, P["ok"] if mk["prob"] >= 0.6 else P["warn"])}</div>')
+        if not filas_n:
+            html += '<div class="mk small">Ningún mercado con calificación Buena o mejor en este grupo. Quita el filtro o cambia de línea.</div>'
+        html += nota("Barra = probabilidad Poisson; marca vertical = % de cumplimiento histórico. Bajo cada % va su rango: pesimista–optimista en Poisson, "
+                     "5%–95% en Bayes. Bajo la calificación, los aciertos de cada equipo. ⚠ Bayes difiere más de 5 puntos (en rojo) y ↕ equipo volátil bajan un nivel la calificación.")
         st.markdown(html + '</div>', unsafe_allow_html=True)
-        st.caption("Barra = prob. Poisson · marca blanca = % histórico · bajo cada % va su rango: pesimista–optimista en Poisson, 5%–95% en Bayes. "
-                   "⚠ Bayes difiere (en rojo) y ↕ equipo volátil bajan un nivel la calificación (ver Diccionario).")
         ss.ctx_titulo = f"Armar · {partido} · {NOM[met]} · {grp}"
         ss.ctx_ia = (f"Vista: Armar. Liga {LIGA}. Partido {partido}. Métrica {NOM[met]}. λ local {lam_l:.2f} (rango bajo-alto {ll:.2f}-{lh:.2f}, "
                      f"varianza {var.loc[local, 'estado_casa']} {var.loc[local, 'ratio_casa']:.1f}x la liga, {var.loc[local, 'n_ef_casa']:.0f} partidos efectivos en casa), "
@@ -1172,19 +1245,13 @@ else:
                      ("\nBoleto actual: " + "; ".join(f"{l['mercado']} ({l['partido']}, {l['metrica']}, modelo {l['prob']:.0%}, cuota casa {l['cuota']})" for l in ss.parlay)
                       if ss.parlay else "\nBoleto vacío."))
 
-        st.markdown('<div class="t">Agregar al boleto</div>', unsafe_allow_html=True)
+        sec("Agregar al boleto", "Elige el mercado, escribe la cuota que paga la casa y revisa el EV antes de agregar. EV = probabilidad × cuota − 1.")
         nombres = [x["mercado"] for x in lst if x["grupo"] == grp]
-        sel = st.selectbox("Mercado", nombres, key=f"sel_{met}_{grp}", label_visibility="collapsed")
+        a, b = st.columns([3, 2])
+        sel = a.selectbox("Mercado", nombres, key=f"sel_{met}_{grp}", label_visibility="collapsed")
+        cuota = b.number_input("Cuota casa", 1.01, 50.0, 1.90, 0.01, key=f"cuota_{met}_{grp}", label_visibility="collapsed")
         mk = next(x for x in lst if x["mercado"] == sel); e = evaluar(mk, hl, hv, vol)
-        a, b = st.columns(2)
-        cuota = a.number_input("Cuota casa", 1.01, 50.0, 1.90, 0.01, key=f"cuota_{met}_{grp}", label_visibility="collapsed")
-        ev, ev_lo = mk["prob"] * cuota - 1, mk["lo"] * cuota - 1
-        ev_b = mk["bayes"] * cuota - 1 if mk.get("bayes") is not None else None
-        b.markdown(f'<div style="padding-top:6px"><span class="tag {e["cls"]}">{e["tag"]}</span> &nbsp; EV Poisson <b class="{"up" if ev > 0 else "down"}">{ev:+.2f}</b>'
-                   + (f' · EV Bayes <b class="{"up" if ev_b > 0 else "down"}">{ev_b:+.2f}</b>' if ev_b is not None else '')
-                   + f'<br><span class="small">pesimista EV <b class="{"up" if ev_lo > 0 else "down"}">{ev_lo:+.2f}</b> · Poisson {mk["prob"]:.0%} ({mk["lo"]:.0%}–{mk["hi"]:.0%})'
-                   + (f' · Bayes {mk["bayes"]:.0%} ({mk["bayes_lo"]:.0%}–{mk["bayes_hi"]:.0%})' if mk.get("bayes") is not None else '')
-                   + f' · justa {mo.cuota_justa(mk["prob"])}</span></div>', unsafe_allow_html=True)
+        st.markdown(ev_html(mk, e, cuota), unsafe_allow_html=True)
         a, b = st.columns(2)
         if a.button("Agregar al boleto", width="stretch"):
             ss.parlay.append({"partido": partido, "metrica": NOM[met], "mercado": sel, "prob": mk["prob"], "cuota": cuota,
@@ -1214,20 +1281,19 @@ else:
         hl, hv = historial(local, met, n, cond_l), historial(visitante, met, n, cond_v)
         e = evaluar(mk, hl, hv, vol)
 
-        # tarjeta en tres bloques: 1) veredicto (Poisson · Bayes · histórico, los tres en grande, + calificación) 2) escenarios Poisson 3) esperado por modelo en tabla
-        bloque_bayes = (f'<div style="text-align:center"><div class="big{" down" if e["alerta"] else ""}">{mk["bayes"]:.0%}</div>'
-                        f'<div class="small">Bayes · {mk["bayes_lo"]:.0%}–{mk["bayes_hi"]:.0%}{" · ⚠ difiere" if e["alerta"] else ""}</div></div>') if mk.get("bayes") is not None else ''
-        st.markdown(f'<div class="card"><div class="row"><div class="t">{sel} · {NOM[met]}</div><span class="tag {e["cls"]}">{e["tag"]}</span></div>'
-                    f'<div class="row" style="margin-top:6px"><div><div class="big">{mk["prob"]:.0%}</div><div class="small">Poisson · justa {mo.cuota_justa(mk["prob"]):.2f}</div></div>'
-                    f'{bloque_bayes}'
-                    f'<div style="text-align:right"><div class="big">{e["tasa"]:.0%}</div><div class="small">histórico · {e["hl"] + e["hv"]} de {e["nl"] + e["nv"]}</div></div></div>'
-                    f'{barra(mk["prob"], e["tasa"], 1, P["acc"])}'
-                    f'<div class="sec"><div class="t">Escenarios Poisson</div>{escenarios_html(mk)}</div>'
-                    f'<div class="sec"><div class="t">Esperado por modelo · {NOM[met].lower()}</div>'
-                    f'{tabla_lambdas(local, visitante, lam_l, lam_v, r["rango"]["lam_l"], r["rango"]["lam_v"], ml, var)}{tabla_bayes(mbm, local, visitante, ml)}</div></div>',
+        # tarjeta de veredicto: Poisson · Bayes · histórico en grande, luego escenarios Poisson y esperado por modelo
+        sec("Veredicto", f"Probabilidad de la pata según cada modelo y en cuántos de los últimos {n} partidos de los dos equipos se cumplió. "
+            "Calificación = 60% probabilidad Poisson + 40% cumplimiento histórico; ⚠ Bayes difiere y ↕ equipo volátil la bajan un nivel.")
+        trio = (f'<div><div class="big">{mk["prob"]:.0%}</div><div class="t">Poisson</div><div class="rg">justa {mo.cuota_justa(mk["prob"]):.2f}</div></div>'
+                + (f'<div><div class="big{" down" if e["alerta"] else ""}">{mk["bayes"]:.0%}</div><div class="t">Bayes{" ⚠ difiere" if e["alerta"] else ""}</div>'
+                   f'<div class="rg">{mk["bayes_lo"]:.0%}–{mk["bayes_hi"]:.0%}</div></div>' if mk.get("bayes") is not None else '')
+                + f'<div><div class="big">{e["tasa"]:.0%}</div><div class="t">Histórico</div><div class="rg">{e["hl"] + e["hv"]} de {e["nl"] + e["nv"]} partidos</div></div>')
+        st.markdown(f'<div class="card"><div class="row"><div class="c1"><div class="mid">{sel}</div><div class="small">{NOM[met]} · {partido}</div></div><span class="tag {e["cls"]}">{e["tag"]}</span></div>'
+                    f'<div class="trio">{trio}</div>{barra(mk["prob"], e["tasa"], 1, P["acc"])}'
+                    f'<div class="rg" style="margin-bottom:4px">barra = probabilidad Poisson · marca vertical = % histórico</div>'
+                    f'<div class="sec"><div class="t">Escenarios Poisson · la misma pata con la λ pesimista y la optimista de cada equipo</div>{escenarios_html(mk)}</div>'
+                    f'<div class="sec"><div class="t">Esperado por modelo · {NOM[met].lower()}</div>{tabla_esp}</div></div>',
                     unsafe_allow_html=True)
-        st.caption("Barra = prob. Poisson · marca blanca = % histórico · pesimista / optimista = Poisson con la λ del extremo en contra / a favor · "
-                   "Bayes = promedio de 1,000 escenarios y su intervalo 5%–95% · rango, Δ vs liga y var.: ver Diccionario.")
 
         def bloque(nombre, h, hits_, lado, color):
             col = mk["col_l"] if lado == "l" else mk["col_v"]
@@ -1236,16 +1302,18 @@ else:
             ref_chart = {"a_favor": ref_f, "en_contra": ref_c}.get(col, ml["total"])
             if col in ("a_favor", "en_contra", "total"):
                 chart = chart_barras(h, col, mk["linea"], ref_chart, mk["over"], color)
-                sub = f"{NOM[met].lower()} {que} por partido · verde = cumplió la pata"
+                sub = f"{NOM[met].lower()} {que} por partido · barra de color = cumplió la pata"
             else:
                 chart = chart_barras(h, "total", ml["total"], ml["total"], True, color)
-                sub = f"{NOM[met].lower()} total por partido · verde = sobre media liga"
-            return (f'<div class="card"><div class="row"><div class="mid">{nombre}</div>'
-                    f'<div><span class="w">{hits_}/{len(h)}</span> <span class="small">cumplió</span></div></div>'
-                    f'{chart}<div class="small">{sub} · antiguo → reciente · C casa / F fuera</div>'
+                sub = f"{NOM[met].lower()} total por partido · barra de color = sobre la media de la liga"
+            return (f'<div class="card"><div class="row"><div class="mid">{eq(nombre, lado)}</div>'
+                    f'<div><span class="pct">{hits_}/{len(h)}</span> <span class="small">cumplió</span></div></div>'
+                    f'{chart}<div class="rg">{sub} · antiguo → reciente · C casa / F fuera</div>'
                     f'<div style="margin-top:10px">{tabla_stats(h, mk["linea"], mk["over"], ref_f, ref_c, ml["total"])}</div></div>')
 
-        st.markdown(bloque(local, hl, e["hl"], "l", P["acc"]) + bloque(visitante, hv, e["hv"], "v", "#8b5cf6"), unsafe_allow_html=True)
+        sec("Historial por equipo", f"Últimos {n} partidos de cada uno" + (" (local en casa, visitante fuera)" if filtro != "Todos" else "")
+            + ". Línea blanca punteada = línea del mercado; naranja = media de la liga. Debajo, media, mediana y desviación (qué tanto varía de partido a partido).")
+        st.markdown(bloque(local, hl, e["hl"], "l", P["acc"]) + bloque(visitante, hv, e["hv"], "v", COLOR_VIS), unsafe_allow_html=True)
         def _st(h):
             return (f"a favor media {h.a_favor.mean():.1f} mediana {h.a_favor.median():.1f} desv {h.a_favor.std(ddof=0):.1f}; "
                     f"en contra media {h.en_contra.mean():.1f}; total media {h.total.mean():.1f} máx {h.total.max()} mín {h.total.min()}") if len(h) else "sin partidos"
@@ -1271,9 +1339,10 @@ else:
                 st.markdown(f'<div class="card">{distribucion_html(r["matriz"], mk, NOM[met].lower() + (" total" if mk["grupo"] == "Total" else " " + mk["grupo"]))}</div>',
                             unsafe_allow_html=True)
 
-        a, b = st.columns(2)
-        cuota = a.number_input("Cuota casa", 1.01, 50.0, 1.90, 0.01, key=f"cuota_an_{met}", label_visibility="collapsed")
-        if b.button("Agregar al boleto", width="stretch", key="add_an"):
+        sec("Agregar al boleto", "Escribe la cuota que paga la casa y revisa el EV antes de agregar. Al agregar vuelves a Armar.")
+        cuota = st.number_input("Cuota casa", 1.01, 50.0, 1.90, 0.01, key=f"cuota_an_{met}", label_visibility="collapsed")
+        st.markdown(ev_html(mk, e, cuota), unsafe_allow_html=True)
+        if st.button("Agregar al boleto", width="stretch", key="add_an"):
             ss.parlay.append({"partido": partido, "metrica": NOM[met], "mercado": sel, "prob": mk["prob"], "cuota": cuota,
                               "cal": e["tag"], "cls": e["cls"], "lo": mk["lo"], "hi": mk["hi"], "bayes": mk.get("bayes")})
             registrar_uso("pata", f"{partido} | {sel} @ {cuota}")
@@ -1294,7 +1363,7 @@ st.markdown(f"""<style>
 </style>""", unsafe_allow_html=True)
 with st.popover("IA"):
     ss.setdefault("ctx_titulo", "")
-    st.markdown(f'<div class="small">Analista Kuota · {ss.ctx_titulo or "abre Armar o Analizar para darle contexto"}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="mid">Analista Kuota</div><div class="small">{ss.ctx_titulo or "abre Armar o Analizar para darle contexto"}</div>', unsafe_allow_html=True)
     for m in ss.chat[-8:]:
         st.markdown(f'<div class="msg {"u" if m["rol"] == "user" else "a"}">{m["txt"]}</div>', unsafe_allow_html=True)
     sug = st.pills("Sugerencias", ["¿Qué opinas de esta pata?", "Debate mi parlay", "¿Mayor riesgo?"], label_visibility="collapsed", key=f"sug{len(ss.chat)}")
@@ -1310,6 +1379,5 @@ with st.popover("IA"):
     if b.button("Limpiar", width="stretch", key="ia_clear"):
         ss.chat = []; st.rerun()
 
-st.caption(f"{LIGA}: {len(df)} partidos · último {df['fecha'].max():%d/%m/%Y} · football-data.co.uk · "
-           "Calificación = 60% prob. Poisson + 40% cumplimiento histórico (⚠ baja un nivel si Bayes difiere >5 pts · ↕ baja un nivel si un equipo es volátil vs liga) · "
-           "(pesimista–optimista) = Poisson con la λ del extremo en contra / a favor; rango de λ = promedio ± t·desv/√n (80%) · EV = prob × cuota − 1 · Kelly con la prob. pesimista")
+st.markdown(f'<div class="note" style="margin-top:18px">{LIGA}: {len(df)} partidos cargados, último el {df["fecha"].max():%d/%m/%Y}. '
+            f'Fuente: {"ESPN" if ss.liga == "ligamx" else "football-data.co.uk"}. Los términos de la app están explicados en el Diccionario.</div>', unsafe_allow_html=True)
