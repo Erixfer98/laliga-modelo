@@ -1,0 +1,10 @@
+estadistico,observado,simulado,p05,p95,dentro
+media_local,0.698,0.693,0.571,0.833,True
+media_visita,0.502,0.521,0.424,0.631,True
+desv_local,0.8,0.844,0.751,0.946,True
+desv_visita,0.738,0.724,0.646,0.804,True
+pct_local_mas,0.371,0.345,0.286,0.412,True
+pct_igual,0.386,0.415,0.352,0.479,True
+pct_visita_mas,0.243,0.24,0.186,0.291,True
+pct_over_0.5,0.71,0.699,0.64,0.755,True
+pct_ambos_positivos,0.181,0.198,0.155,0.245,True
