@@ -2,11 +2,16 @@
 app.py — Kuota · Parlays con Datos. Las 5 grandes ligas + Liga MX.
 Paginas: Inicio · Armar · Analizar · Cara a cara · Tabla · Diccionario · Admin (solo administradores).
 Usuarios y registro de uso: opcionales, se configuran en Streamlit Cloud -> Settings -> Secrets (ver pagina Admin).
+Sesion: al entrar se guarda un token firmado en la URL (?s=...). Si el celular manda la app a segundo plano y Streamlit
+pierde la sesion, al volver se lee el token y no vuelve a pedir usuario y contraseña (dura DIAS_SESION dias).
 Local: streamlit run app.py
 """
 
 import base64
+import hashlib
+import hmac
 import os
+import time
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -16,10 +21,6 @@ import requests
 import streamlit as st
 
 import modelo as mo
-try:
-    import modelo_bayes as mb      # modelo bayesiano (se muestra a la par del Poisson); si falta el modulo o modelos_bayes/, la app sigue igual
-except Exception:
-    mb = None
 
 st.set_page_config(page_title="Kuota", page_icon="⚽", layout="centered", initial_sidebar_state="collapsed")
 
@@ -157,18 +158,6 @@ def datos(liga):
     return mo.cargar(f"datos/bbdd_{liga}.csv")
 
 
-@st.cache_resource
-def bayes(liga):
-    """Modelos bayesianos por metrica ({metrica: ModeloBayes}) leidos de modelos_bayes/<liga>_<metrica>.npz. {} si no hay. Ver modelo_bayes.py."""
-    try:
-        return mb.cargar_modelos(liga) if mb else {}
-    except Exception:
-        return {}
-
-
-UMBRAL_BAYES = 0.05   # Poisson y Bayes difieren en mas de 5 puntos -> ⚠ y la pata baja un nivel
-
-
 @st.cache_data(ttl=3600)
 def incert(liga, met):
     """Incertidumbre de la lambda por equipo y condicion + variabilidad vs liga (ver modelo.incertidumbre)."""
@@ -256,9 +245,8 @@ def ia_cfg():
     return {"key": key, "url": url, "modelo": modelo}
 
 
-SISTEMA_IA = ("Eres el analista de Kuota, una app de apuestas para las 5 grandes ligas europeas con dos modelos mostrados a la par: Poisson/Dixon-Coles "
-              "(de él salen la cuota justa, el EV principal, la calificación y el stake) y un modelo bayesiano jerárquico (promedio de 1,000 escenarios con intervalo 5%-95%), "
-              "más estadísticas descriptivas. Si los dos modelos difieren en más de 5 puntos, dilo y explica qué implica. "
+SISTEMA_IA = ("Eres el analista de Kuota, una app de apuestas para las 5 grandes ligas europeas y la Liga MX con un modelo Poisson/Dixon-Coles "
+              "(de él salen la probabilidad, la cuota justa, el EV, la calificación y el stake) más estadísticas descriptivas. "
               "Responde en español, directo y breve (máximo ~150 palabras salvo que pidan más). Fundamenta o debate con los datos del contexto: "
               "probabilidad del modelo, cuota justa, cumplimiento histórico, medias vs liga, resultados recientes. No inventes cifras que no estén en el contexto; "
               "si te falta un dato dilo. Señala riesgos: patas del mismo partido no son independientes, muestras chicas (N<5), equipos recién ascendidos con pocos datos, "
@@ -359,18 +347,57 @@ def registrar_uso(accion, detalle=""):
 
 
 usuarios = cfg_usuarios()
+DIAS_SESION = 30   # cuanto dura la sesion guardada en la URL sin volver a pedir contraseña
+
+
+def secreto_sesion():
+    """Clave con la que se firma el token de sesion. Usa SESION_SECRETO de Secrets si existe; si no, una derivada de las
+    contraseñas (sirve igual; solo cambia -y cierra las sesiones- si cambias alguna contraseña)."""
+    try:
+        s = st.secrets.get("SESION_SECRETO", "")
+    except Exception:
+        s = ""
+    return str(s) or hashlib.sha256("|".join(f"{k}:{v}" for k, v in sorted(usuarios.items())).encode()).hexdigest()
+
+
+def firma(usuario, exp):
+    return hmac.new(secreto_sesion().encode(), f"{usuario}|{exp}".encode(), hashlib.sha256).hexdigest()[:24]
+
+
+def token_sesion(usuario):
+    """usuario|vencimiento|firma, en base64 para que viaje limpio en la URL."""
+    exp = int(time.time()) + DIAS_SESION * 86400
+    return base64.urlsafe_b64encode(f"{usuario}|{exp}|{firma(usuario, exp)}".encode()).decode().rstrip("=")
+
+
+def usuario_de_token(tok):
+    """Usuario del token si la firma es valida, no vencio y el usuario sigue existiendo; None si no."""
+    try:
+        usuario, exp, f = base64.urlsafe_b64decode((tok + "=" * (-len(tok) % 4)).encode()).decode().split("|")
+        if hmac.compare_digest(f, firma(usuario, exp)) and int(exp) > time.time() and usuario in usuarios:
+            return usuario
+    except Exception:
+        pass
+    return None
+
+
 if usuarios and "usuario" not in ss:
-    st.markdown('### Kuota <span class="small" style="font-weight:400">· Parlays con Datos</span>', unsafe_allow_html=True)
-    st.markdown('<div class="card"><div class="t">Acceso</div><div class="small">Ingresa con tu usuario y contraseña.</div></div>', unsafe_allow_html=True)
-    u = st.text_input("Usuario")
-    c = st.text_input("Contraseña", type="password")
-    if st.button("Entrar", width="stretch"):
-        if u in usuarios and str(usuarios[u]) == c:
-            ss.usuario = u
-            registrar_uso("login")
-            st.rerun()
-        st.error("Usuario o contraseña incorrectos")
-    st.stop()
+    u_tok = usuario_de_token(st.query_params.get("s", ""))
+    if u_tok:
+        ss.usuario = u_tok          # la sesion se reconstruye desde la URL: no pide login
+    else:
+        st.markdown('### Kuota <span class="small" style="font-weight:400">· Parlays con Datos</span>', unsafe_allow_html=True)
+        st.markdown('<div class="card"><div class="t">Acceso</div><div class="small">Ingresa con tu usuario y contraseña.</div></div>', unsafe_allow_html=True)
+        u = st.text_input("Usuario")
+        c = st.text_input("Contraseña", type="password")
+        if st.button("Entrar", width="stretch"):
+            if u in usuarios and str(usuarios[u]) == c:
+                ss.usuario = u
+                st.query_params["s"] = token_sesion(u)   # la URL guarda la sesion: al volver del segundo plano no pide login
+                registrar_uso("login")
+                st.rerun()
+            st.error("Usuario o contraseña incorrectos")
+        st.stop()
 if not usuarios:
     ss.setdefault("usuario", "invitado")
 ES_ADMIN = ss.usuario in cfg_admins() or not usuarios
@@ -418,24 +445,19 @@ def bajar_nivel(cls):
 
 
 def evaluar(mk, hl, hv, vol=None):
-    """vol = {equipo: True si es volátil en su condicion}. La pata baja un nivel si Bayes difiere del Poisson y otro si algún
-    equipo que participa en la pata es volátil (Total/Resultado/Mayor número = los dos; grupo de un equipo = ese)."""
+    """vol = {equipo: True si es volátil en su condicion}. La pata baja un nivel si algún equipo que participa en la pata
+    es volátil (Total/Resultado/Mayor número = los dos; grupo de un equipo = ese)."""
     cl, cv = cumple(hl, mk, "l"), cumple(hv, mk, "v")
     n = len(hl) + len(hv)
     tasa = (cl.sum() + cv.sum()) / n if n else 0
     txt, cls = calificar(mk["prob"], tasa)
-    # si Poisson y Bayes difieren mas del umbral, la pata baja un nivel
-    alerta = mk.get("bayes") is not None and abs(mk["prob"] - mk["bayes"]) > UMBRAL_BAYES
-    if alerta:
-        txt, cls = bajar_nivel(cls)
-    # varianza: si un equipo de la pata es volátil frente a la liga, baja otro nivel
+    # varianza: si un equipo de la pata es volátil frente a la liga, baja un nivel
     equipos_pata = list(vol) if (vol and mk["grupo"] in ("Resultado", "Total", "Mayor número")) else [mk["grupo"]]
     volatil = bool(vol) and any(vol.get(t, False) for t in equipos_pata)
     if volatil:
         txt, cls = bajar_nivel(cls)
     return {"hl": int(cl.sum()), "nl": len(hl), "hv": int(cv.sum()), "nv": len(hv), "tasa": tasa, "cal": txt, "cls": cls,
-            "serie_l": cl, "serie_v": cv, "alerta": alerta, "volatil": volatil,
-            "tag": ("⚠ " if alerta else "") + ("↕ " if volatil else "") + txt}
+            "serie_l": cl, "serie_v": cv, "volatil": volatil, "tag": ("↕ " if volatil else "") + txt}
 
 
 # ================================================================== mercados (linea configurable)
@@ -443,54 +465,32 @@ def lineas(centro, rango):
     return [x for x in np.arange(centro - rango, centro + rango + 0.01, 1.0) if x > 0]
 
 
-def mercados(r, met, local, visitante, cfg, mbm=None):
-    """cfg = {grupo: (centro, rango)}. mbm = ModeloBayes de la metrica (o None):
-    agrega a cada mercado bayes / bayes_lo / bayes_hi = probabilidad promedio de los escenarios y su intervalo 5%-95%.
-    Devuelve lista de mercados con su regla
-    de evaluacion historica. Cada mercado trae prob (lambda central) y lo / hi = pesimista / optimista: la misma
-    probabilidad calculada en las esquinas bajo/alto de las lambdas (minimo y maximo de las 4 esquinas; en mercados
-    de un solo equipo, de sus 2 extremos). Todo sale de las mismas lambdas bajo-alto que se muestran arriba."""
+def mercados(r, met, local, visitante, cfg):
+    """cfg = {grupo: (centro, rango)}. Devuelve lista de mercados con su regla de evaluacion historica. Cada mercado
+    trae prob (lambda central) y lo / hi = pesimista / optimista: la misma probabilidad calculada en las esquinas
+    bajo/alto de las lambdas (minimo y maximo de las 4 esquinas; en mercados de un solo equipo, de sus 2 extremos).
+    Todo sale de las mismas lambdas bajo-alto que se muestran arriba."""
     m, lam_l, lam_v = r["matriz"], r["lambda_local"], r["lambda_visitante"]
     esq, (ll, lh), (vl, vh) = r["rango"]["esquinas"], r["rango"]["lam_l"], r["rango"]["lam_v"]
     k = m.shape[0]; tot = np.add.outer(np.arange(k), np.arange(k))
     out = []
-    # bayes: una matriz por escenario; la predictiva es el promedio y el intervalo sale de una submuestra
-    mats = None
-    if mbm is not None:
-        b_l, b_v = mbm.lambdas(local, visitante)
-        mats = mb.matrices_muestras(b_l, b_v, mbm.m["rho"], k - 1, mbm.dixon_coles)
-        mat_b, sub = mats.mean(0), mats[::max(1, len(mats) // 200)]
-    sin_bayes = {"bayes": None, "bayes_lo": None, "bayes_hi": None}
-
-    def bayes_de(f):
-        if mats is None: return sin_bayes
-        ps = np.array([f(x) for x in sub])
-        return {"bayes": float(min(max(f(mat_b), 0), 1)), "bayes_lo": float(np.percentile(ps, 5)), "bayes_hi": float(np.percentile(ps, 95))}
-
-    def bayes_1(lam_s, ln, over):
-        if mats is None: return sin_bayes
-        from scipy.stats import poisson
-        ps = poisson.sf(int(np.floor(ln)), lam_s)        # P(X > ln) en cada escenario, igual que mo.prob_over
-        if not over: ps = 1 - ps
-        return {"bayes": float(ps.mean()), "bayes_lo": float(np.percentile(ps, 5)), "bayes_hi": float(np.percentile(ps, 95))}
 
     def add(nombre, grupo, f, col_l, col_v, linea, over, region):
-        """f(matriz) -> probabilidad; se evalua en la matriz central, en las 4 esquinas y en los escenarios bayesianos."""
+        """f(matriz) -> probabilidad; se evalua en la matriz central y en las 4 esquinas."""
         p, ps = f(m), [f(e) for e in esq.values()]
         out.append({"mercado": nombre, "grupo": grupo, "prob": float(min(max(p, 0), 1)),
                     "lo": float(min(max(min(ps), 0), 1)), "hi": float(min(max(max(ps), 0), 1)),
-                    "col_l": col_l, "col_v": col_v, "linea": linea, "over": over, "region": region, **bayes_de(f)})
+                    "col_l": col_l, "col_v": col_v, "linea": linea, "over": over, "region": region})
 
-    def add1(nombre, grupo, lam, lam_lo, lam_hi, ln, over, col_l, col_v, region, lam_s=None):
-        """mercado de un solo equipo: Poisson con su lambda central, baja y alta (y con las lambdas bayesianas lam_s)."""
+    def add1(nombre, grupo, lam, lam_lo, lam_hi, ln, over, col_l, col_v, region):
+        """mercado de un solo equipo: Poisson con su lambda central, baja y alta."""
         ps = [mo.prob_over(x, ln) for x in (lam, lam_lo, lam_hi)]
         if not over: ps = [1 - x for x in ps]
         out.append({"mercado": nombre, "grupo": grupo, "prob": float(ps[0]), "lo": float(min(ps[1:])), "hi": float(max(ps[1:])),
-                    "col_l": col_l, "col_v": col_v, "linea": ln, "over": over, "region": region,
-                    **(bayes_1(lam_s, ln, over) if lam_s is not None else sin_bayes)})
+                    "col_l": col_l, "col_v": col_v, "linea": ln, "over": over, "region": region})
 
     p1 = lambda x: np.tril(x, -1).sum(); px = lambda x: np.trace(x); p2 = lambda x: np.triu(x, 1).sum(); bt = lambda x: x[1:, 1:].sum()
-    # quien gana / quien hace mas: sale de la matriz (Poisson y, si hay modelo, Bayes)
+    # quien gana / quien hace mas: sale de la matriz
     if met in GOL:
         add(f"Gana {local}", "Resultado", p1, "gano", "perdio", 0.5, True, lambda x, y: x > y)
         add("Empate", "Resultado", px, "empato", "empato", 0.5, True, lambda x, y: x == y)
@@ -508,11 +508,11 @@ def mercados(r, met, local, visitante, cfg, mbm=None):
         add(f"Más {que}: empate", "Mayor número", px, "empato", "empato", 0.5, True, lambda x, y: x == y)
         add(f"Más {que}: {visitante}", "Mayor número", p2, "perdio", "gano", 0.5, True, lambda x, y: x < y)
     for ln in lineas(*cfg[local]):
-        add1(f"{local} Over {ln}", local, lam_l, ll, lh, ln, True, "a_favor", "en_contra", lambda x, y, ln=ln: x > ln, b_l if mats is not None else None)
-        add1(f"{local} Under {ln}", local, lam_l, ll, lh, ln, False, "a_favor", "en_contra", lambda x, y, ln=ln: x < ln, b_l if mats is not None else None)
+        add1(f"{local} Over {ln}", local, lam_l, ll, lh, ln, True, "a_favor", "en_contra", lambda x, y, ln=ln: x > ln)
+        add1(f"{local} Under {ln}", local, lam_l, ll, lh, ln, False, "a_favor", "en_contra", lambda x, y, ln=ln: x < ln)
     for ln in lineas(*cfg[visitante]):
-        add1(f"{visitante} Over {ln}", visitante, lam_v, vl, vh, ln, True, "en_contra", "a_favor", lambda x, y, ln=ln: y > ln, b_v if mats is not None else None)
-        add1(f"{visitante} Under {ln}", visitante, lam_v, vl, vh, ln, False, "en_contra", "a_favor", lambda x, y, ln=ln: y < ln, b_v if mats is not None else None)
+        add1(f"{visitante} Over {ln}", visitante, lam_v, vl, vh, ln, True, "en_contra", "a_favor", lambda x, y, ln=ln: y > ln)
+        add1(f"{visitante} Under {ln}", visitante, lam_v, vl, vh, ln, False, "en_contra", "a_favor", lambda x, y, ln=ln: y < ln)
     return out
 
 
@@ -538,9 +538,8 @@ def corto(nombre, n=12):
     return nombre if len(nombre) <= n else nombre[:n - 1] + "…"
 
 
-def tabla_modelos(local, visitante, lam_l, lam_v, rango_l, rango_v, ml, var, mbm=None):
-    """Esperado por modelo en UNA tabla con columnas alineadas: bloque Poisson (λ · rango 80% · liga · Δ · var.) y,
-    si hay modelo, bloque Bayes (λ · intervalo 5%–95% · liga · Δ). Una fila por equipo y el total."""
+def tabla_modelos(local, visitante, lam_l, lam_v, rango_l, rango_v, ml, var):
+    """Esperado por el modelo en una tabla con columnas alineadas: λ · rango 80% · liga · Δ · var. Una fila por equipo y el total."""
     (ll, lh), (vl, vh) = rango_l, rango_v
     h = '<table class="st"><tr><th>Equipo</th><th>λ</th><th>rango</th><th>liga</th><th>Δ</th><th>var.</th></tr>'
     h += '<tr class="grp"><td colspan="6">Poisson · rango de confianza 80%</td></tr>'
@@ -548,31 +547,8 @@ def tabla_modelos(local, visitante, lam_l, lam_v, rango_l, rango_v, ml, var, mbm
                                        (eq(visitante, "v", 13), lam_v, vl, vh, ml["visitante"], chip_var(var, visitante, "fuera")),
                                        ("Total", lam_l + lam_v, ll + vl, lh + vh, ml["total"], "")):
         h += f'<tr><td>{nm}</td><td class="w">{lam:.2f}</td><td>{lo:.2f}–{hi:.2f}</td><td>{ref:.2f}</td><td>{delta(lam, ref, 2)}</td><td>{chip}</td></tr>'
-    pie = ""
-    if mbm is not None:
-        b_l, b_v = mbm.lambdas(local, visitante)
-        h += '<tr class="grp"><td colspan="6">Bayes · intervalo 5%–95% (1,000 escenarios)</td></tr>'
-        for nm, s, ref in ((eq(local, "l", 13), b_l, ml["local"]), (eq(visitante, "v", 13), b_v, ml["visitante"]), ("Total", b_l + b_v, ml["total"])):
-            h += (f'<tr><td>{nm}</td><td class="w">{s.mean():.2f}</td><td>{np.percentile(s, 5):.2f}–{np.percentile(s, 95):.2f}</td>'
-                  f'<td>{ref:.2f}</td><td>{delta(s.mean(), ref, 2)}</td><td></td></tr>')
-        nuevos = [t for t in (local, visitante) if t not in mbm.idx]
-        pie = f' · ρ Bayes {mbm.m["rho"].mean():.2f}' + (f' · sin partidos en el modelo Bayes: {", ".join(nuevos)}' if nuevos else "")
     return h + "</table>" + nota("λ = cantidad esperada · liga = media de la liga en esa condición · Δ = λ menos la media · "
-                                "var. = qué tan variable es el equipo frente a la liga (🟢 estable 🟡 normal 🔴 volátil ⚪ pocos datos)" + pie)
-
-
-def html_bayes(mbm, resaltar=()):
-    """Fuerzas bayesianas por equipo (1.00 = promedio de la liga) con intervalo 5%-95%, ordenadas por ataque."""
-    f = mbm.fuerzas().sort_values("ataque", ascending=False)
-    h = '<div class="card"><table class="st"><tr><th>#</th><th style="text-align:left">Equipo</th><th>Ataque</th><th>5%–95%</th><th>Defensa</th><th>5%–95%</th></tr>'
-    for i, (equipo, x) in enumerate(f.iterrows(), 1):
-        h += (f'<tr{" class=me" if equipo in resaltar else ""}><td style="color:{P["mut"]}">{i}</td><td style="text-align:left">{equipo}</td>'
-              f'<td class="w">{x.ataque:.2f}</td><td>{x.ataque_bajo:.2f}–{x.ataque_alto:.2f}</td>'
-              f'<td class="w">{x.defensa:.2f}</td><td>{x.defensa_bajo:.2f}–{x.defensa_alto:.2f}</td></tr>')
-    d = mbm.meta.get("diag", {})
-    return h + "</table>" + nota(f'1.00 = promedio de la liga · ataque > 1 produce más · defensa > 1 concede más · '
-                                 f'ventaja local {np.exp(mbm.m["ventaja_local"].mean()):.2f}× · ajustado con datos al {mbm.meta.get("fecha_max", "?")} '
-                                 f'({mbm.meta.get("n_partidos", "?")} partidos) · convergencia {d.get("veredicto", "?")}') + "</div>"
+                                "var. = qué tan variable es el equipo frente a la liga (🟢 estable 🟡 normal 🔴 volátil ⚪ pocos datos)")
 
 
 def escenarios_html(mk):
@@ -792,27 +768,16 @@ def resumen_boleto():
     return prob, cuota, prob * cuota - 1, lo, hi
 
 
-def boleto_bayes():
-    """(prob_bayes, ev_bayes) del boleto: producto de la prob. bayesiana de cada pata (si una pata no la tiene, usa su prob. Poisson)."""
-    legs = ss.parlay
-    if not legs or all(l.get("bayes") is None for l in legs):
-        return None
-    pb = float(np.prod([l["bayes"] if l.get("bayes") is not None else l["prob"] for l in legs]))
-    return pb, pb * float(np.prod([l["cuota"] for l in legs])) - 1
-
-
 def slip_html(detalle=False):
-    """Resumen del boleto en una fila: patas y cuota a la izquierda, EV Poisson y EV Bayes (mismo tamaño) a la derecha.
+    """Resumen del boleto en una fila: patas y cuota a la izquierda, probabilidad y EV a la derecha.
     detalle=True agrega la linea pesimista / optimista."""
     rb = resumen_boleto()
     if not rb:
         return ""
     prob, cuota, ev, plo, phi = rb
-    bb = boleto_bayes()
-    evs = [("Poisson", prob, ev)] + ([("Bayes", bb[0], bb[1])] if bb else [])
     h = (f'<div class="slip"><div class="row"><div class="c1"><div class="t">Boleto · {len(ss.parlay)} pata{"s" if len(ss.parlay) > 1 else ""}</div>'
          f'<div class="mid">cuota {cuota:.2f}</div><div class="rg">justa {mo.cuota_justa(prob)}</div></div>'
-         + "".join(f'<div class="evb"><div class="t">EV {nm} · {p:.0%}</div><div class="pct {"up" if v > 0 else "down"}">{v:+.2f}</div></div>' for nm, p, v in evs) + "</div>")
+         f'<div class="evb"><div class="t">EV · {prob:.0%}</div><div class="pct {"up" if ev > 0 else "down"}">{ev:+.2f}</div></div></div>')
     if detalle:
         h += f'<div class="small" style="margin-top:6px">pesimista {plo:.0%} (EV {plo * cuota - 1:+.2f}) · optimista {phi:.0%} (EV {phi * cuota - 1:+.2f})</div>'
     return h + "</div>"
@@ -826,6 +791,7 @@ with st.container(key="topbar"):
     if usuarios:
         if top2.button(f"Salir · {ss.usuario}", width="stretch"):
             registrar_uso("logout")
+            st.query_params.clear()      # borra el token de la URL: la proxima vez si pide login
             for k in list(ss.keys()):
                 del ss[k]
             st.rerun()
@@ -932,20 +898,18 @@ elif pagina == "Diccionario":
         ("Modelo", "Rango bajo–alto de λ", "Entre paréntesis junto a cada λ: hasta dónde puede estar equivocado el promedio del equipo. Se calcula sobre sus propios partidos (con la misma recencia del modelo): promedio ± t × desviación estándar ÷ √n. El multiplicador t sale de la distribución t de Student y baja solo conforme hay más partidos (3 partidos 1.89, 21 partidos 1.33, muchos 1.28); el rango cubre el 80% de los casos. Mide confianza en la λ, no cuánto varía un partido: eso ya lo cubre Poisson."),
         ("Modelo", "Pesimista / optimista", "La probabilidad del mercado calculada con el mismo Poisson pero con las λ del extremo que va en contra (pesimista) o a favor (optimista) de la pata. Salen de las mismas λ bajo–alto que ves arriba, así que un Over y su Under siempre cuadran. El EV pesimista usa la prob. pesimista: si sigue positivo, la pata aguanta aunque el promedio esté algo inflado."),
         ("Modelo", "Varianza vs liga (🟢🟡🔴⚪)", "Ancho del rango del equipo (relativo a su promedio, en esa condición: casa o fuera) dividido entre el ancho mediano de los equipos de la liga. 🟢 estable < 0.8×, 🟡 normal 0.8–1.2×, 🔴 volátil > 1.2×, ⚪ pocos datos = menos de 5 partidos efectivos en esa condición; ahí se usa la dispersión típica de la liga en lugar de la del equipo."),
-        ("Modelo", "Bayes", "Modelo bayesiano jerárquico: un ataque y una defensa por equipo estimados todos a la vez, con la liga encogiendo hacia el promedio a los equipos con pocos partidos o resultados raros; ventaja de local por liga y ρ Dixon-Coles estimado (no fijo). En vez de un número entrega 1,000 escenarios: el % es su promedio y debajo (o entre paréntesis) va el intervalo 5%–95%. Se muestra a la par del Poisson en todas las tarjetas. La cuota justa, el EV principal, la calificación y el stake siguen saliendo del Poisson; el EV Bayes va al lado. Se reajusta cada martes con la BBDD del día."),
-        ("Modelo", "Poisson vs Bayes", "Poisson usa promedios ponderados por recencia y te da un número por equipo (más su rango bajo–alto). Bayes estima todos los equipos a la vez y te da un intervalo. Si coinciden, la pata está bien sostenida; si difieren más de 5 puntos, alguno de los dos ve algo que el otro no (ver ⚠ Bayes difiere)."),
+        ("Modelo", "Encogimiento (K)", "Al calcular la fuerza de un equipo se le suman 10 partidos 'extra' al promedio de la liga. Así un equipo con pocos partidos o una racha rara no se va a extremos (λ = 0 o λ = 8). El backtest mostró que sin esto el modelo decía 85% y acertaba 79%; con esto dice 85% y acierta 85%."),
         ("Mercados", "Cuota justa", "1 dividido entre la probabilidad Poisson. Es la cuota a la que no ganas ni pierdes a largo plazo. Si la casa paga más que la justa, hay valor."),
-        ("Mercados", "EV (valor esperado)", "prob. × cuota − 1. Positivo = a largo plazo ganas; negativo = pierdes. EV +0.10 = ganas 10 centavos por cada Q1 apostado, en promedio. Se muestra con la prob. Poisson (EV principal) y con la prob. Bayes (EV Bayes)."),
+        ("Mercados", "EV (valor esperado)", "prob. × cuota − 1. Positivo = a largo plazo ganas; negativo = pierdes. EV +0.10 = ganas 10 centavos por cada Q1 apostado, en promedio."),
         ("Mercados", "Over / Under", "Más de / menos de una línea. Total Over 2.5 goles = 3 o más goles en el partido. Las líneas .5 no permiten empate."),
         ("Mercados", "Línea y ± líneas", "Línea = el centro que quieres ver (ej. 9.5 corners). ± líneas = cuántas líneas alrededor mostrar (±2 con 9.5 muestra 7.5, 8.5, 9.5, 10.5 y 11.5)."),
         ("Mercados", "1X2 / doble oportunidad", "1 = gana local, X = empate, 2 = gana visitante. 1X = local o empate; X2 = visitante o empate."),
         ("Mercados", "Ambos anotan (BTTS)", "Sí = los dos equipos marcan al menos un gol. No = al menos uno se queda en cero."),
         ("Mercados", "Total / Local / Visitante", "Grupos de mercados. Total suma los dos equipos; Local y Visitante son la métrica de un solo equipo."),
-        ("Mercados", "Mayor número", "Qué equipo termina con más tiros, tiros a puerta, corners, faltas o amarillas (o empate). Probabilidad = matriz de la métrica, en Poisson y en Bayes."),
+        ("Mercados", "Mayor número", "Qué equipo termina con más tiros, tiros a puerta, corners, faltas o amarillas (o empate). Probabilidad = matriz Poisson de la métrica."),
         ("Validación", "Últ. N", "Contra cuántos partidos recientes de cada equipo se valida la pata. N chico = forma actual; N grande = tendencia estable."),
         ("Validación", "X/N cumplió", "En cuántos de los últimos N partidos del equipo se habría cumplido ese mercado. 4/5 = pasó en 4 de 5."),
         ("Validación", "Calificación", "60% probabilidad Poisson + 40% cumplimiento histórico. Excelente ≥ 78%, Buena ≥ 68%, Regular ≥ 56%, Mala ≥ 45%, Pésima el resto."),
-        ("Validación", "⚠ Bayes difiere", "Poisson y Bayes difieren en más de 5 puntos en esa pata: la calificación baja un nivel y el % Bayes se pinta en rojo. Mira el intervalo: si el % Poisson cae dentro del 5%–95% de Bayes la diferencia es ruido; si cae fuera, los modelos ven equipos distintos. Dos modelos que no coinciden = pata menos confiable."),
         ("Validación", "↕ Equipo volátil", "Un equipo de la pata es 🔴 volátil frente a la liga (el local en casa o el visitante fuera; en Total, Resultado y Mayor número cuentan los dos): la calificación baja un nivel."),
         ("Validación", "Como jugarán", "Filtro: solo partidos del local jugando en casa y del visitante jugando fuera."),
         ("Validación", "Media / mediana / desv. est.", "Media = promedio. Mediana = valor del medio (resiste goleadas raras). Desviación estándar = qué tanto varía de partido a partido; alta = equipo irregular."),
@@ -979,26 +943,11 @@ elif pagina == "Diccionario":
 
 # ================================================================== PAGINA TABLA
 elif pagina == "Tabla":
-    vistas = ["Posiciones"] + (["Bayes"] if bayes(ss.liga) else [])
-    vista = st.pills("Vista", vistas, default=ss.get("vista_tabla", "Posiciones") if ss.get("vista_tabla") in vistas else "Posiciones", label_visibility="collapsed") or "Posiciones"
-    ss.vista_tabla = vista
-    if vista == "Bayes":
-        mets_b = [m for m in mo.METRICAS if m in bayes(ss.liga)]
-        met_b = st.pills("Métrica Bayes", mets_b, format_func=lambda x: NOM[x], default="goles" if "goles" in mets_b else mets_b[0], label_visibility="collapsed") or mets_b[0]
-        mbm_t = bayes(ss.liga)[met_b]
-        sec(f"Bayes · {NOM[met_b]} · fuerzas por equipo", f"{LIGA}. Ataque y defensa de cada equipo estimados todos a la vez; con pocos datos el equipo se acerca "
-            "al promedio. El intervalo 5%–95% dice cuánto se sabe de cada uno: más angosto = más seguro. Se reajusta cada martes.")
-        st.markdown(html_bayes(mbm_t), unsafe_allow_html=True)
-        f_ = mbm_t.fuerzas().sort_values("ataque", ascending=False)
-        ss.ctx_titulo = f"Tabla Bayes · {LIGA} · {NOM[met_b]}"
-        ss.ctx_ia = (f"Vista: Tabla Bayes. Liga {LIGA}. Métrica {NOM[met_b]}. Fuerzas bayesianas (1.00 = promedio liga, con intervalo 5-95%): " +
-                     "; ".join(f"{eq} ataque {x.ataque:.2f} ({x.ataque_bajo:.2f}-{x.ataque_alto:.2f}) defensa {x.defensa:.2f} ({x.defensa_bajo:.2f}-{x.defensa_alto:.2f})" for eq, x in f_.iterrows()))
-    else:
-        temps = sorted(df.temporada_txt.unique(), reverse=True)
-        temp = st.selectbox("Temporada", temps, label_visibility="collapsed")
-        t = tabla_posiciones(temp)
-        sec(f"Posiciones · {temp}", f"{LIGA}. Calculada con los partidos cargados en la base. Las zonas de Champions, Europa y descenso son orientativas (4 / 2 / 3).")
-        st.markdown(html_tabla(t), unsafe_allow_html=True)
+    temps = sorted(df.temporada_txt.unique(), reverse=True)
+    temp = st.selectbox("Temporada", temps, label_visibility="collapsed")
+    t = tabla_posiciones(temp)
+    sec(f"Posiciones · {temp}", f"{LIGA}. Calculada con los partidos cargados en la base. Las zonas de Champions, Europa y descenso son orientativas (4 / 2 / 3).")
+    st.markdown(html_tabla(t), unsafe_allow_html=True)
 
 # ================================================================== PAGINA ADMIN
 elif pagina == "Admin":
@@ -1131,18 +1080,17 @@ else:
     tl, th = ll + vl, lh + vh
     vol = {local: var.loc[local, "estado_casa"] == "volátil", visitante: var.loc[visitante, "estado_fuera"] == "volátil"}
     ml = mo.medias_liga(df, met)
-    mbm = bayes(ss.liga).get(met)                    # modelo bayesiano de la metrica (None si no hay .npz)
 
     key_cfg = f"cfg_{met}_{local}_{visitante}"
     if key_cfg not in ss:
         ss[key_cfg] = {"Total": [centro_defecto(lam_l + lam_v, met), 2 if met == "goles" else 1],
                        local: [centro_defecto(lam_l, met), 1], visitante: [centro_defecto(lam_v, met), 1]}
     cfg = ss[key_cfg]
-    lst = mercados(r, met, local, visitante, cfg, mbm)
+    lst = mercados(r, met, local, visitante, cfg)
     grupos = list(dict.fromkeys(x["grupo"] for x in lst))
-    tabla_esp = tabla_modelos(local, visitante, lam_l, lam_v, r["rango"]["lam_l"], r["rango"]["lam_v"], ml, var, mbm)
-    desc_esp = (f"Cuántos {NOM[met].lower()} espera cada modelo para este partido (λ). Poisson trae su rango de confianza del 80%; "
-                f"Bayes, el intervalo 5%–95% de sus escenarios. Cuanto más angosto el rango, más seguro el número.")
+    tabla_esp = tabla_modelos(local, visitante, lam_l, lam_v, r["rango"]["lam_l"], r["rango"]["lam_v"], ml, var)
+    desc_esp = (f"Cuántos {NOM[met].lower()} espera el modelo para este partido (λ) y su rango de confianza del 80%. "
+                f"Cuanto más angosto el rango, más seguro el número.")
 
     def selector_lineas(grp, key):
         if grp in ("Resultado", "Mayor número"):
@@ -1154,12 +1102,10 @@ else:
             cfg[grp] = [centro, rango]; st.rerun()
 
     def ev_html(mk, e, cuota):
-        """Tarjeta de EV para una pata con la cuota de la casa: EV Poisson y EV Bayes al mismo tamaño + calificacion."""
+        """Tarjeta de EV para una pata con la cuota de la casa: EV Poisson y EV pesimista + calificacion."""
         ev, ev_lo = mk["prob"] * cuota - 1, mk["lo"] * cuota - 1
-        tiles = [("EV Poisson", ev, f'prob. {mk["prob"]:.0%} · justa {mo.cuota_justa(mk["prob"])}')]
-        if mk.get("bayes") is not None:
-            tiles.append(("EV Bayes", mk["bayes"] * cuota - 1, f'prob. {mk["bayes"]:.0%}'))
-        tiles.append(("EV pesimista", ev_lo, f'prob. {mk["lo"]:.0%}'))
+        tiles = [("EV Poisson", ev, f'prob. {mk["prob"]:.0%} · justa {mo.cuota_justa(mk["prob"])}'),
+                 ("EV pesimista", ev_lo, f'prob. {mk["lo"]:.0%}')]
         kpi = "".join(f'<div><div class="t">{nm}</div><div class="pct {"up" if v > 0 else "down"}">{v:+.2f}</div><div class="rg">{s}</div></div>' for nm, v, s in tiles)
         return (f'<div class="card flat" style="margin:4px 0"><div class="row" style="margin-bottom:8px"><div class="mid">{mk["mercado"]}</div>'
                 f'<span class="tag {e["cls"]}">{e["tag"]}</span></div><div class="kpi esc">{kpi}</div></div>')
@@ -1184,7 +1130,7 @@ else:
                 for i, l in enumerate(legs):
                     a, b = st.columns([6, 1])
                     a.markdown(f'<div class="row" style="padding:4px 0"><div class="c1"><div class="mid">{l["mercado"]}</div>'
-                               f'<div class="small">{l["partido"]} · {l["metrica"]} · Poisson {l["prob"]:.0%}' + (f' ({l["lo"]:.0%}–{l["hi"]:.0%})' if "lo" in l else '') + (f' · Bayes {l["bayes"]:.0%}' if l.get("bayes") is not None else '') + f' · justa {mo.cuota_justa(l["prob"])} · casa {l["cuota"]:.2f}</div></div>'
+                               f'<div class="small">{l["partido"]} · {l["metrica"]} · Poisson {l["prob"]:.0%}' + (f' ({l["lo"]:.0%}–{l["hi"]:.0%})' if "lo" in l else '') + f' · justa {mo.cuota_justa(l["prob"])} · casa {l["cuota"]:.2f}</div></div>'
                                f'<span class="tag {l["cls"]}">{l["cal"]}</span></div>', unsafe_allow_html=True)
                     if b.button("✕", key=f"del{i}"):
                         legs.pop(i); st.rerun()
@@ -1205,29 +1151,25 @@ else:
         solo = b.toggle("Solo Buena o mejor", value=False)
         hl, hv = historial(local, met, n), historial(visitante, met, n)
 
-        sec(f"Mercados · {grp}", f"Probabilidad de cada mercado según Poisson y Bayes, y en cuántos de los últimos {n} partidos de cada equipo se habría cumplido "
+        sec(f"Mercados · {grp}", f"Probabilidad de cada mercado según el modelo y en cuántos de los últimos {n} partidos de cada equipo se habría cumplido "
             f"({local} · {visitante}). Calificación = 60% probabilidad Poisson + 40% cumplimiento.")
-        # libro de mercados: encabezado + una fila por mercado con columnas fijas (mercado · Poisson · Bayes · calificacion)
-        con_bayes = mbm is not None
+        # libro de mercados: encabezado + una fila por mercado con columnas fijas (mercado · Poisson · calificacion)
         html = (f'<div class="card"><div class="lg-h"><div class="c1 t">Mercado</div><div class="cn t">Poisson</div>'
-                + ('<div class="cn t">Bayes</div>' if con_bayes else '') + '<div class="cq t">Calificación</div></div>')
+                '<div class="cq t">Calificación</div></div>')
         filas_n = 0
         for mk in lst:
             if mk["grupo"] != grp: continue
             e = evaluar(mk, hl, hv, vol)
             if solo and e["cls"] not in ("exc", "bue"): continue
             filas_n += 1
-            col_b = (f'<div class="cn"><div class="pct{" down" if e["alerta"] else ""}">{mk["bayes"]:.0%}</div>'
-                     f'<div class="rg">{mk["bayes_lo"]:.0%}–{mk["bayes_hi"]:.0%}</div></div>') if mk.get("bayes") is not None else ''
             html += (f'<div class="mk"><div class="lg-r"><div class="c1"><div class="mid">{mk["mercado"]}</div><div class="small">justa <span class="w">{mo.cuota_justa(mk["prob"]):.2f}</span></div></div>'
                      f'<div class="cn"><div class="pct">{mk["prob"]:.0%}</div><div class="rg">{mk["lo"]:.0%}–{mk["hi"]:.0%}</div></div>'
-                     f'{col_b}'
                      f'<div class="cq"><span class="tag {e["cls"]}">{e["tag"]}</span><div class="rg" style="margin-top:3px">{e["hl"]}/{e["nl"]} · {e["hv"]}/{e["nv"]}</div></div></div>'
                      f'{barra(mk["prob"], e["tasa"], 1, P["ok"] if mk["prob"] >= 0.6 else P["warn"])}</div>')
         if not filas_n:
             html += '<div class="mk small">Ningún mercado con calificación Buena o mejor en este grupo. Quita el filtro o cambia de línea.</div>'
-        html += nota("Barra = probabilidad Poisson; marca vertical = % de cumplimiento histórico. Bajo cada % va su rango: pesimista–optimista en Poisson, "
-                     "5%–95% en Bayes. Bajo la calificación, los aciertos de cada equipo. ⚠ Bayes difiere más de 5 puntos (en rojo) y ↕ equipo volátil bajan un nivel la calificación.")
+        html += nota("Barra = probabilidad Poisson; marca vertical = % de cumplimiento histórico. Bajo cada % va su rango pesimista–optimista. "
+                     "Bajo la calificación, los aciertos de cada equipo. ↕ equipo volátil baja un nivel la calificación.")
         st.markdown(html + '</div>', unsafe_allow_html=True)
         ss.ctx_titulo = f"Armar · {partido} · {NOM[met]} · {grp}"
         ss.ctx_ia = (f"Vista: Armar. Liga {LIGA}. Partido {partido}. Métrica {NOM[met]}. λ local {lam_l:.2f} (rango bajo-alto {ll:.2f}-{lh:.2f}, "
@@ -1237,8 +1179,7 @@ else:
                      f"El rango es el intervalo del 80% del promedio del equipo (t de Student, desv/raíz(n)): incertidumbre de la λ, no la varianza Poisson. "
                      f"Validación con últimos {n} partidos.\n"
                      "Mercados del grupo " + grp + ":\n" + "\n".join(
-                         f"- {mk['mercado']}: prob Poisson {mk['prob']:.0%} (pesimista {mk['lo']:.0%}, optimista {mk['hi']:.0%})" +
-                         (f", Bayes {mk['bayes']:.0%} (intervalo {mk['bayes_lo']:.0%}-{mk['bayes_hi']:.0%})" if mk.get("bayes") is not None else "") +
+                         f"- {mk['mercado']}: prob Poisson {mk['prob']:.0%} (pesimista {mk['lo']:.0%}, optimista {mk['hi']:.0%})"
                          f", cuota justa {mo.cuota_justa(mk['prob'])}, {local} cumplió {ev_['hl']}/{ev_['nl']}, {visitante} {ev_['hv']}/{ev_['nv']}, "
                          f"calificación {ev_['tag']}"
                          for mk in lst if mk["grupo"] == grp for ev_ in [evaluar(mk, hl, hv, vol)]) +
@@ -1255,7 +1196,7 @@ else:
         a, b = st.columns(2)
         if a.button("Agregar al boleto", width="stretch"):
             ss.parlay.append({"partido": partido, "metrica": NOM[met], "mercado": sel, "prob": mk["prob"], "cuota": cuota,
-                              "cal": e["tag"], "cls": e["cls"], "lo": mk["lo"], "hi": mk["hi"], "bayes": mk.get("bayes")})
+                              "cal": e["tag"], "cls": e["cls"], "lo": mk["lo"], "hi": mk["hi"]})
             registrar_uso("pata", f"{partido} | {sel} @ {cuota}")
             st.rerun()
         if b.button("Analizar esta pata", width="stretch"):
@@ -1281,13 +1222,11 @@ else:
         hl, hv = historial(local, met, n, cond_l), historial(visitante, met, n, cond_v)
         e = evaluar(mk, hl, hv, vol)
 
-        # tarjeta de veredicto: Poisson · Bayes · histórico en grande, luego escenarios Poisson y esperado por modelo
-        sec("Veredicto", f"Probabilidad de la pata según cada modelo y en cuántos de los últimos {n} partidos de los dos equipos se cumplió. "
-            "Calificación = 60% probabilidad Poisson + 40% cumplimiento histórico; ⚠ Bayes difiere y ↕ equipo volátil la bajan un nivel.")
+        # tarjeta de veredicto: Poisson · histórico en grande, luego escenarios Poisson y esperado por modelo
+        sec("Veredicto", f"Probabilidad de la pata según el modelo y en cuántos de los últimos {n} partidos de los dos equipos se cumplió. "
+            "Calificación = 60% probabilidad Poisson + 40% cumplimiento histórico; ↕ equipo volátil la baja un nivel.")
         trio = (f'<div><div class="big">{mk["prob"]:.0%}</div><div class="t">Poisson</div><div class="rg">justa {mo.cuota_justa(mk["prob"]):.2f}</div></div>'
-                + (f'<div><div class="big{" down" if e["alerta"] else ""}">{mk["bayes"]:.0%}</div><div class="t">Bayes{" ⚠ difiere" if e["alerta"] else ""}</div>'
-                   f'<div class="rg">{mk["bayes_lo"]:.0%}–{mk["bayes_hi"]:.0%}</div></div>' if mk.get("bayes") is not None else '')
-                + f'<div><div class="big">{e["tasa"]:.0%}</div><div class="t">Histórico</div><div class="rg">{e["hl"] + e["hv"]} de {e["nl"] + e["nv"]} partidos</div></div>')
+                f'<div><div class="big">{e["tasa"]:.0%}</div><div class="t">Histórico</div><div class="rg">{e["hl"] + e["hv"]} de {e["nl"] + e["nv"]} partidos</div></div>')
         st.markdown(f'<div class="card"><div class="row"><div class="c1"><div class="mid">{sel}</div><div class="small">{NOM[met]} · {partido}</div></div><span class="tag {e["cls"]}">{e["tag"]}</span></div>'
                     f'<div class="trio">{trio}</div>{barra(mk["prob"], e["tasa"], 1, P["acc"])}'
                     f'<div class="rg" style="margin-bottom:4px">barra = probabilidad Poisson · marca vertical = % histórico</div>'
@@ -1321,7 +1260,6 @@ else:
         ss.ctx_ia = (f"Vista: Analizar. Liga {LIGA}. Partido {partido}. Métrica {NOM[met]}. Pata: {sel}. Prob modelo (Poisson) {mk['prob']:.0%} "
                      f"(pesimista {mk['lo']:.0%}, optimista {mk['hi']:.0%}; Poisson con la λ del extremo en contra / a favor). "
                      f"Varianza vs liga: {local} {var.loc[local, 'estado_casa']} {var.loc[local, 'ratio_casa']:.1f}x en casa, {visitante} {var.loc[visitante, 'estado_fuera']} {var.loc[visitante, 'ratio_fuera']:.1f}x fuera"
-                     + (f", prob Bayes {mk['bayes']:.0%} (intervalo {mk['bayes_lo']:.0%}-{mk['bayes_hi']:.0%})" if mk.get("bayes") is not None else "") +
                      f", cuota justa {mo.cuota_justa(mk['prob'])}, calificación {e['tag']}, cumplimiento histórico {e['tasa']:.0%} ({e['hl']}/{e['nl']} {local}, {e['hv']}/{e['nv']} {visitante}) "
                      f"en últimos {n} partidos, filtro {filtro}. λ {local} {lam_l:.2f} (rango 80% {ll:.2f}-{lh:.2f}), λ {visitante} {lam_v:.2f} ({vl:.2f}-{vh:.2f}), media liga local {ml['local']:.2f} visita {ml['visitante']:.2f} total {ml['total']:.2f}.\n"
                      f"{local} últimos {len(hl)}: {_st(hl)}. Resultados (reciente→antiguo): " + ", ".join(f"{r_.condicion[0]} vs {r_.rival} {r_.marcador} ({int(r_.a_favor)}-{int(r_.en_contra)} {NOM[met].lower()})" for _, r_ in hl.iterrows()) +
@@ -1344,7 +1282,7 @@ else:
         st.markdown(ev_html(mk, e, cuota), unsafe_allow_html=True)
         if st.button("Agregar al boleto", width="stretch", key="add_an"):
             ss.parlay.append({"partido": partido, "metrica": NOM[met], "mercado": sel, "prob": mk["prob"], "cuota": cuota,
-                              "cal": e["tag"], "cls": e["cls"], "lo": mk["lo"], "hi": mk["hi"], "bayes": mk.get("bayes")})
+                              "cal": e["tag"], "cls": e["cls"], "lo": mk["lo"], "hi": mk["hi"]})
             registrar_uso("pata", f"{partido} | {sel} @ {cuota}")
             ss.grp = grp
             ir_a("Armar")

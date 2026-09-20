@@ -1,8 +1,0 @@
-{
-  "goles":     {"1 (gana local)": 2.30, "X (empate)": 3.70, "2 (gana visitante)": 2.85,
-                "Over 2.5": 1.57, "Under 2.5": 2.40, "Over 3.5": 2.30, "Under 3.5": 1.60, "Ambos anotan / suman": 1.45},
-  "goles_1t":  {"Over 0.5": 1.28, "Under 0.5": 3.50, "Over 1.5": 2.05, "Under 1.5": 1.75},
-  "goles_2t":  {"Over 1.5": 1.55, "Under 1.5": 2.40},
-  "corners":   {"Over 9.5": 1.85, "Under 9.5": 1.95},
-  "amarillas": {"Over 4.5": 1.80, "Under 4.5": 2.00}
-}
