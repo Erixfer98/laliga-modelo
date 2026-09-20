@@ -4,7 +4,8 @@ modelo.py — Poisson (+ Dixon-Coles en goles) para cada par de columnas local/v
 Misma logica que el Excel modelo_poisson_dixon_coles_laliga:
   1. Cada partido pesa mas cuanto mas reciente (peso = exp(-XI * dias_atras)).
   2. Por equipo: promedio ponderado de lo que hace y lo que concede, en casa y fuera.
-  3. Fuerza = promedio del equipo / promedio de la liga.
+  3. Fuerza = promedio del equipo / promedio de la liga. El promedio del equipo se "encoge" hacia el de la liga
+     como si tuviera K_ENCOGE partidos extra al promedio (K_ENCOGE = 0 -> promedio puro, comportamiento anterior).
   4. lambda_local = ataque_casa(local) * defensa_fuera(visitante) * promedio_liga_casa
      lambda_visitante = ataque_fuera(visitante) * defensa_casa(local) * promedio_liga_fuera
   5. Matriz de marcadores con Poisson; en goles se aplica la correccion Dixon-Coles (rho).
@@ -31,6 +32,9 @@ from scipy.stats import t as t_student
 RUTA_DATOS = "datos/bbdd_laliga.csv"
 XI = 0.005          # decaimiento por dia. 0.005 = un partido de hace 140 dias pesa la mitad
 RHO = -0.05         # Dixon-Coles, solo goles. Tipico -0.03 a -0.13; 0 = Poisson puro
+K_ENCOGE = 10       # encogimiento: cada equipo se calcula como si tuviera K partidos extra al promedio de la liga.
+                    # Evita fuerzas extremas con pocos partidos (lambda = 0 de un recien ascendido) y corrige el exceso de
+                    # confianza que mostro el backtest (backtest.py): con 0 el modelo decia 85% y acertaba 79%; con 10, 85%.
 CONFIANZA = 0.90    # percentil superior del rango -> percentiles 10 y 90 (intervalo del 80%)
 PJ_MIN = 5          # partidos efectivos minimos en esa condicion para fiarse del rango -> si no, "pocos datos"
 CORTES_VAR = (0.8, 1.2)   # ancho relativo del equipo / mediana de la liga: < 0.8 estable, > 1.2 volatil
@@ -80,15 +84,21 @@ def fuerzas(df: pd.DataFrame, metrica: str) -> pd.DataFrame:
     prom_casa = np.average(d[col_l], weights=w)     # lo que hace un local promedio
     prom_fuera = np.average(d[col_v], weights=w)    # lo que hace un visitante promedio
 
+    def media(x, w, prom):
+        """Promedio ponderado del equipo encogido hacia el promedio de la liga (K_ENCOGE partidos extra al promedio)."""
+        if len(x) == 0 or (w.sum() + K_ENCOGE) == 0:
+            return prom
+        return (np.sum(x * w) + K_ENCOGE * prom) / (w.sum() + K_ENCOGE)
+
     filas = []
     for eq in equipos(d):
         casa = d[d["equipo_local_txt"] == eq]
         fuera = d[d["equipo_visitante_txt"] == eq]
-        wc, wf = casa["peso"], fuera["peso"]
-        gf_casa = np.average(casa[col_l], weights=wc) if len(casa) else prom_casa
-        gc_casa = np.average(casa[col_v], weights=wc) if len(casa) else prom_fuera
-        gf_fuera = np.average(fuera[col_v], weights=wf) if len(fuera) else prom_fuera
-        gc_fuera = np.average(fuera[col_l], weights=wf) if len(fuera) else prom_casa
+        wc, wf = casa["peso"].values, fuera["peso"].values
+        gf_casa = media(casa[col_l].values, wc, prom_casa)
+        gc_casa = media(casa[col_v].values, wc, prom_fuera)
+        gf_fuera = media(fuera[col_v].values, wf, prom_fuera)
+        gc_fuera = media(fuera[col_l].values, wf, prom_casa)
         filas.append({
             "equipo": eq, "pj_casa": len(casa), "pj_fuera": len(fuera),
             "ataque_casa": gf_casa / prom_casa, "defensa_casa": gc_casa / prom_fuera,
