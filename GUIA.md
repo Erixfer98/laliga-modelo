@@ -12,7 +12,9 @@ Archivos del paquete (todos van en la raíz del repositorio):
 | `generar_bbdd_laliga.py` | Tu notebook, como script. Descarga football-data.co.uk y escribe `datos/bbdd_laliga.xlsx` y `.csv` |
 | `espn.py` | Fuente ESPN para Liga MX (scoreboard + summary de `mex.1`). Incremental: solo pide los días nuevos |
 | `modelo.py` | Poisson (+ Dixon-Coles en goles) para las 9 métricas. Rango bajo–alto de cada λ (promedio ± t·desv/√n, 80%), prob. pesimista/optimista por mercado y varianza de cada equipo vs la liga |
-| `app.py` | Web app (Streamlit) |
+| `kuota.py` | Motor: todo lo que calcula la app (mercados, calificación, boleto, tabla, cara a cara) en funciones que devuelven datos. Sin pantalla |
+| `app.py` | Web app (Streamlit): solo pantalla, llama a `kuota.py` |
+| `api.py` | La misma información en JSON (FastAPI) para la web app nueva. `pip install fastapi uvicorn` y `uvicorn api:app --reload` → http://localhost:8000/docs |
 | `requirements.txt` | Librerías que necesita la app |
 | `.github/workflows/actualizar.yml` | El reloj: corre el script todos los días a las 6:00 am Guatemala |
 | `datos/` | Aquí viven el Excel y el CSV. Se sobrescriben en cada corrida |

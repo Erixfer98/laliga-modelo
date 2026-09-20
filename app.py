@@ -1,5 +1,6 @@
 """
-app.py — Kuota · Parlays con Datos. Las 5 grandes ligas + Liga MX.
+app.py — Kuota · Parlays con Datos. Las 5 grandes ligas + Liga MX. SOLO PANTALLA (Streamlit).
+Todo lo que calcula vive en kuota.py (motor): aqui solo se eligen parametros con widgets y se dibuja HTML.
 Paginas: Inicio · Armar · Analizar · Cara a cara · Tabla · Diccionario · Admin (solo administradores).
 Usuarios y registro de uso: opcionales, se configuran en Streamlit Cloud -> Settings -> Secrets (ver pagina Admin).
 Sesion: al entrar se guarda un token firmado en la URL (?s=...). Si el celular manda la app a segundo plano y Streamlit
@@ -10,16 +11,15 @@ Local: streamlit run app.py
 import base64
 import hashlib
 import hmac
-import os
 import time
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-import numpy as np
 import pandas as pd
 import requests
 import streamlit as st
 
+import kuota
 import modelo as mo
 
 st.set_page_config(page_title="Kuota", page_icon="⚽", layout="centered", initial_sidebar_state="collapsed")
@@ -149,28 +149,27 @@ st.markdown(f"""
 </style>""", unsafe_allow_html=True)
 
 
-LIGAS = {"laliga": "La Liga", "premier": "Premier League", "seriea": "Serie A", "bundesliga": "Bundesliga", "ligue1": "Ligue 1", "ligamx": "Liga MX"}
-LIGAS_DISPONIBLES = {k: v for k, v in LIGAS.items() if os.path.exists(f"datos/bbdd_{k}.csv")} or {"laliga": "La Liga"}
+LIGAS = kuota.LIGAS
+LIGAS_DISPONIBLES = kuota.ligas_disponibles()
 
 
 @st.cache_data(ttl=3600)
 def datos(liga):
-    return mo.cargar(f"datos/bbdd_{liga}.csv")
+    return kuota.cargar(liga)
 
 
 @st.cache_data(ttl=3600)
 def incert(liga, met):
     """Incertidumbre de la lambda por equipo y condicion + variabilidad vs liga (ver modelo.incertidumbre)."""
-    return mo.incertidumbre(mo.cargar(f"datos/bbdd_{liga}.csv"), met)
+    return kuota.incertidumbre(kuota.cargar(liga), met)
 
 
 VAR_ICONO = {"estable": "🟢", "normal": "🟡", "volátil": "🔴", "pocos datos": "⚪"}
 
 
-def chip_var(v, equipo, cond):
-    """Chip de variabilidad del equipo en su condicion (casa/fuera): icono + ratio vs liga."""
-    est, ratio, n = v.loc[equipo, f"estado_{cond}"], v.loc[equipo, f"ratio_{cond}"], v.loc[equipo, f"n_ef_{cond}"]
-    return f'<span title="{est} · {n:.0f} partidos efectivos {cond}">{VAR_ICONO[est]} {ratio:.1f}×</span>'
+def chip_var(v):
+    """Chip de variabilidad del equipo en su condicion (casa/fuera): icono + ratio vs liga. v = an["var"]["local" | "visitante"]."""
+    return f'<span title="{v["estado"]} · {v["n_ef"]:.0f} partidos efectivos {v["condicion"]}">{VAR_ICONO[v["estado"]]} {v["ratio"]:.1f}×</span>'
 
 
 def rango_txt(lo, hi, pct=True):
@@ -198,18 +197,16 @@ ss.setdefault("liga", next(iter(LIGAS_DISPONIBLES)))
 if ss.liga not in LIGAS_DISPONIBLES:
     ss.liga = next(iter(LIGAS_DISPONIBLES))
 df = datos(ss.liga)
-lista = mo.equipos(df)
+lista = kuota.equipos(df)
 ss.setdefault("parlay", [])
 ss.setdefault("pagina", "Inicio")
 ss.setdefault("gen", 0)   # cambia para reiniciar los widgets al saltar de pagina
 ss.setdefault("banca", 1000.0)
 ss.setdefault("chat", [])       # historial del asistente IA
 ss.setdefault("ctx_ia", "")     # contexto de la vista actual que se le pasa a la IA
-GOL = ("goles", "goles_1t", "goles_2t")
-MAYOR_NUMERO = ("tiros", "tiros_a_puerta", "corners", "faltas", "amarillas")   # metricas con mercado "quien hace mas"
-NOM = mo.NOMBRES
-NOM_CORTO = {"goles": "Goles", "goles_1t": "Goles 1T", "goles_2t": "Goles 2T", "tiros": "Tiros", "tiros_a_puerta": "Tiros a puerta",
-             "corners": "Corners", "faltas": "Faltas", "amarillas": "Amarillas", "rojas": "Rojas"}
+GOL = kuota.GOL
+NOM = kuota.NOM
+NOM_CORTO = kuota.NOM_CORTO
 COLOR_VIS = P["vis"]   # color del visitante en graficos y cara a cara (el local usa P["acc"])
 HORA_GT = ZoneInfo("America/Guatemala")
 MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]
@@ -403,127 +400,7 @@ if not usuarios:
 ES_ADMIN = ss.usuario in cfg_admins() or not usuarios
 
 
-# ================================================================== datos por equipo
-def historial(equipo, met, n, condicion=None):
-    h = mo.ultimos_n(df, equipo, met, 80)
-    if condicion:
-        h = h[h.condicion == condicion]
-    h = h.head(n).copy()
-    h["gano"] = (h.a_favor > h.en_contra).astype(int)
-    h["empato"] = (h.a_favor == h.en_contra).astype(int)
-    h["perdio"] = (h.a_favor < h.en_contra).astype(int)
-    h["no_perdio"] = 1 - h.perdio
-    h["no_gano"] = 1 - h.gano
-    h["btts"] = ((h.a_favor > 0) & (h.en_contra > 0)).astype(int)
-    return h
-
-
-def cumple(h, mk, lado):
-    col = mk["col_l"] if lado == "l" else mk["col_v"]
-    return (h[col] > mk["linea"]) if mk["over"] else (h[col] < mk["linea"])
-
-
-def calificar(p, tasa):
-    s = 0.6 * p + 0.4 * tasa
-    for lim, txt, cls in ((0.78, "Excelente", "exc"), (0.68, "Buena", "bue"), (0.56, "Regular", "reg"), (0.45, "Mala", "mal")):
-        if s >= lim:
-            return txt, cls
-    return "Pésima", "pes"
-
-
-def kelly(p, cuota):
-    """Fraccion de banca segun Kelly: (b*p - q) / b, con b = cuota - 1. Negativa = sin valor."""
-    b = cuota - 1
-    return (b * p - (1 - p)) / b if b > 0 else 0.0
-
-
-NIVELES = [("Excelente", "exc"), ("Buena", "bue"), ("Regular", "reg"), ("Mala", "mal"), ("Pésima", "pes")]
-
-
-def bajar_nivel(cls):
-    return NIVELES[min([c for _, c in NIVELES].index(cls) + 1, len(NIVELES) - 1)]
-
-
-def evaluar(mk, hl, hv, vol=None):
-    """vol = {equipo: True si es volátil en su condicion}. La pata baja un nivel si algún equipo que participa en la pata
-    es volátil (Total/Resultado/Mayor número = los dos; grupo de un equipo = ese)."""
-    cl, cv = cumple(hl, mk, "l"), cumple(hv, mk, "v")
-    n = len(hl) + len(hv)
-    tasa = (cl.sum() + cv.sum()) / n if n else 0
-    txt, cls = calificar(mk["prob"], tasa)
-    # varianza: si un equipo de la pata es volátil frente a la liga, baja un nivel
-    equipos_pata = list(vol) if (vol and mk["grupo"] in ("Resultado", "Total", "Mayor número")) else [mk["grupo"]]
-    volatil = bool(vol) and any(vol.get(t, False) for t in equipos_pata)
-    if volatil:
-        txt, cls = bajar_nivel(cls)
-    return {"hl": int(cl.sum()), "nl": len(hl), "hv": int(cv.sum()), "nv": len(hv), "tasa": tasa, "cal": txt, "cls": cls,
-            "serie_l": cl, "serie_v": cv, "volatil": volatil, "tag": ("↕ " if volatil else "") + txt}
-
-
-# ================================================================== mercados (linea configurable)
-def lineas(centro, rango):
-    return [x for x in np.arange(centro - rango, centro + rango + 0.01, 1.0) if x > 0]
-
-
-def mercados(r, met, local, visitante, cfg):
-    """cfg = {grupo: (centro, rango)}. Devuelve lista de mercados con su regla de evaluacion historica. Cada mercado
-    trae prob (lambda central) y lo / hi = pesimista / optimista: la misma probabilidad calculada en las esquinas
-    bajo/alto de las lambdas (minimo y maximo de las 4 esquinas; en mercados de un solo equipo, de sus 2 extremos).
-    Todo sale de las mismas lambdas bajo-alto que se muestran arriba."""
-    m, lam_l, lam_v = r["matriz"], r["lambda_local"], r["lambda_visitante"]
-    esq, (ll, lh), (vl, vh) = r["rango"]["esquinas"], r["rango"]["lam_l"], r["rango"]["lam_v"]
-    k = m.shape[0]; tot = np.add.outer(np.arange(k), np.arange(k))
-    out = []
-
-    def add(nombre, grupo, f, col_l, col_v, linea, over, region):
-        """f(matriz) -> probabilidad; se evalua en la matriz central y en las 4 esquinas."""
-        p, ps = f(m), [f(e) for e in esq.values()]
-        out.append({"mercado": nombre, "grupo": grupo, "prob": float(min(max(p, 0), 1)),
-                    "lo": float(min(max(min(ps), 0), 1)), "hi": float(min(max(max(ps), 0), 1)),
-                    "col_l": col_l, "col_v": col_v, "linea": linea, "over": over, "region": region})
-
-    def add1(nombre, grupo, lam, lam_lo, lam_hi, ln, over, col_l, col_v, region):
-        """mercado de un solo equipo: Poisson con su lambda central, baja y alta."""
-        ps = [mo.prob_over(x, ln) for x in (lam, lam_lo, lam_hi)]
-        if not over: ps = [1 - x for x in ps]
-        out.append({"mercado": nombre, "grupo": grupo, "prob": float(ps[0]), "lo": float(min(ps[1:])), "hi": float(max(ps[1:])),
-                    "col_l": col_l, "col_v": col_v, "linea": ln, "over": over, "region": region})
-
-    p1 = lambda x: np.tril(x, -1).sum(); px = lambda x: np.trace(x); p2 = lambda x: np.triu(x, 1).sum(); bt = lambda x: x[1:, 1:].sum()
-    # quien gana / quien hace mas: sale de la matriz
-    if met in GOL:
-        add(f"Gana {local}", "Resultado", p1, "gano", "perdio", 0.5, True, lambda x, y: x > y)
-        add("Empate", "Resultado", px, "empato", "empato", 0.5, True, lambda x, y: x == y)
-        add(f"Gana {visitante}", "Resultado", p2, "perdio", "gano", 0.5, True, lambda x, y: x < y)
-        add(f"{local} o empate", "Resultado", lambda x: p1(x) + px(x), "no_perdio", "no_gano", 0.5, True, lambda x, y: x >= y)
-        add(f"{visitante} o empate", "Resultado", lambda x: p2(x) + px(x), "no_gano", "no_perdio", 0.5, True, lambda x, y: x <= y)
-        add("Ambos anotan: Sí", "Resultado", bt, "btts", "btts", 0.5, True, lambda x, y: x > 0 and y > 0)
-        add("Ambos anotan: No", "Resultado", lambda x: 1 - bt(x), "btts", "btts", 0.5, False, lambda x, y: x == 0 or y == 0)
-    for ln in lineas(*cfg["Total"]):
-        add(f"Total Over {ln}", "Total", lambda x, ln=ln: x[tot > ln].sum(), "total", "total", ln, True, lambda x, y, ln=ln: x + y > ln)
-        add(f"Total Under {ln}", "Total", lambda x, ln=ln: 1 - x[tot > ln].sum(), "total", "total", ln, False, lambda x, y, ln=ln: x + y < ln)
-    if met in MAYOR_NUMERO:
-        que = NOM[met].lower()
-        add(f"Más {que}: {local}", "Mayor número", p1, "gano", "perdio", 0.5, True, lambda x, y: x > y)
-        add(f"Más {que}: empate", "Mayor número", px, "empato", "empato", 0.5, True, lambda x, y: x == y)
-        add(f"Más {que}: {visitante}", "Mayor número", p2, "perdio", "gano", 0.5, True, lambda x, y: x < y)
-    for ln in lineas(*cfg[local]):
-        add1(f"{local} Over {ln}", local, lam_l, ll, lh, ln, True, "a_favor", "en_contra", lambda x, y, ln=ln: x > ln)
-        add1(f"{local} Under {ln}", local, lam_l, ll, lh, ln, False, "a_favor", "en_contra", lambda x, y, ln=ln: x < ln)
-    for ln in lineas(*cfg[visitante]):
-        add1(f"{visitante} Over {ln}", visitante, lam_v, vl, vh, ln, True, "en_contra", "a_favor", lambda x, y, ln=ln: y > ln)
-        add1(f"{visitante} Under {ln}", visitante, lam_v, vl, vh, ln, False, "en_contra", "a_favor", lambda x, y, ln=ln: y < ln)
-    return out
-
-
-def centro_defecto(lam, met):
-    if met == "goles": return 2.5
-    if met in GOL: return 1.5
-    if met == "rojas": return 0.5
-    return max(round(lam) - 0.5, 0.5)
-
-
-# ================================================================== piezas visuales
+# ================================================================== piezas visuales (todo el calculo esta en kuota.py)
 def barra(valor, marca, maximo, color="#2b6cb0"):
     pct = min(valor / maximo, 1) * 100 if maximo else 0
     mk = min(marca / maximo, 1) * 100 if maximo else 0
@@ -538,14 +415,16 @@ def corto(nombre, n=12):
     return nombre if len(nombre) <= n else nombre[:n - 1] + "…"
 
 
-def tabla_modelos(local, visitante, lam_l, lam_v, rango_l, rango_v, ml, var):
-    """Esperado por el modelo en una tabla con columnas alineadas: λ · rango 80% · liga · Δ · var. Una fila por equipo y el total."""
-    (ll, lh), (vl, vh) = rango_l, rango_v
+def tabla_modelos(an):
+    """Esperado por el modelo en una tabla con columnas alineadas: λ · rango 80% · liga · Δ · var. Una fila por equipo y el total.
+    an = kuota.analizar_partido(...)."""
+    local, visitante, ml, lam_l, lam_v = an["local"], an["visitante"], an["medias_liga"], an["lambda_local"], an["lambda_visitante"]
+    (ll, lh), (vl, vh), (tl, th) = an["rango"]["local"], an["rango"]["visitante"], an["rango"]["total"]
     h = '<table class="st"><tr><th>Equipo</th><th>λ</th><th>rango</th><th>liga</th><th>Δ</th><th>var.</th></tr>'
     h += '<tr class="grp"><td colspan="6">Poisson · rango de confianza 80%</td></tr>'
-    for nm, lam, lo, hi, ref, chip in ((eq(local, "l", 13), lam_l, ll, lh, ml["local"], chip_var(var, local, "casa")),
-                                       (eq(visitante, "v", 13), lam_v, vl, vh, ml["visitante"], chip_var(var, visitante, "fuera")),
-                                       ("Total", lam_l + lam_v, ll + vl, lh + vh, ml["total"], "")):
+    for nm, lam, lo, hi, ref, chip in ((eq(local, "l", 13), lam_l, ll, lh, ml["local"], chip_var(an["var"]["local"])),
+                                       (eq(visitante, "v", 13), lam_v, vl, vh, ml["visitante"], chip_var(an["var"]["visitante"])),
+                                       ("Total", lam_l + lam_v, tl, th, ml["total"], "")):
         h += f'<tr><td>{nm}</td><td class="w">{lam:.2f}</td><td>{lo:.2f}–{hi:.2f}</td><td>{ref:.2f}</td><td>{delta(lam, ref, 2)}</td><td>{chip}</td></tr>'
     return h + "</table>" + nota("λ = cantidad esperada · liga = media de la liga en esa condición · Δ = λ menos la media · "
                                 "var. = qué tan variable es el equipo frente a la liga (🟢 estable 🟡 normal 🔴 volátil ⚪ pocos datos)")
@@ -558,29 +437,28 @@ def escenarios_html(mk):
                                              for nm, p, s in tiles) + "</div>"
 
 
-def medias_html():
-    """Medias de la liga por metrica (todas las temporadas cargadas) y % de partidos por encima de la linea tipica del total."""
+def medias_html(medias):
+    """Medias de la liga por metrica (todas las temporadas cargadas) y % de partidos por encima de la linea tipica del total.
+    medias = kuota.medias_por_metrica(df)."""
     h = '<table class="st"><tr><th></th><th>Local</th><th>Visit.</th><th>Total</th><th>Línea</th><th>Over</th></tr>'
-    for met, (col_l, col_v, _) in mo.METRICAS.items():
-        d = df.dropna(subset=[col_l, col_v]); tot = d[col_l] + d[col_v]
-        ln = float(np.floor(tot.mean()) + 0.5)          # la linea .5 mas cercana a la media del total
-        dec = 2 if met in GOL or met == "rojas" else 1
-        h += (f'<tr><td>{NOM_CORTO[met]}</td><td>{d[col_l].mean():.{dec}f}</td><td>{d[col_v].mean():.{dec}f}</td><td class="w">{tot.mean():.{dec}f}</td>'
-              f'<td>{ln}</td><td class="w">{(tot > ln).mean():.0%}</td></tr>')
+    for m in medias:
+        dec = m["decimales"]
+        h += (f'<tr><td>{m["nombre"]}</td><td>{m["local"]:.{dec}f}</td><td>{m["visitante"]:.{dec}f}</td><td class="w">{m["total"]:.{dec}f}</td>'
+              f'<td>{m["linea"]}</td><td class="w">{m["pct_over"]:.0%}</td></tr>')
     return h + "</table>"
 
 
-def stats_partido_html(g, a, b):
-    """Ficha de un partido estilo FotMob: valor del local · metrica · valor del visitante. La pastilla de color = el que hizo mas."""
-    home, away = g.equipo_local_txt, g.equipo_visitante_txt
+def stats_partido_html(g, a):
+    """Ficha de un partido estilo FotMob: valor del local · metrica · valor del visitante. La pastilla de color = el que hizo mas.
+    g = un partido de kuota.cara_a_cara(...)["partidos"]; a = el equipo elegido como local."""
+    home, away = g["local"], g["visitante"]
     c_home, c_away = (P["acc"], COLOR_VIS) if home == a else (COLOR_VIS, P["acc"])
     h = (f'<div class="row" style="margin-bottom:4px"><div class="mid" style="color:{c_home}">{corto(home)}</div>'
-         f'<div class="small">{g.temporada_txt} · {g.fecha:%d/%m/%Y}</div><div class="mid" style="color:{c_away}">{corto(away)}</div></div>')
-    for met, (col_l, col_v, _) in mo.METRICAS.items():
-        vl, vv = g[col_l], g[col_v]
-        if pd.isna(vl) or pd.isna(vv):
+         f'<div class="small">{g["temporada"]} · {g["fecha"]:%d/%m/%Y}</div><div class="mid" style="color:{c_away}">{corto(away)}</div></div>')
+    for met, v in g["metricas"].items():
+        vl, vv = v["local"], v["visitante"]
+        if vl is None or vv is None:
             continue
-        vl, vv = int(vl), int(vv)
         pl = f'<span class="pill on" style="background:{c_home}">{vl}</span>' if vl > vv else f'<span class="pill">{vl}</span>'
         pv = f'<span class="pill on" style="background:{c_away}">{vv}</span>' if vv > vl else f'<span class="pill">{vv}</span>'
         h += f'<div class="fm">{pl}<div class="lbl">{NOM_CORTO[met]}</div>{pv}</div>'
@@ -604,30 +482,28 @@ def chart_barras(h, col, linea, media_liga, over, color):
             f'<div class="lg" style="bottom:{media_liga / mx * 100:.0f}%"><span>liga {media_liga:.1f}</span></div></div>')
 
 
-def tabla_stats(h, linea, over, ref_f, ref_c, ref_t):
-    """Media, mediana, desviacion, min, max y % cumple para a favor / en contra / total, con fila de referencia liga."""
-    if h.empty:
+def tabla_stats(st_, linea, over, ref_f, ref_c, ref_t):
+    """Media, mediana, desviacion, min, max y % cumple para a favor / en contra / total, con fila de referencia liga.
+    st_ = kuota.stats_historial(h, linea, over) (None si no hay partidos)."""
+    if st_ is None:
         return '<div class="small">sin partidos con ese filtro</div>'
-    def col(c):
-        s = h[c]; pct = ((s > linea) if over else (s < linea)).mean()
-        return [s.mean(), s.median(), s.std(ddof=0), s.min(), s.max(), pct]
-    A, C, T = col("a_favor"), col("en_contra"), col("total")
+    claves = ["media", "mediana", "desv", "min", "max", "pct"]
     filas = ["Media", "Mediana", "Desv. est.", "Mín", "Máx", f"% {'Over' if over else 'Under'} {linea}"]
     html = '<table class="st"><tr><th></th><th>A favor</th><th>En contra</th><th>Total</th></tr>'
     for i, nm in enumerate(filas):
         f = (lambda v: f"{v:.0%}") if i == 5 else (lambda v: f"{v:.1f}")
-        html += f"<tr><td>{nm}</td><td>{f(A[i])}</td><td>{f(C[i])}</td><td>{f(T[i])}</td></tr>"
+        html += f"<tr><td>{nm}</td><td>{f(st_['a_favor'][claves[i]])}</td><td>{f(st_['en_contra'][claves[i]])}</td><td>{f(st_['total'][claves[i]])}</td></tr>"
     html += f'<tr class="liga"><td>Media liga</td><td>{ref_f:.1f}</td><td>{ref_c:.1f}</td><td>{ref_t:.1f}</td></tr></table>'
     return html
 
 
-def lista_partidos(equipo, h, mk, lado):
+def lista_partidos(equipo, h, mk, lado, met):
     """Partido a partido estilo FotMob: local - marcador (verde gano / rojo perdio / gris empate) - visitante,
     racha G/E/P y el valor de la pata en cada partido (verde = cumplio)."""
     if h.empty:
         return f'<div class="card"><div class="mid">{equipo}</div><div class="small">sin partidos con ese filtro</div></div>'
     col = mk["col_l"] if lado == "l" else mk["col_v"]
-    serie = cumple(h, mk, lado)
+    serie = kuota.cumple(h, mk, lado)
     filas, forma = "", []
     for (_, g), ok in zip(h.iterrows(), serie):
         gl, gv = (int(x) for x in g.marcador.split("-"))
@@ -656,130 +532,76 @@ def lista_partidos(equipo, h, mk, lado):
             f'{filas}' + nota("Racha: antiguo → reciente. Marcador verde = ganó, rojo = perdió, gris = empate. Valor en verde = en ese partido se cumplió la pata.") + '</div>')
 
 
-def matriz_html(m, local, visitante, region, k=6):
-    mx = m[:k, :k].max()
-    h = '<table class="mx"><tr><th></th>' + "".join(f"<th>{y}</th>" for y in range(k)) + "</tr>"
-    for x in range(k):
+def matriz_html(g, local, visitante):
+    """g = kuota.matriz_datos(...): marcadores exactos con probabilidad y si gana la pata."""
+    k_, mx = g["k"], g["max"]
+    h = '<table class="mx"><tr><th></th>' + "".join(f"<th>{y}</th>" for y in range(k_)) + "</tr>"
+    for x in range(k_):
         h += f"<tr><th>{x}</th>"
-        for y in range(k):
-            p = m[x, y]; a = 0.15 + 0.85 * (p / mx)
-            col = f"rgba(46,158,91,{a:.2f})" if region(x, y) else (f"rgba(90,98,112,{a * 0.7:.2f})" if TEMA == "dark" else f"rgba(156,163,175,{a * 0.8:.2f})")
+        for c in g["celdas"][x]:
+            p = c["p"]; a = 0.15 + 0.85 * (p / mx)
+            col = f"rgba(46,158,91,{a:.2f})" if c["gana"] else (f"rgba(90,98,112,{a * 0.7:.2f})" if TEMA == "dark" else f"rgba(156,163,175,{a * 0.8:.2f})")
             h += f'<td style="background:{col}">{p * 100:.0f}</td>'
         h += "</tr>"
     return h + "</table>" + nota(f"Filas = {local} · columnas = {visitante}. Cada celda es el % de ese marcador exacto según Poisson. Verde = marcadores con los que gana la pata; más intenso = más probable.")
 
 
-def distribucion_html(m, mk, etiqueta):
-    k = m.shape[0]
-    if mk["grupo"] == "Total":
-        tot = np.add.outer(np.arange(k), np.arange(k))
-        dist = np.array([m[tot == s].sum() for s in range(k * 2 - 1)])
-    else:
-        dist = m.sum(axis=1 if mk["col_l"] == "a_favor" else 0)
-    cond = (lambda s: s > mk["linea"]) if mk["over"] else (lambda s: s < mk["linea"])
-    hi = len(dist)
-    while hi > 1 and dist[hi - 1] < 0.005: hi -= 1
-    hi = min(len(dist), max(hi, int(mk["linea"]) + 2))
-    mx = dist[:hi].max()
-    bars = "".join(f'<div style="height:{max(dist[s] / mx * 100, 2):.0f}%;background:{"#2e9e5b" if cond(s) else P["miss"]}">'
-                   f'<span class="v">{dist[s]:.0%}</span><span class="x">{s}</span></div>' for s in range(hi))
+def distribucion_html(valores, etiqueta):
+    """valores = kuota.distribucion_datos(...): probabilidad de cada cantidad y si gana la pata."""
+    mx = max(v["p"] for v in valores)
+    bars = "".join(f'<div style="height:{max(v["p"] / mx * 100, 2):.0f}%;background:{"#2e9e5b" if v["gana"] else P["miss"]}">'
+                   f'<span class="v">{v["p"]:.0%}</span><span class="x">{v["x"]}</span></div>' for v in valores)
     return f'<div class="chart"><div class="bars">{bars}</div></div>' + nota(f"Probabilidad de cada cantidad de {etiqueta} según Poisson. Verde = cantidades con las que gana la pata.")
 
 
-
-def diferencia_html(m, mk, local, visitante, etiqueta):
-    """Barras de P(local - visitante = d) segun la matriz Poisson. Verde = diferencias con las que gana la pata."""
-    k = m.shape[0]
-    dif = np.subtract.outer(np.arange(k), np.arange(k))
-    ds = list(range(-(k - 1), k))
-    dist = np.array([m[dif == d].sum() for d in ds])
-    lo, hi = 0, len(ds)
-    while lo < len(ds) - 1 and dist[lo] < 0.005: lo += 1
-    while hi > lo + 1 and dist[hi - 1] < 0.005: hi -= 1
-    mx = dist[lo:hi].max()
-    bars = "".join(f'<div style="height:{max(dist[i] / mx * 100, 2):.0f}%;background:{"#2e9e5b" if mk["region"](max(ds[i], 0), max(-ds[i], 0)) else P["miss"]}">'
-                   f'<span class="v">{dist[i]:.0%}</span><span class="x">{ds[i]:+d}</span></div>' for i in range(lo, hi))
+def diferencia_html(valores, local, visitante, etiqueta):
+    """valores = kuota.diferencia_datos(...): P(local - visitante = d) segun la matriz Poisson. Verde = diferencias con las que gana la pata."""
+    mx = max(v["p"] for v in valores)
+    bars = "".join(f'<div style="height:{max(v["p"] / mx * 100, 2):.0f}%;background:{"#2e9e5b" if v["gana"] else P["miss"]}">'
+                   f'<span class="v">{v["p"]:.0%}</span><span class="x">{v["x"]:+d}</span></div>' for v in valores)
     return (f'<div class="chart"><div class="bars">{bars}</div></div>'
             + nota(f"Diferencia de {etiqueta}: {local} menos {visitante}, según Poisson. Positivo = más el local, negativo = más el visitante. Verde = gana la pata."))
 
 
-# ================================================================== tabla de posiciones y tendencias
-def temporada_actual():
-    return df.sort_values("fecha")["temporada_txt"].iloc[-1]
+def grafico_modelo_html(g, mk, local, visitante, met):
+    """Tarjeta 'Que dice el modelo' segun el tipo de grafico que devuelve kuota.grafico_modelo."""
+    if g["tipo"] == "matriz":
+        return matriz_html(g, local, visitante)
+    if g["tipo"] == "diferencia":
+        return diferencia_html(g["valores"], local, visitante, NOM[met].lower())
+    return distribucion_html(g["valores"], NOM[met].lower() + (" total" if mk["grupo"] == "Total" else " " + mk["grupo"]))
 
 
-def tabla_posiciones(temp):
-    d = df[df.temporada_txt == temp]
-    filas = {}
-    for _, g in d.sort_values("fecha").iterrows():
-        gl, gv = int(g.goles_local_val), int(g.goles_visitante_val)
-        for eq, gf, gc in ((g.equipo_local_txt, gl, gv), (g.equipo_visitante_txt, gv, gl)):
-            f = filas.setdefault(eq, {"equipo": eq, "J": 0, "G": 0, "E": 0, "P": 0, "GF": 0, "GC": 0, "PTS": 0, "forma": []})
-            f["J"] += 1; f["GF"] += gf; f["GC"] += gc
-            res = "g" if gf > gc else ("p" if gf < gc else "e")
-            f["G" if res == "g" else ("P" if res == "p" else "E")] += 1
-            f["PTS"] += 3 if res == "g" else (1 if res == "e" else 0)
-            f["forma"].append(res)
-    t = pd.DataFrame(filas.values())
-    if t.empty:
-        return t
-    t["DG"] = t.GF - t.GC
-    return t.sort_values(["PTS", "DG", "GF"], ascending=False).reset_index(drop=True)
-
-
+# ================================================================== tabla de posiciones (t = kuota.tabla_posiciones: lista de filas)
 def html_tabla(t, resaltar=(), compacta=False):
     n = len(t)
     h = ('<div class="card"><div class="tb" style="border:none;padding:2px 0"><div class="z"></div><div class="pos"></div><div class="eq t">Equipo</div>'
          '<div class="n t">J</div><div class="n t">G</div><div class="n t">E</div><div class="n t">P</div>'
          + ('' if compacta else '<div class="n t gfgc" style="width:44px">GF-GC</div>') + '<div class="n t">DG</div><div class="pts t">PTS</div>'
          + ('' if compacta else '<div class="forma" style="width:102px"></div>') + '</div>')
-    for i, f in t.iterrows():
+    for i, f in enumerate(t):
         pos = i + 1
         z = P["ok"] if pos <= 4 else ("#f59e0b" if pos <= 6 else (P["bad"] if pos > n - 3 else "transparent"))
-        forma = "".join(f'<span class="{x}">{x.upper()}</span>' for x in f.forma[-5:])
-        h += (f'<div class="tb"{" style=background:" + P["card2"] if f.equipo in resaltar else ""}><div class="z" style="background:{z}"></div>'
-              f'<div class="pos">{pos}</div><div class="eq">{f.equipo}</div><div class="n">{f.J}</div><div class="n">{f.G}</div>'
-              f'<div class="n">{f.E}</div><div class="n">{f.P}</div>' + ('' if compacta else f'<div class="n gfgc" style="width:44px">{f.GF}-{f.GC}</div>')
-              + f'<div class="n">{f.DG:+d}</div><div class="pts">{f.PTS}</div>' + ('' if compacta else f'<div class="forma" style="width:102px">{forma}</div>') + '</div>')
+        forma = "".join(f'<span class="{x}">{x.upper()}</span>' for x in f["forma"][-5:])
+        h += (f'<div class="tb"{" style=background:" + P["card2"] if f["equipo"] in resaltar else ""}><div class="z" style="background:{z}"></div>'
+              f'<div class="pos">{pos}</div><div class="eq">{f["equipo"]}</div><div class="n">{f["J"]}</div><div class="n">{f["G"]}</div>'
+              f'<div class="n">{f["E"]}</div><div class="n">{f["P"]}</div>' + ('' if compacta else f'<div class="n gfgc" style="width:44px">{f["GF"]}-{f["GC"]}</div>')
+              + f'<div class="n">{f["DG"]:+d}</div><div class="pts">{f["PTS"]}</div>' + ('' if compacta else f'<div class="forma" style="width:102px">{forma}</div>') + '</div>')
     return h + nota("Franja verde = Champions · ámbar = Europa · roja = descenso (orientativo). Forma: antiguo → reciente.") + "</div>"
 
 
-def tendencias(met, n=5):
-    """Equipos con mayor y menor promedio total de la metrica en sus ultimos n partidos, vs media liga."""
-    ml = mo.medias_liga(df, met)
-    filas = []
-    for eq in lista:
-        h = mo.ultimos_n(df, eq, met, n)
-        if len(h) >= 3:
-            filas.append({"equipo": eq, "prom": h.total.mean(), "favor": h.a_favor.mean(), "contra": h.en_contra.mean()})
-    t = pd.DataFrame(filas).sort_values("prom", ascending=False)
-    return t, ml["total"]
-
-
 # ================================================================== boleto (se usa en la barra superior y en Inicio)
-def resumen_boleto():
-    """Devuelve (prob, cuota, ev, prob_pesimista, prob_optimista) del boleto o None.
-    Pesimista / optimista = producto de la prob. pesimista / optimista de cada pata."""
-    legs = ss.parlay
-    if not legs:
-        return None
-    prob = float(np.prod([l["prob"] for l in legs])); cuota = float(np.prod([l["cuota"] for l in legs]))
-    lo = float(np.prod([l.get("lo", l["prob"]) for l in legs])); hi = float(np.prod([l.get("hi", l["prob"]) for l in legs]))
-    return prob, cuota, prob * cuota - 1, lo, hi
-
-
 def slip_html(detalle=False):
     """Resumen del boleto en una fila: patas y cuota a la izquierda, probabilidad y EV a la derecha.
     detalle=True agrega la linea pesimista / optimista."""
-    rb = resumen_boleto()
+    rb = kuota.resumen_boleto(ss.parlay)
     if not rb:
         return ""
-    prob, cuota, ev, plo, phi = rb
-    h = (f'<div class="slip"><div class="row"><div class="c1"><div class="t">Boleto · {len(ss.parlay)} pata{"s" if len(ss.parlay) > 1 else ""}</div>'
-         f'<div class="mid">cuota {cuota:.2f}</div><div class="rg">justa {mo.cuota_justa(prob)}</div></div>'
-         f'<div class="evb"><div class="t">EV · {prob:.0%}</div><div class="pct {"up" if ev > 0 else "down"}">{ev:+.2f}</div></div></div>')
+    h = (f'<div class="slip"><div class="row"><div class="c1"><div class="t">Boleto · {rb["n"]} pata{"s" if rb["n"] > 1 else ""}</div>'
+         f'<div class="mid">cuota {rb["cuota"]:.2f}</div><div class="rg">justa {rb["justa"]}</div></div>'
+         f'<div class="evb"><div class="t">EV · {rb["prob"]:.0%}</div><div class="pct {"up" if rb["ev"] > 0 else "down"}">{rb["ev"]:+.2f}</div></div></div>')
     if detalle:
-        h += f'<div class="small" style="margin-top:6px">pesimista {plo:.0%} (EV {plo * cuota - 1:+.2f}) · optimista {phi:.0%} (EV {phi * cuota - 1:+.2f})</div>'
+        h += f'<div class="small" style="margin-top:6px">pesimista {rb["lo"]:.0%} (EV {rb["ev_lo"]:+.2f}) · optimista {rb["hi"]:.0%} (EV {rb["ev_hi"]:+.2f})</div>'
     return h + "</div>"
 
 
@@ -792,8 +614,8 @@ with st.container(key="topbar"):
         if top2.button(f"Salir · {ss.usuario}", width="stretch"):
             registrar_uso("logout")
             st.query_params.clear()      # borra el token de la URL: la proxima vez si pide login
-            for k in list(ss.keys()):
-                del ss[k]
+            for key_ in list(ss.keys()):
+                del ss[key_]
             st.rerun()
     else:
         top2.markdown(f'<div class="brand"><span class="user">{ss.usuario}</span></div>', unsafe_allow_html=True)
@@ -827,28 +649,20 @@ def selector_partido():
     return local, visitante
 
 
-def torneos_recientes():
-    """Torneo vigente y el anterior (los dos ultimos por fecha), en orden cronologico."""
-    return df.groupby("temporada_txt")["fecha"].max().sort_values().index.tolist()[-2:]
-
-
 # ================================================================== PAGINA INICIO
 if pagina == "Inicio":
-    temp = temporada_actual()
-    ult = df["fecha"].max()
-    n_temp = len(df[df.temporada_txt == temp])
+    res = kuota.resumen_liga(df)
+    temp, ult = res["temporada"], res["ultimo"]
     val_txt = ""
-    if os.path.exists("datos/validacion.json"):
-        import json
-        _v = json.load(open("datos/validacion.json")).get("ligas", {}).get(ss.liga)
-        if _v:
-            val_txt = (f'<span class="{"up" if _v.get("ok") and not _v.get("avisos") else "down"}">datos {"validados ✓" if _v.get("ok") else "con errores"}</span>'
-                       f' · {_v.get("vacias", 0)} celdas vacías · ')
+    _v = (kuota.validacion() or {}).get("ligas", {}).get(ss.liga)
+    if _v:
+        val_txt = (f'<span class="{"up" if _v.get("ok") and not _v.get("avisos") else "down"}">datos {"validados ✓" if _v.get("ok") else "con errores"}</span>'
+                   f' · {_v.get("vacias", 0)} celdas vacías · ')
     st.markdown(f'<div class="card"><div class="row"><div class="mid">{LIGA}</div><div class="small">temporada {temp}</div></div>'
-                f'<div class="trio"><div><div class="big">{n_temp}</div><div class="t">partidos jugados</div></div>'
+                f'<div class="trio"><div><div class="big">{res["partidos_temporada"]}</div><div class="t">partidos jugados</div></div>'
                 f'<div><div class="big">{ult:%d} {MESES[ult.month - 1]}</div><div class="t">último dato</div></div>'
                 f'<div><div class="big">{len(lista)}</div><div class="t">equipos</div></div></div>'
-                + nota(f'{val_txt}{len(df)} partidos cargados en total ({" y ".join(torneos_recientes())}). Se actualiza todos los días a las 6:00 am.') + '</div>',
+                + nota(f'{val_txt}{res["partidos_total"]} partidos cargados en total ({" y ".join(res["torneos_recientes"])}). Se actualiza todos los días a las 6:00 am.') + '</div>',
                 unsafe_allow_html=True)
     if ss.parlay:
         sec("Boleto en curso", "Lo que llevas armado. Sigue en Armar para agregar patas o revisar el stake.")
@@ -861,105 +675,57 @@ if pagina == "Inicio":
 
     sec("Medias de liga por partido", "Promedio de todos los partidos cargados. Línea = la .5 más cercana a la media del total; "
         "Over = en qué porcentaje de partidos el total superó esa línea. Sirve para saber qué tan normal es un Over antes de mirar a los equipos.")
-    st.markdown(f'<div class="card">{medias_html()}</div>', unsafe_allow_html=True)
+    medias = kuota.medias_por_metrica(df)
+    st.markdown(f'<div class="card">{medias_html(medias)}</div>', unsafe_allow_html=True)
 
-    t = tabla_posiciones(temp)
+    t = kuota.tabla_posiciones(df, temp)
     sec("Tabla · top 6", f"Calculada con los partidos cargados de la temporada {temp}. La tabla completa está en la página Tabla.")
-    st.markdown(html_tabla(t.head(6), compacta=True), unsafe_allow_html=True)
+    st.markdown(html_tabla(t[:6], compacta=True), unsafe_allow_html=True)
     ss.ctx_titulo = f"Inicio · {LIGA} · tabla {temp}"
-    medias_ia = "; ".join(f"{NOM[m]} local {mo.medias_liga(df, m)['local']:.2f} visita {mo.medias_liga(df, m)['visitante']:.2f} total {mo.medias_liga(df, m)['total']:.2f}"
-                          for m in mo.METRICAS)
-    ss.ctx_ia = (f"Vista: Inicio. Liga {LIGA}. Temporada {temp}, datos al {ult:%d/%m/%Y}. Medias de liga por partido: {medias_ia}. Tabla: " +
-                 "; ".join(f"{i + 1}. {f.equipo} {f.PTS} pts (J{f.J} G{f.G} E{f.E} P{f.P}, DG {f.DG:+d})" for i, f in t.iterrows()) +
-                 ("\nBoleto actual: " + "; ".join(f"{l['mercado']} ({l['partido']}, modelo {l['prob']:.0%}, cuota {l['cuota']})" for l in ss.parlay) if ss.parlay else "\nBoleto vacío."))
+    ss.ctx_ia = kuota.contexto_inicio(LIGA, temp, ult, medias, t, ss.parlay)
 
     sec("Tendencias · últimos 5 partidos", "Promedio del equipo (a favor + en contra) en sus últimos 5 partidos, comparado con la media de la liga. "
         "Sirve para elegir qué partido y mercado analizar.")
     met_h = st.pills("Métrica tendencias", list(mo.METRICAS), format_func=lambda x: NOM[x], default="corners", label_visibility="collapsed")
     if met_h:
-        tt, media = tendencias(met_h)
+        tt = kuota.tendencias(df, met_h)
+        media, filas_t = tt["media_liga"], tt["filas"]
+        tope = max(max(f["prom"] for f in filas_t), media) * 1.1
         def fila(f):
-            return (f'<div class="mk"><div class="row"><div class="mid">{f.equipo}</div><div class="pct">{f.prom:.1f} '
-                    f'<span class="rg">{f.prom - media:+.1f} vs liga</span></div></div>'
-                    f'{barra(f.prom, media, max(tt.prom.max(), media) * 1.1, P["ok"] if f.prom >= media else P["mut"])}'
-                    f'<div class="rg">a favor {f.favor:.1f} · en contra {f.contra:.1f}</div></div>')
+            return (f'<div class="mk"><div class="row"><div class="mid">{f["equipo"]}</div><div class="pct">{f["prom"]:.1f} '
+                    f'<span class="rg">{f["prom"] - media:+.1f} vs liga</span></div></div>'
+                    f'{barra(f["prom"], media, tope, P["ok"] if f["prom"] >= media else P["mut"])}'
+                    f'<div class="rg">a favor {f["favor"]:.1f} · en contra {f["contra"]:.1f}</div></div>')
         st.markdown(f'<div class="card"><div class="row" style="margin-bottom:4px"><div class="t">{NOM[met_h]} por partido · todos los equipos</div><div class="t">media liga {media:.1f}</div></div>'
-                    + "".join(fila(f) for _, f in tt.iterrows()) + nota("Ordenados de mayor a menor. Barra = promedio del equipo; marca vertical = media de la liga.") + '</div>', unsafe_allow_html=True)
+                    + "".join(fila(f) for f in filas_t) + nota("Ordenados de mayor a menor. Barra = promedio del equipo; marca vertical = media de la liga.") + '</div>', unsafe_allow_html=True)
 
 # ================================================================== PAGINA DICCIONARIO
 elif pagina == "Diccionario":
-    DIC = [
-        ("Modelo", "λ (lambda)", "Cantidad esperada de la métrica para un equipo en este partido, según el modelo. Ej. λ corners 5.2 = se esperan unos 5 corners de ese equipo."),
-        ("Modelo", "Poisson", "Fórmula que convierte una λ en probabilidades: cuántas veces sale 0, 1, 2, 3… Se usa para goles, tiros, corners, faltas y tarjetas."),
-        ("Modelo", "Dixon-Coles (ρ)", "Corrección a Poisson solo para goles: ajusta los marcadores 0-0, 1-0, 0-1 y 1-1, que Poisson estima mal. ρ negativo = más empates bajos."),
-        ("Modelo", "Ataque / defensa", "Fuerza del equipo relativa a la liga. 1.00 = promedio; 1.30 = produce 30% más que un equipo promedio; 0.80 = 20% menos."),
-        ("Modelo", "Peso por recencia", "Los partidos recientes pesan más que los viejos al calcular las fuerzas. Un partido de hace ~140 días pesa la mitad que uno de hoy."),
-        ("Modelo", "Matriz de resultados", "Tabla con la probabilidad de cada marcador exacto (filas = local, columnas = visitante). Verde = marcadores con los que gana la pata."),
-        ("Modelo", "Rango bajo–alto de λ", "Entre paréntesis junto a cada λ: hasta dónde puede estar equivocado el promedio del equipo. Se calcula sobre sus propios partidos (con la misma recencia del modelo): promedio ± t × desviación estándar ÷ √n. El multiplicador t sale de la distribución t de Student y baja solo conforme hay más partidos (3 partidos 1.89, 21 partidos 1.33, muchos 1.28); el rango cubre el 80% de los casos. Mide confianza en la λ, no cuánto varía un partido: eso ya lo cubre Poisson."),
-        ("Modelo", "Pesimista / optimista", "La probabilidad del mercado calculada con el mismo Poisson pero con las λ del extremo que va en contra (pesimista) o a favor (optimista) de la pata. Salen de las mismas λ bajo–alto que ves arriba, así que un Over y su Under siempre cuadran. El EV pesimista usa la prob. pesimista: si sigue positivo, la pata aguanta aunque el promedio esté algo inflado."),
-        ("Modelo", "Varianza vs liga (🟢🟡🔴⚪)", "Ancho del rango del equipo (relativo a su promedio, en esa condición: casa o fuera) dividido entre el ancho mediano de los equipos de la liga. 🟢 estable < 0.8×, 🟡 normal 0.8–1.2×, 🔴 volátil > 1.2×, ⚪ pocos datos = menos de 5 partidos efectivos en esa condición; ahí se usa la dispersión típica de la liga en lugar de la del equipo."),
-        ("Modelo", "Encogimiento (K)", "Al calcular la fuerza de un equipo se le suman 10 partidos 'extra' al promedio de la liga. Así un equipo con pocos partidos o una racha rara no se va a extremos (λ = 0 o λ = 8). El backtest mostró que sin esto el modelo decía 85% y acertaba 79%; con esto dice 85% y acierta 85%."),
-        ("Mercados", "Cuota justa", "1 dividido entre la probabilidad Poisson. Es la cuota a la que no ganas ni pierdes a largo plazo. Si la casa paga más que la justa, hay valor."),
-        ("Mercados", "EV (valor esperado)", "prob. × cuota − 1. Positivo = a largo plazo ganas; negativo = pierdes. EV +0.10 = ganas 10 centavos por cada Q1 apostado, en promedio."),
-        ("Mercados", "Over / Under", "Más de / menos de una línea. Total Over 2.5 goles = 3 o más goles en el partido. Las líneas .5 no permiten empate."),
-        ("Mercados", "Línea y ± líneas", "Línea = el centro que quieres ver (ej. 9.5 corners). ± líneas = cuántas líneas alrededor mostrar (±2 con 9.5 muestra 7.5, 8.5, 9.5, 10.5 y 11.5)."),
-        ("Mercados", "1X2 / doble oportunidad", "1 = gana local, X = empate, 2 = gana visitante. 1X = local o empate; X2 = visitante o empate."),
-        ("Mercados", "Ambos anotan (BTTS)", "Sí = los dos equipos marcan al menos un gol. No = al menos uno se queda en cero."),
-        ("Mercados", "Total / Local / Visitante", "Grupos de mercados. Total suma los dos equipos; Local y Visitante son la métrica de un solo equipo."),
-        ("Mercados", "Mayor número", "Qué equipo termina con más tiros, tiros a puerta, corners, faltas o amarillas (o empate). Probabilidad = matriz Poisson de la métrica."),
-        ("Validación", "Últ. N", "Contra cuántos partidos recientes de cada equipo se valida la pata. N chico = forma actual; N grande = tendencia estable."),
-        ("Validación", "X/N cumplió", "En cuántos de los últimos N partidos del equipo se habría cumplido ese mercado. 4/5 = pasó en 4 de 5."),
-        ("Validación", "Calificación", "60% probabilidad Poisson + 40% cumplimiento histórico. Excelente ≥ 78%, Buena ≥ 68%, Regular ≥ 56%, Mala ≥ 45%, Pésima el resto."),
-        ("Validación", "↕ Equipo volátil", "Un equipo de la pata es 🔴 volátil frente a la liga (el local en casa o el visitante fuera; en Total, Resultado y Mayor número cuentan los dos): la calificación baja un nivel."),
-        ("Validación", "Como jugarán", "Filtro: solo partidos del local jugando en casa y del visitante jugando fuera."),
-        ("Validación", "Media / mediana / desv. est.", "Media = promedio. Mediana = valor del medio (resiste goleadas raras). Desviación estándar = qué tanto varía de partido a partido; alta = equipo irregular."),
-        ("Validación", "Media liga", "Promedio de todos los partidos cargados. Referencia para saber si un equipo está por encima o por debajo de lo normal."),
-        ("Validación", "Línea típica y % Over (Inicio)", "Línea .5 más cercana a la media de la liga de esa métrica (ej. 2.5 goles, 9.5 corners). % Over = en qué porcentaje de los partidos cargados el total superó esa línea. Sirve para saber qué tan normal es un Over antes de mirar a los equipos."),
-        ("Validación", "Cara a cara", "Enfrentamientos directos entre los dos equipos solo en el torneo vigente y el anterior. Récord y la ficha completa de cada partido (las 9 métricas): la pastilla de color marca al equipo que hizo más. Son pocos partidos (2 o 3): contexto, no prueba."),
-        ("Validación", "Tabla de λ", "Una fila por equipo y el total: λ = esperado del modelo, bajo–alto = hasta dónde puede estar equivocado ese promedio, liga = media de la liga en esa condición, Δ = λ menos la media liga, var. = varianza del equipo vs liga (🟢🟡🔴⚪ y ×N)."),
-        ("Banca", "Banca", "Dinero total destinado a apostar. Todo el stake se calcula como porcentaje de esto."),
-        ("Banca", "Kelly", "Fracción de banca que maximiza el crecimiento si la probabilidad fuera exacta: ((cuota−1)·p − (1−p)) / (cuota−1). Se calcula con la prob. pesimista del boleto (producto de las pesimistas de cada pata): si con esa aún hay valor, el stake aguanta un modelo demasiado optimista."),
-        ("Banca", "½, ¼, ⅛ Kelly", "La mitad, un cuarto y un octavo del Kelly completo. Para parlays usa ¼ o ⅛: menos crecimiento pero mucha menos probabilidad de quebrar."),
-        ("Banca", "Patas no independientes", "Dos patas del mismo partido (ej. gana Madrid + over 2.5) están relacionadas; multiplicar sus probabilidades da un número inexacto."),
-        ("Datos", "Fuente", "football-data.co.uk para las 5 ligas europeas; ESPN para Liga MX. Se descarga todos los días a las 6:00 am (Guatemala) por GitHub Actions."),
-        ("Datos", "Columnas _val", "goles, goles 1er/2do tiempo, tiros, tiros a puerta, corners, faltas, amarillas y rojas, cada una para local y visitante."),
-        ("Datos", "Jornada", "Estimada: partido n-ésimo de cada equipo en la temporada. Un aplazado se cuenta cuando se jugó."),
-        ("Datos", "Temporada", "Europa: formato 2025-26 (agosto a mayo). Liga MX: Clausura AAAA (enero-junio) y Apertura AAAA (julio-diciembre), Liguilla incluida."),
-    ]
     sec("Diccionario", "Qué significa cada término que ves en la app, en palabras simples. Escribe para filtrar.")
-    q = st.text_input("Buscar", placeholder="Buscar un término…", label_visibility="collapsed").strip().lower()
-    grupos_d = list(dict.fromkeys(g for g, _, _ in DIC))
-    DESC_G = {"Modelo": "Cómo se calculan las probabilidades.", "Mercados": "Qué es cada apuesta y cómo leer cuota y EV.",
-              "Validación": "Cómo se comprueba una pata contra el historial y qué significa la calificación.",
-              "Banca": "Cuánto apostar.", "Datos": "De dónde salen los datos y cómo se ordenan."}
-    for g in grupos_d:
-        items = [(t_, d_) for gg, t_, d_ in DIC if gg == g and (not q or q in t_.lower() or q in d_.lower())]
-        if not items:
-            continue
-        sec(g, DESC_G.get(g, ""))
+    q = st.text_input("Buscar", placeholder="Buscar un término…", label_visibility="collapsed")
+    for g in kuota.diccionario(q):
+        sec(g["grupo"], g["descripcion"])
         st.markdown('<div class="card">' +
-                    "".join(f'<div class="mk"><div class="mid">{t_}</div><div style="margin-top:3px;font-size:0.86rem;line-height:1.5;color:{P["txt"]}">{d_}</div></div>' for t_, d_ in items)
+                    "".join(f'<div class="mk"><div class="mid">{it["termino"]}</div><div style="margin-top:3px;font-size:0.86rem;line-height:1.5;color:{P["txt"]}">{it["definicion"]}</div></div>' for it in g["items"])
                     + '</div>', unsafe_allow_html=True)
 
 # ================================================================== PAGINA TABLA
 elif pagina == "Tabla":
-    temps = sorted(df.temporada_txt.unique(), reverse=True)
-    temp = st.selectbox("Temporada", temps, label_visibility="collapsed")
-    t = tabla_posiciones(temp)
+    temp = st.selectbox("Temporada", kuota.temporadas(df), label_visibility="collapsed")
+    t = kuota.tabla_posiciones(df, temp)
     sec(f"Posiciones · {temp}", f"{LIGA}. Calculada con los partidos cargados en la base. Las zonas de Champions, Europa y descenso son orientativas (4 / 2 / 3).")
     st.markdown(html_tabla(t), unsafe_allow_html=True)
 
 # ================================================================== PAGINA ADMIN
 elif pagina == "Admin":
     sec("Calidad de datos", "Resultado de la última revisión automática de cada base: vacíos, duplicados, descanso > final, tiros a puerta > tiros y negativos.")
-    if os.path.exists("datos/validacion.json"):
-        import json
-        val = json.load(open("datos/validacion.json"))
+    val = kuota.validacion()
+    if val:
         filas_v = ""
-        for k, r in val["ligas"].items():
+        for lg, r in val["ligas"].items():
             estado = ("ERROR", P["bad"]) if not r.get("ok") else (("AVISO", "#f59e0b") if r.get("avisos") else ("OK", P["ok"]))
             det = "<br>".join(r.get("errores", []) + r.get("avisos", []))
-            filas_v += (f'<div class="mk"><div class="row"><div class="mid">{LIGAS.get(k, k)}</div><span class="tag" style="background:{estado[1]};color:#fff">{estado[0]}</span></div>'
+            filas_v += (f'<div class="mk"><div class="row"><div class="mid">{LIGAS.get(lg, lg)}</div><span class="tag" style="background:{estado[1]};color:#fff">{estado[0]}</span></div>'
                         f'<div class="small">{r.get("partidos", 0)} partidos · {r.get("equipos", "?")} equipos · último {r.get("ultimo", "?")} · '
                         f'{r.get("vacias", 0)} celdas vacías · {r.get("duplicados", 0)} duplicados</div>'
                         + (f'<div class="small down">{det}</div>' if det else "") + '</div>')
@@ -1019,19 +785,10 @@ elif pagina == "Admin":
 # ================================================================== PAGINA CARA A CARA (torneo vigente + anterior)
 elif pagina == "Cara a cara":
     local, visitante = selector_partido()
-    temps = torneos_recientes()
-    par = df[df.temporada_txt.isin(temps) & (((df.equipo_local_txt == local) & (df.equipo_visitante_txt == visitante)) |
-                                             ((df.equipo_local_txt == visitante) & (df.equipo_visitante_txt == local)))].sort_values("fecha", ascending=False)
     solo_casa = st.toggle(f"Solo con {local} en casa", value=False)
-    if solo_casa:
-        par = par[par.equipo_local_txt == local]
-    es_a = par.equipo_local_txt == local                                   # True donde el local elegido jugo en casa
-    ga = np.where(es_a, par.goles_local_val, par.goles_visitante_val)
-    gb = np.where(es_a, par.goles_visitante_val, par.goles_local_val)
-    G, E, Pp = int((ga > gb).sum()), int((ga == gb).sum()), int((ga < gb).sum())
-    n = len(par)
-    txt_temps = " y ".join(temps)
-    iv = lambda x: "?" if pd.isna(x) else int(x)
+    cc = kuota.cara_a_cara(df, local, visitante, solo_casa)
+    G, E, Pp, n = cc["G"], cc["E"], cc["P"], cc["n"]
+    txt_temps = " y ".join(cc["torneos"])
 
     # 1) record estilo FotMob: victorias · empates · victorias + barra tricolor
     sec("Récord directo", f"Solo {txt_temps}" + (f", con {local} en casa" if solo_casa else "") + ". Son pocos partidos: sirven como contexto, no como prueba.")
@@ -1049,22 +806,13 @@ elif pagina == "Cara a cara":
         # 2) partido a partido: la ficha completa de cada enfrentamiento, ya abierta (estilo FotMob)
         sec("Partido a partido", f"La ficha completa de cada enfrentamiento (las 9 métricas). 🟢 ganó {local} · 🔴 ganó {visitante} · ⚪ empate. "
             "La pastilla de color marca al equipo que hizo más en esa métrica.")
-        for _, g in par.iterrows():
-            gl, gv = int(g.goles_local_val), int(g.goles_visitante_val)
-            a_, b_ = (gl, gv) if g.equipo_local_txt == local else (gv, gl)
-            punto = "🟢" if a_ > b_ else ("🔴" if a_ < b_ else "⚪")
-            with st.expander(f"{punto} {g.fecha:%d/%m/%y} · {g.equipo_local_txt} {gl}-{gv} {g.equipo_visitante_txt} · {g.temporada_txt}", expanded=True):
-                st.markdown(stats_partido_html(g, local, visitante), unsafe_allow_html=True)
+        for g in cc["partidos"]:
+            punto = {"g": "🟢", "p": "🔴", "e": "⚪"}.get(g["resultado"], "⚪")
+            with st.expander(f"{punto} {g['fecha']:%d/%m/%y} · {g['local']} {g['goles_local']}-{g['goles_visitante']} {g['visitante']} · {g['temporada']}", expanded=True):
+                st.markdown(stats_partido_html(g, local), unsafe_allow_html=True)
 
     ss.ctx_titulo = f"Cara a cara · {local} vs {visitante}"
-    ss.ctx_ia = (f"Vista: Cara a cara. Liga {LIGA}. {local} vs {visitante}, solo {txt_temps}" + (f", solo con {local} en casa" if solo_casa else "") +
-                 f". Récord: {local} {G} victorias, {E} empates, {visitante} {Pp} victorias en {n} partidos. "
-                 + (("Partidos (reciente→antiguo): " +
-                     "; ".join(f"{g.fecha:%d/%m/%y} {g.equipo_local_txt} {iv(g.goles_local_val)}-{iv(g.goles_visitante_val)} {g.equipo_visitante_txt} "
-                               f"(tiros {iv(g.tiros_local_val)}-{iv(g.tiros_visitante_val)}, corners {iv(g.corners_local_val)}-{iv(g.corners_visitante_val)}, "
-                               f"faltas {iv(g.faltas_local_val)}-{iv(g.faltas_visitante_val)}, amarillas {iv(g.amarillas_local_val)}-{iv(g.amarillas_visitante_val)})"
-                               for _, g in par.iterrows())) if n else "Sin partidos.")
-                 + ("\nBoleto actual: " + "; ".join(f"{l['mercado']} ({l['partido']}, modelo {l['prob']:.0%}, cuota {l['cuota']})" for l in ss.parlay) if ss.parlay else "\nBoleto vacío."))
+    ss.ctx_ia = kuota.contexto_cara(LIGA, cc, ss.parlay)
 
 # ================================================================== ARMAR / ANALIZAR (comparten partido y metrica)
 else:
@@ -1073,22 +821,11 @@ else:
     met = st.pills("Métrica", list(mo.METRICAS), format_func=lambda x: NOM[x], default=ss.get("met", "goles"),
                    label_visibility="collapsed", key="met_w") or "goles"
     ss.met = met
-    var = incert(ss.liga, met)
-    r = mo.analizar(df, local, visitante, met, inc=var)
-    lam_l, lam_v = r["lambda_local"], r["lambda_visitante"]
-    (ll, lh), (vl, vh) = r["rango"]["lam_l"], r["rango"]["lam_v"]      # rangos bajo-alto de las λ
-    tl, th = ll + vl, lh + vh
-    vol = {local: var.loc[local, "estado_casa"] == "volátil", visitante: var.loc[visitante, "estado_fuera"] == "volátil"}
-    ml = mo.medias_liga(df, met)
-
-    key_cfg = f"cfg_{met}_{local}_{visitante}"
-    if key_cfg not in ss:
-        ss[key_cfg] = {"Total": [centro_defecto(lam_l + lam_v, met), 2 if met == "goles" else 1],
-                       local: [centro_defecto(lam_l, met), 1], visitante: [centro_defecto(lam_v, met), 1]}
-    cfg = ss[key_cfg]
-    lst = mercados(r, met, local, visitante, cfg)
-    grupos = list(dict.fromkeys(x["grupo"] for x in lst))
-    tabla_esp = tabla_modelos(local, visitante, lam_l, lam_v, r["rango"]["lam_l"], r["rango"]["lam_v"], ml, var)
+    key_cfg = f"cfg_{met}_{local}_{visitante}"          # lineas elegidas por el usuario (se recuerdan por partido y metrica)
+    an = kuota.analizar_partido(df, local, visitante, met, incert(ss.liga, met), ss.get(key_cfg))
+    cfg = ss.setdefault(key_cfg, an["cfg"])
+    lst, grupos, vol, ml = an["mercados"], an["grupos"], an["vol"], an["medias_liga"]
+    tabla_esp = tabla_modelos(an)
     desc_esp = (f"Cuántos {NOM[met].lower()} espera el modelo para este partido (λ) y su rango de confianza del 80%. "
                 f"Cuanto más angosto el rango, más seguro el número.")
 
@@ -1103,9 +840,9 @@ else:
 
     def ev_html(mk, e, cuota):
         """Tarjeta de EV para una pata con la cuota de la casa: EV Poisson y EV pesimista + calificacion."""
-        ev, ev_lo = mk["prob"] * cuota - 1, mk["lo"] * cuota - 1
-        tiles = [("EV Poisson", ev, f'prob. {mk["prob"]:.0%} · justa {mo.cuota_justa(mk["prob"])}'),
-                 ("EV pesimista", ev_lo, f'prob. {mk["lo"]:.0%}')]
+        evp = kuota.ev_pata(mk, cuota)
+        tiles = [("EV Poisson", evp["ev"], f'prob. {mk["prob"]:.0%} · justa {evp["justa"]}'),
+                 ("EV pesimista", evp["ev_lo"], f'prob. {mk["lo"]:.0%}')]
         kpi = "".join(f'<div><div class="t">{nm}</div><div class="pct {"up" if v > 0 else "down"}">{v:+.2f}</div><div class="rg">{s}</div></div>' for nm, v, s in tiles)
         return (f'<div class="card flat" style="margin:4px 0"><div class="row" style="margin-bottom:8px"><div class="mid">{mk["mercado"]}</div>'
                 f'<span class="tag {e["cls"]}">{e["tag"]}</span></div><div class="kpi esc">{kpi}</div></div>')
@@ -1113,20 +850,19 @@ else:
     # ---------------------------------------------------------- ARMAR
     if pagina == "Armar":
         if ss.parlay:
-            rb = resumen_boleto(); prob, cuota, ev, plo, phi = rb; legs = ss.parlay
-            f = kelly(plo, cuota)   # stake con la probabilidad pesimista: si aun asi hay valor, la apuesta aguanta
+            legs = ss.parlay
             sec("Stake sugerido", "Kelly calculado con la probabilidad pesimista del boleto: si con esa todavía hay valor, la apuesta aguanta un modelo "
                 "demasiado optimista. Para parlays usa ¼ o ⅛ de Kelly.")
             a, b = st.columns([1, 1])
             ss.banca = a.number_input("Banca (Q)", 1.0, 1e9, float(ss.banca), 50.0, format="%.0f", help="Tu banca total en Q")
-            b.markdown(f'<div class="card flat" style="margin:28px 0 0 0;padding:8px 12px"><div class="t">Boleto</div><div class="mid">cuota {cuota:.2f}</div><div class="rg">prob. pesimista {plo:.0%}</div></div>', unsafe_allow_html=True)
-            if f <= 0:
+            stk = kuota.stake(legs, ss.banca); rb = stk["boleto"]
+            b.markdown(f'<div class="card flat" style="margin:28px 0 0 0;padding:8px 12px"><div class="t">Boleto</div><div class="mid">cuota {rb["cuota"]:.2f}</div><div class="rg">prob. pesimista {rb["lo"]:.0%}</div></div>', unsafe_allow_html=True)
+            if stk["sin_valor"]:
                 st.markdown('<div class="card flat"><div class="t">Con la probabilidad pesimista</div><div class="mid down">Sin valor: Kelly dice no apostar</div></div>', unsafe_allow_html=True)
             else:
-                chips = "".join(f'<div><div class="t">{nm}</div><div class="pct">Q{ss.banca * f / d:,.0f}</div><div class="rg">{f / d:.1%}</div></div>'
-                                for nm, d in (("Kelly", 1), ("½ Kelly", 2), ("¼ Kelly", 4), ("⅛ Kelly", 8)))
+                chips = "".join(f'<div><div class="t">{o["nombre"]}</div><div class="pct">Q{o["monto"]:,.0f}</div><div class="rg">{o["fraccion"]:.1%}</div></div>' for o in stk["opciones"])
                 st.markdown(f'<div class="kpi esc">{chips}</div>', unsafe_allow_html=True)
-            with st.expander(f"Patas del boleto · {len(legs)} · pesimista {plo:.0%} (EV {plo * cuota - 1:+.2f}) · optimista {phi:.0%} (EV {phi * cuota - 1:+.2f})"):
+            with st.expander(f"Patas del boleto · {rb['n']} · pesimista {rb['lo']:.0%} (EV {rb['ev_lo']:+.2f}) · optimista {rb['hi']:.0%} (EV {rb['ev_hi']:+.2f})"):
                 for i, l in enumerate(legs):
                     a, b = st.columns([6, 1])
                     a.markdown(f'<div class="row" style="padding:4px 0"><div class="c1"><div class="mid">{l["mercado"]}</div>'
@@ -1134,7 +870,7 @@ else:
                                f'<span class="tag {l["cls"]}">{l["cal"]}</span></div>', unsafe_allow_html=True)
                     if b.button("✕", key=f"del{i}"):
                         legs.pop(i); st.rerun()
-                if len({l["partido"] for l in legs}) < len(legs):
+                if rb["mismo_partido"]:
                     st.caption("Patas del mismo partido no son independientes; la probabilidad combinada real difiere.")
                 if st.button("Vaciar boleto"):
                     ss.parlay = []; st.rerun()
@@ -1149,7 +885,8 @@ else:
         a, b = st.columns([1, 1])
         n = a.selectbox("Validar con", [3, 5, 8, 10, 15, 20], index=1, format_func=lambda x: f"validar últ. {x}", label_visibility="collapsed")
         solo = b.toggle("Solo Buena o mejor", value=False)
-        hl, hv = historial(local, met, n), historial(visitante, met, n)
+        hl, hv = kuota.historial(df, local, met, n), kuota.historial(df, visitante, met, n)
+        evaluados = [(mk, kuota.evaluar(mk, hl, hv, vol)) for mk in lst if mk["grupo"] == grp]
 
         sec(f"Mercados · {grp}", f"Probabilidad de cada mercado según el modelo y en cuántos de los últimos {n} partidos de cada equipo se habría cumplido "
             f"({local} · {visitante}). Calificación = 60% probabilidad Poisson + 40% cumplimiento.")
@@ -1157,9 +894,7 @@ else:
         html = (f'<div class="card"><div class="lg-h"><div class="c1 t">Mercado</div><div class="cn t">Poisson</div>'
                 '<div class="cq t">Calificación</div></div>')
         filas_n = 0
-        for mk in lst:
-            if mk["grupo"] != grp: continue
-            e = evaluar(mk, hl, hv, vol)
+        for mk, e in evaluados:
             if solo and e["cls"] not in ("exc", "bue"): continue
             filas_n += 1
             html += (f'<div class="mk"><div class="lg-r"><div class="c1"><div class="mid">{mk["mercado"]}</div><div class="small">justa <span class="w">{mo.cuota_justa(mk["prob"]):.2f}</span></div></div>'
@@ -1172,31 +907,18 @@ else:
                      "Bajo la calificación, los aciertos de cada equipo. ↕ equipo volátil baja un nivel la calificación.")
         st.markdown(html + '</div>', unsafe_allow_html=True)
         ss.ctx_titulo = f"Armar · {partido} · {NOM[met]} · {grp}"
-        ss.ctx_ia = (f"Vista: Armar. Liga {LIGA}. Partido {partido}. Métrica {NOM[met]}. λ local {lam_l:.2f} (rango bajo-alto {ll:.2f}-{lh:.2f}, "
-                     f"varianza {var.loc[local, 'estado_casa']} {var.loc[local, 'ratio_casa']:.1f}x la liga, {var.loc[local, 'n_ef_casa']:.0f} partidos efectivos en casa), "
-                     f"λ visitante {lam_v:.2f} ({vl:.2f}-{vh:.2f}, {var.loc[visitante, 'estado_fuera']} {var.loc[visitante, 'ratio_fuera']:.1f}x, {var.loc[visitante, 'n_ef_fuera']:.0f} fuera), "
-                     f"λ total {lam_l + lam_v:.2f} ({tl:.2f}-{th:.2f}); media liga local {ml['local']:.2f}, visita {ml['visitante']:.2f}, total {ml['total']:.2f}. "
-                     f"El rango es el intervalo del 80% del promedio del equipo (t de Student, desv/raíz(n)): incertidumbre de la λ, no la varianza Poisson. "
-                     f"Validación con últimos {n} partidos.\n"
-                     "Mercados del grupo " + grp + ":\n" + "\n".join(
-                         f"- {mk['mercado']}: prob Poisson {mk['prob']:.0%} (pesimista {mk['lo']:.0%}, optimista {mk['hi']:.0%})"
-                         f", cuota justa {mo.cuota_justa(mk['prob'])}, {local} cumplió {ev_['hl']}/{ev_['nl']}, {visitante} {ev_['hv']}/{ev_['nv']}, "
-                         f"calificación {ev_['tag']}"
-                         for mk in lst if mk["grupo"] == grp for ev_ in [evaluar(mk, hl, hv, vol)]) +
-                     ("\nBoleto actual: " + "; ".join(f"{l['mercado']} ({l['partido']}, {l['metrica']}, modelo {l['prob']:.0%}, cuota casa {l['cuota']})" for l in ss.parlay)
-                      if ss.parlay else "\nBoleto vacío."))
+        ss.ctx_ia = kuota.contexto_armar(LIGA, partido, an, n, grp, evaluados, ss.parlay)
 
         sec("Agregar al boleto", "Elige el mercado, escribe la cuota que paga la casa y revisa el EV antes de agregar. EV = probabilidad × cuota − 1.")
         nombres = [x["mercado"] for x in lst if x["grupo"] == grp]
         a, b = st.columns([3, 2])
         sel = a.selectbox("Mercado", nombres, key=f"sel_{met}_{grp}", label_visibility="collapsed")
         cuota = b.number_input("Cuota casa", 1.01, 50.0, 1.90, 0.01, key=f"cuota_{met}_{grp}", label_visibility="collapsed")
-        mk = next(x for x in lst if x["mercado"] == sel); e = evaluar(mk, hl, hv, vol)
+        mk, e = next(x for x in evaluados if x[0]["mercado"] == sel)
         st.markdown(ev_html(mk, e, cuota), unsafe_allow_html=True)
         a, b = st.columns(2)
         if a.button("Agregar al boleto", width="stretch"):
-            ss.parlay.append({"partido": partido, "metrica": NOM[met], "mercado": sel, "prob": mk["prob"], "cuota": cuota,
-                              "cal": e["tag"], "cls": e["cls"], "lo": mk["lo"], "hi": mk["hi"]})
+            ss.parlay.append(kuota.pata(partido, met, mk, e, cuota))
             registrar_uso("pata", f"{partido} | {sel} @ {cuota}")
             st.rerun()
         if b.button("Analizar esta pata", width="stretch"):
@@ -1219,8 +941,8 @@ else:
         filtro = b.selectbox("Condición", ["Todos", "Como jugarán"], label_visibility="collapsed",
                              help="Como jugarán = solo partidos del local en casa y del visitante fuera")
         cond_l, cond_v = ("Casa", "Fuera") if filtro != "Todos" else (None, None)
-        hl, hv = historial(local, met, n, cond_l), historial(visitante, met, n, cond_v)
-        e = evaluar(mk, hl, hv, vol)
+        hl, hv = kuota.historial(df, local, met, n, cond_l), kuota.historial(df, visitante, met, n, cond_v)
+        e = kuota.evaluar(mk, hl, hv, vol)
 
         # tarjeta de veredicto: Poisson · histórico en grande, luego escenarios Poisson y esperado por modelo
         sec("Veredicto", f"Probabilidad de la pata según el modelo y en cuántos de los últimos {n} partidos de los dos equipos se cumplió. "
@@ -1248,41 +970,25 @@ else:
             return (f'<div class="card"><div class="row"><div class="mid">{eq(nombre, lado)}</div>'
                     f'<div><span class="pct">{hits_}/{len(h)}</span> <span class="small">cumplió</span></div></div>'
                     f'{chart}<div class="rg">{sub} · antiguo → reciente · C casa / F fuera</div>'
-                    f'<div style="margin-top:10px">{tabla_stats(h, mk["linea"], mk["over"], ref_f, ref_c, ml["total"])}</div></div>')
+                    f'<div style="margin-top:10px">{tabla_stats(kuota.stats_historial(h, mk["linea"], mk["over"]), mk["linea"], mk["over"], ref_f, ref_c, ml["total"])}</div></div>')
 
         sec("Historial por equipo", f"Últimos {n} partidos de cada uno" + (" (local en casa, visitante fuera)" if filtro != "Todos" else "")
             + ". Línea blanca punteada = línea del mercado; naranja = media de la liga. Debajo, media, mediana y desviación (qué tanto varía de partido a partido).")
         st.markdown(bloque(local, hl, e["hl"], "l", P["acc"]) + bloque(visitante, hv, e["hv"], "v", COLOR_VIS), unsafe_allow_html=True)
-        def _st(h):
-            return (f"a favor media {h.a_favor.mean():.1f} mediana {h.a_favor.median():.1f} desv {h.a_favor.std(ddof=0):.1f}; "
-                    f"en contra media {h.en_contra.mean():.1f}; total media {h.total.mean():.1f} máx {h.total.max()} mín {h.total.min()}") if len(h) else "sin partidos"
         ss.ctx_titulo = f"Analizar · {partido} · {sel}"
-        ss.ctx_ia = (f"Vista: Analizar. Liga {LIGA}. Partido {partido}. Métrica {NOM[met]}. Pata: {sel}. Prob modelo (Poisson) {mk['prob']:.0%} "
-                     f"(pesimista {mk['lo']:.0%}, optimista {mk['hi']:.0%}; Poisson con la λ del extremo en contra / a favor). "
-                     f"Varianza vs liga: {local} {var.loc[local, 'estado_casa']} {var.loc[local, 'ratio_casa']:.1f}x en casa, {visitante} {var.loc[visitante, 'estado_fuera']} {var.loc[visitante, 'ratio_fuera']:.1f}x fuera"
-                     f", cuota justa {mo.cuota_justa(mk['prob'])}, calificación {e['tag']}, cumplimiento histórico {e['tasa']:.0%} ({e['hl']}/{e['nl']} {local}, {e['hv']}/{e['nv']} {visitante}) "
-                     f"en últimos {n} partidos, filtro {filtro}. λ {local} {lam_l:.2f} (rango 80% {ll:.2f}-{lh:.2f}), λ {visitante} {lam_v:.2f} ({vl:.2f}-{vh:.2f}), media liga local {ml['local']:.2f} visita {ml['visitante']:.2f} total {ml['total']:.2f}.\n"
-                     f"{local} últimos {len(hl)}: {_st(hl)}. Resultados (reciente→antiguo): " + ", ".join(f"{r_.condicion[0]} vs {r_.rival} {r_.marcador} ({int(r_.a_favor)}-{int(r_.en_contra)} {NOM[met].lower()})" for _, r_ in hl.iterrows()) +
-                     f"\n{visitante} últimos {len(hv)}: {_st(hv)}. Resultados: " + ", ".join(f"{r_.condicion[0]} vs {r_.rival} {r_.marcador} ({int(r_.a_favor)}-{int(r_.en_contra)} {NOM[met].lower()})" for _, r_ in hv.iterrows()) +
-                     ("\nBoleto actual: " + "; ".join(f"{l['mercado']} ({l['partido']}, modelo {l['prob']:.0%}, cuota {l['cuota']})" for l in ss.parlay) if ss.parlay else "\nBoleto vacío."))
+        ss.ctx_ia = kuota.contexto_analizar(LIGA, partido, an, sel, mk, e, n, filtro, hl, hv, ss.parlay)
 
         with st.expander("Partido a partido", expanded=True):
-            st.markdown(lista_partidos(local, hl, mk, "l") + lista_partidos(visitante, hv, mk, "v"), unsafe_allow_html=True)
+            st.markdown(lista_partidos(local, hl, mk, "l", met) + lista_partidos(visitante, hv, mk, "v", met), unsafe_allow_html=True)
         with st.expander("Qué dice el modelo", expanded=False):
-            if met in GOL and mk["grupo"] in ("Resultado", "Total"):
-                st.markdown(f'<div class="card">{matriz_html(r["matriz"], local, visitante, mk["region"])}</div>', unsafe_allow_html=True)
-            elif mk["grupo"] == "Mayor número":
-                st.markdown(f'<div class="card">{diferencia_html(r["matriz"], mk, local, visitante, NOM[met].lower())}</div>', unsafe_allow_html=True)
-            else:
-                st.markdown(f'<div class="card">{distribucion_html(r["matriz"], mk, NOM[met].lower() + (" total" if mk["grupo"] == "Total" else " " + mk["grupo"]))}</div>',
-                            unsafe_allow_html=True)
+            g_mod = kuota.grafico_modelo(an["matriz"], mk, met)
+            st.markdown(f'<div class="card">{grafico_modelo_html(g_mod, mk, local, visitante, met)}</div>', unsafe_allow_html=True)
 
         sec("Agregar al boleto", "Escribe la cuota que paga la casa y revisa el EV antes de agregar. Al agregar vuelves a Armar.")
         cuota = st.number_input("Cuota casa", 1.01, 50.0, 1.90, 0.01, key=f"cuota_an_{met}", label_visibility="collapsed")
         st.markdown(ev_html(mk, e, cuota), unsafe_allow_html=True)
         if st.button("Agregar al boleto", width="stretch", key="add_an"):
-            ss.parlay.append({"partido": partido, "metrica": NOM[met], "mercado": sel, "prob": mk["prob"], "cuota": cuota,
-                              "cal": e["tag"], "cls": e["cls"], "lo": mk["lo"], "hi": mk["hi"]})
+            ss.parlay.append(kuota.pata(partido, met, mk, e, cuota))
             registrar_uso("pata", f"{partido} | {sel} @ {cuota}")
             ss.grp = grp
             ir_a("Armar")
