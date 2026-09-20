@@ -1,5 +1,5 @@
 {
- "fecha": "19/09/2026 15:24 UTC",
+ "fecha": "20/09/2026 15:29 UTC",
  "ligas": {
   "bundesliga": {
    "partidos": 333,
@@ -30,11 +30,11 @@
    "ok": true
   },
   "ligamx": {
-   "partidos": 239,
-   "ultimo": "18/09/2026",
+   "partidos": 243,
+   "ultimo": "19/09/2026",
    "temporadas": {
     "Clausura 2026": 167,
-    "Apertura 2026": 72
+    "Apertura 2026": 76
    },
    "equipos": 19,
    "vacias": 0,
