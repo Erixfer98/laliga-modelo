@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { LIGAS } from "@/lib/api";
 import { useStore } from "@/lib/store";
 import { LigaLogo } from "./Crest";
+import { Logo } from "./Logo";
 
 const P = { home: "M3 11 12 3l9 8v10h-6v-6H9v6H3z", ball: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 4 3.5 2.6-1.3 4.2H9.8L8.5 9.6Zm-7 4.5 2.5-1.2M19 11.5l-2.5-1.2M8.4 18.6l1.6-2.4M15.6 18.6 14 16.2",
   ticket: "M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4Zm7-2v12",
@@ -33,7 +34,7 @@ export function Header() {
     <header className="sticky top-0 z-40 bg-bg/90 backdrop-blur-md">
       <div className="max-w-[640px] mx-auto px-4 pt-3 pb-1">
         <div className="flex items-center gap-3">
-          <Link href="/" className="num text-[1.5rem] tracking-[-0.04em]">Kuota<span className="text-acc">.</span></Link>
+          <Link href="/"><Logo tam="1.5rem" animado /></Link>
           <nav className="hidden sm:flex gap-1 ml-2">
             {PAGINAS.map((p) => (
               <Link key={p.href} href={p.href} className={`rounded-full px-2.5 py-1.5 text-[0.8rem] font-bold whitespace-nowrap ${activa(p.href) ? "bg-card2 text-txt" : "text-mut hover:text-txt"}`}>

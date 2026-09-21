@@ -118,3 +118,30 @@ details > summary::-webkit-details-marker { display: none; }
 
 /* barra de navegación inferior: deja espacio a la barra del iPhone */
 .safe-b { padding-bottom: env(safe-area-inset-bottom); }
+
+/* ===== logo: la pelota entra dando botes y se aplasta al caer; "Ku" y "ta" tiemblan al recibirla ===== */
+.logo-anim .logo-pelota { animation: bola-entra 1.5s cubic-bezier(.3,.7,.4,1) both; transform-origin: 50% 100%; }
+.logo-anim .logo-bola { animation: bola-gira 1.5s linear both; transform-origin: 50% 50%; }
+.logo-anim .logo-ku { animation: logo-tiembla 0.5s ease-out 1.12s both; display: inline-block; transform-origin: 50% 100%; }
+.logo-anim .logo-ta { animation: logo-tiembla 0.5s ease-out 1.15s both; display: inline-block; transform-origin: 50% 100%; }
+@keyframes bola-entra {
+  0%   { transform: translate(3.2em, -2.5em) scale(1); opacity: 0; }
+  6%   { opacity: 1; }
+  24%  { transform: translate(2.2em, .1em) scale(1.2, .78); }
+  30%  { transform: translate(1.9em, -.2em) scale(.95, 1.08); }
+  46%  { transform: translate(1.15em, -1em) scale(1); }
+  62%  { transform: translate(.55em, .1em) scale(1.18, .8); }
+  67%  { transform: translate(.45em, -.1em) scale(.96, 1.06); }
+  78%  { transform: translate(.15em, -.35em) scale(1); }
+  88%  { transform: translate(0, .1em) scale(1.22, .74); }
+  94%  { transform: translate(0, .02em) scale(.96, 1.05); }
+  100% { transform: translate(0, .1em) scale(1); }
+}
+@keyframes bola-gira { from { transform: rotate(0deg); } to { transform: rotate(-720deg); } }
+@keyframes logo-tiembla {
+  0%   { transform: translateY(0) scaleY(1); }
+  30%  { transform: translateY(.06em) scaleY(.88); }
+  60%  { transform: translateY(-.03em) scaleY(1.04); }
+  100% { transform: translateY(0) scaleY(1); }
+}
+@media (prefers-reduced-motion: reduce) { .logo-anim .logo-pelota, .logo-anim .logo-bola, .logo-anim .logo-ku, .logo-anim .logo-ta { animation: none; } }
