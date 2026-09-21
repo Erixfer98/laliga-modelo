@@ -18,7 +18,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="min-h-full flex flex-col">
         {ok ? (
           <StoreProvider>
-            <Header />
+            <Header conClave={!!process.env.KUOTA_CLAVE} />
             <main className="max-w-[640px] w-full mx-auto px-4 pb-24 sm:pb-10 pt-1">{children}</main>
             <BarraInferior />
           </StoreProvider>

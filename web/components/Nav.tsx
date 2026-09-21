@@ -26,7 +26,7 @@ const PAGINAS = [
 ];
 const CON_LIGA = ["/", "/partido", "/cara", "/tabla"];
 
-export function Header() {
+export function Header({ conClave }: { conClave?: boolean }) {
   const path = usePathname();
   const { liga, setLiga, boleto } = useStore();
   const activa = (href: string) => (href === "/" ? path === "/" : path.startsWith(href));
@@ -43,6 +43,11 @@ export function Header() {
             ))}
           </nav>
           <span className="ml-auto sm:hidden text-[0.66rem] font-bold text-mut2 uppercase tracking-[0.1em] opacity-70">Parlays con datos</span>
+          {conClave && (
+            <form method="POST" action="/api/salir" className="sm:ml-auto">
+              <button type="submit" className="rounded-full bg-card2 text-mut hover:text-txt px-3 py-1.5 text-[0.74rem] font-bold" title="Cerrar sesión">Salir</button>
+            </form>
+          )}
         </div>
         {CON_LIGA.includes(path) && (
           <div className="scrollx flex gap-2 mt-2.5 -mx-1 px-1 pb-1.5">
