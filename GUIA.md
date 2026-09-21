@@ -15,6 +15,9 @@ Archivos del paquete (todos van en la raíz del repositorio):
 | `kuota.py` | Motor: todo lo que calcula la app (mercados, calificación, boleto, tabla, cara a cara) en funciones que devuelven datos. Sin pantalla |
 | `app.py` | Web app (Streamlit): solo pantalla, llama a `kuota.py` |
 | `api.py` | La misma información en JSON (FastAPI) para la web app nueva. `pip install fastapi uvicorn` y `uvicorn api:app --reload` → http://localhost:8000/docs |
+| `web/` | La web app nueva (Next.js + Tailwind): solo pantalla, le pide todo a `api.py`. Cómo correrla y publicarla: `web/README.md` |
+| `logos.py` | Escudos y logos de liga desde ESPN → `datos/logos.json` (lo corre el Action a diario) |
+| `render.yaml` | Receta para publicar la API en Render (New → Blueprint) |
 | `requirements.txt` | Librerías que necesita la app |
 | `.github/workflows/actualizar.yml` | El reloj: corre el script todos los días a las 6:00 am Guatemala |
 | `datos/` | Aquí viven el Excel y el CSV. Se sobrescriben en cada corrida |

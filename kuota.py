@@ -412,10 +412,10 @@ def vista_cara(df: pd.DataFrame, liga: str, local: str, visitante: str, solo_cas
 
 
 def vista_partido(df: pd.DataFrame, liga: str, local: str, visitante: str, met: str, inc: pd.DataFrame = None, cfg: dict = None,
-                  n: int = 5, filtro: str = "Todos", sel: str = None, legs: list = None) -> dict:
+                  n: int = 5, filtro: str = "Todos", sel: str = None, legs: list = None, grupo: str = None) -> dict:
     """Armar + Analizar en un solo paquete: mercados de todos los grupos ya evaluados con los ultimos n partidos
     (filtro "Como jugarán" = local en casa / visitante fuera) y el detalle de la pata `sel` (grafico del modelo,
-    historial y estadisticas de cada equipo)."""
+    historial y estadisticas de cada equipo). Si `sel` no existe, se toma el primer mercado del `grupo` (o el primero de todos)."""
     inc = incertidumbre(df, met) if inc is None else inc
     an = analizar_partido(df, local, visitante, met, inc, cfg)
     nombre_liga = LIGAS.get(liga, liga); partido = f"{local} vs {visitante} ({nombre_liga})"
@@ -423,7 +423,9 @@ def vista_partido(df: pd.DataFrame, liga: str, local: str, visitante: str, met: 
     hl, hv = historial(df, local, met, n, cond_l), historial(df, visitante, met, n, cond_v)
     evaluados = [{**mk, **evaluar(mk, hl, hv, an["vol"])} for mk in an["mercados"]]
     nombres = [x["mercado"] for x in evaluados]
-    sel = sel if sel in nombres else nombres[0]
+    if sel not in nombres:
+        del_grupo = [x["mercado"] for x in evaluados if x["grupo"] == grupo]
+        sel = del_grupo[0] if del_grupo else nombres[0]
     mk = next(x for x in evaluados if x["mercado"] == sel)
     detalle = {**mk, "grafico": grafico_modelo(an["matriz"], mk, met),
                "historial_local": historial_json(hl), "historial_visitante": historial_json(hv),
@@ -518,7 +520,7 @@ DICCIONARIO = [
     ("Modelo", "Rango bajo–alto de λ", "Entre paréntesis junto a cada λ: hasta dónde puede estar equivocado el promedio del equipo. Se calcula sobre sus propios partidos (con la misma recencia del modelo): promedio ± t × desviación estándar ÷ √n. El multiplicador t sale de la distribución t de Student y baja solo conforme hay más partidos (3 partidos 1.89, 21 partidos 1.33, muchos 1.28); el rango cubre el 80% de los casos. Mide confianza en la λ, no cuánto varía un partido: eso ya lo cubre Poisson."),
     ("Modelo", "Pesimista / optimista", "La probabilidad del mercado calculada con el mismo Poisson pero con las λ del extremo que va en contra (pesimista) o a favor (optimista) de la pata. Salen de las mismas λ bajo–alto que ves arriba, así que un Over y su Under siempre cuadran. El EV pesimista usa la prob. pesimista: si sigue positivo, la pata aguanta aunque el promedio esté algo inflado."),
     ("Modelo", "Varianza vs liga (🟢🟡🔴⚪)", "Ancho del rango del equipo (relativo a su promedio, en esa condición: casa o fuera) dividido entre el ancho mediano de los equipos de la liga. 🟢 estable < 0.8×, 🟡 normal 0.8–1.2×, 🔴 volátil > 1.2×, ⚪ pocos datos = menos de 5 partidos efectivos en esa condición; ahí se usa la dispersión típica de la liga en lugar de la del equipo."),
-    ("Modelo", "Encogimiento (K)", "Al calcular la fuerza de un equipo se le suman 10 partidos 'extra' al promedio de la liga. Así un equipo con pocos partidos o una racha rara no se va a extremos (λ = 0 o λ = 8). El backtest mostró que sin esto el modelo decía 85% y acertaba 79%; con esto dice 85% y acierta 85%."),
+    ("Modelo", "Encogimiento (K)", (f"Al calcular la fuerza de un equipo se le suman {mo.K_ENCOGE} partidos 'extra' al promedio de la liga, para que un equipo con pocos partidos o una racha rara no se vaya a extremos." if mo.K_ENCOGE else "Desactivado (K = 0): la fuerza de cada equipo es su promedio ponderado puro, sin acercarlo al promedio de la liga.") + " Se ajusta con K_ENCOGE en modelo.py."),
     ("Mercados", "Cuota justa", "1 dividido entre la probabilidad Poisson. Es la cuota a la que no ganas ni pierdes a largo plazo. Si la casa paga más que la justa, hay valor."),
     ("Mercados", "EV (valor esperado)", "prob. × cuota − 1. Positivo = a largo plazo ganas; negativo = pierdes. EV +0.10 = ganas 10 centavos por cada Q1 apostado, en promedio."),
     ("Mercados", "Over / Under", "Más de / menos de una línea. Total Over 2.5 goles = 3 o más goles en el partido. Las líneas .5 no permiten empate."),

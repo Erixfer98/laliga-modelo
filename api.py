@@ -11,9 +11,10 @@ Rutas:
   GET  /liga/{liga}/tabla                       Tabla de posiciones                          (?temporada=2026-27)
   GET  /liga/{liga}/cara                        Cara a cara                                  ?local=..&visitante=..&solo_casa=false
   GET  /liga/{liga}/partido                     Armar + Analizar: mercados evaluados + detalle de una pata
-                                                ?local=..&visitante=..&met=goles&n=5&filtro=Todos&pata=Total Over 2.5&cfg={json}
+                                                ?local=..&visitante=..&met=goles&n=5&filtro=Todos&grupo=Total&pata=Total Over 2.5&cfg={json}
   POST /boleto   {"patas": [...], "banca": 1000} resumen del boleto + stake Kelly
   GET  /diccionario                             terminos                                     (?q=kelly)
+  GET  /logos                                   escudos y logos de ligas (datos/logos.json, lo genera logos.py)
 Pendiente (necesitan claves): login de usuarios, registro de uso y el analista IA. Hoy siguen en app.py.
 """
 
@@ -77,13 +78,14 @@ def cara(liga: str, local: str, visitante: str, solo_casa: bool = False):
 
 
 @app.get("/liga/{liga}/partido")
-def partido(liga: str, local: str, visitante: str, met: str = "goles", n: int = 5, filtro: str = "Todos", pata: str = None, cfg: str = None):
-    """cfg = lineas elegidas por el usuario, en JSON: {"Total": [10.5, 1], "<local>": [4.5, 1], "<visitante>": [4.5, 1]}. Sin cfg usa las de defecto."""
+def partido(liga: str, local: str, visitante: str, met: str = "goles", n: int = 5, filtro: str = "Todos", pata: str = None, cfg: str = None, grupo: str = None):
+    """cfg = lineas elegidas por el usuario, en JSON: {"Total": [10.5, 1], "<local>": [4.5, 1], "<visitante>": [4.5, 1]}. Sin cfg usa las de defecto.
+    pata = mercado a detallar; si no existe, el primero del grupo (o el primero de todos)."""
     validar_equipos(liga, local, visitante)
     if met not in kuota.NOM:
         raise HTTPException(404, f"metrica desconocida: {met}")
     cfg_d = json.loads(cfg) if cfg else None
-    v = kuota.vista_partido(datos(liga)["df"], liga, local, visitante, met, incert(liga, met), cfg_d, n, filtro, pata)
+    v = kuota.vista_partido(datos(liga)["df"], liga, local, visitante, met, incert(liga, met), cfg_d, n, filtro, pata, grupo=grupo)
     return kuota.a_json(v)
 
 
@@ -96,3 +98,10 @@ def boleto(body: dict):
 @app.get("/diccionario")
 def diccionario(q: str = ""):
     return kuota.diccionario(q)
+
+
+@app.get("/logos")
+def logos():
+    """Escudos por liga y equipo. Si no existe datos/logos.json (aun no corriste logos.py) devuelve vacio y la web muestra iniciales."""
+    ruta = f"{kuota.CARPETA_DATOS}/logos.json"
+    return json.load(open(ruta)) if os.path.exists(ruta) else {"ligas": {}, "equipos": {}}

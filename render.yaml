@@ -1,0 +1,10 @@
+# Render.com: "New → Blueprint" con este repo crea la API de Kuota. Cambia plan a "starter" si quieres que no se duerma.
+services:
+  - type: web
+    name: kuota-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn api:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /ligas
+    autoDeploy: true

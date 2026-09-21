@@ -32,9 +32,10 @@ from scipy.stats import t as t_student
 RUTA_DATOS = "datos/bbdd_laliga.csv"
 XI = 0.005          # decaimiento por dia. 0.005 = un partido de hace 140 dias pesa la mitad
 RHO = -0.05         # Dixon-Coles, solo goles. Tipico -0.03 a -0.13; 0 = Poisson puro
-K_ENCOGE = 10       # encogimiento: cada equipo se calcula como si tuviera K partidos extra al promedio de la liga.
+K_ENCOGE = 0        # encogimiento: cada equipo se calcula como si tuviera K partidos extra al promedio de la liga. 0 = promedio puro (comportamiento de la app publicada).
                     # Evita fuerzas extremas con pocos partidos (lambda = 0 de un recien ascendido) y corrige el exceso de
                     # confianza que mostro el backtest (backtest.py): con 0 el modelo decia 85% y acertaba 79%; con 10, 85%.
+                    # Se dejo en 0 (20/09/2026) para que el resultado sea identico al de Streamlit Cloud; subir a 10 lo reactiva.
 CONFIANZA = 0.90    # percentil superior del rango -> percentiles 10 y 90 (intervalo del 80%)
 PJ_MIN = 5          # partidos efectivos minimos en esa condicion para fiarse del rango -> si no, "pocos datos"
 CORTES_VAR = (0.8, 1.2)   # ancho relativo del equipo / mediana de la liga: < 0.8 estable, > 1.2 volatil
