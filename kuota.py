@@ -387,6 +387,10 @@ def stake(legs: list, banca: float) -> dict:
     rb = resumen_boleto(legs)
     if not rb:
         return None
+    # Sin distribución conjunta validada, no recomendar stake para patas del mismo partido.
+    if rb["mismo_partido"]:
+        return {"kelly": None, "sin_valor": True, "banca": banca, "boleto": rb,
+                "opciones": [], "advertencia": "Kelly no disponible: hay selecciones del mismo partido y su dependencia no está modelada."}
     f = kelly(rb["lo"], rb["cuota"])
     return {"kelly": f, "sin_valor": f <= 0, "banca": banca, "boleto": rb,
             "opciones": [{"nombre": nm, "fraccion": f / d, "monto": banca * f / d} for nm, d in (("Kelly", 1), ("½ Kelly", 2), ("¼ Kelly", 4), ("⅛ Kelly", 8))]}
