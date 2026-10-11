@@ -1,5 +1,5 @@
 """GET opt-in, hosts fijos, sin redirecciones ni reintentos ocultos. No consulta al importar."""
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from hashlib import sha256
 import json
 import math
@@ -23,13 +23,17 @@ def _objeto_unico(pairs):
 
 
 class NoDisponible(RuntimeError):
-    pass
+    def __init__(self, message, status=None, retry_after=None):
+        super().__init__(message)
+        self.status = status
+        self.retry_after = retry_after
 
 
 @dataclass(frozen=True)
 class Captura:
     contenido: bytes
     metadata: dict
+    http_info: dict = field(default_factory=dict)
 
     def json(self):
         try:
@@ -59,7 +63,8 @@ class Transporte:
             with requests.get(url, params=params, headers=headers, timeout=(5, 20),
                               allow_redirects=False, stream=True) as response:
                 if response.status_code != 200:
-                    raise NoDisponible(f'Proveedor no disponible: HTTP {response.status_code}')
+                    raise NoDisponible(f'Proveedor no disponible: HTTP {response.status_code}',
+                                       response.status_code, response.headers.get('Retry-After'))
                 if response.headers.get('Content-Type', '').split(';')[0].strip().lower() != 'application/json':
                     raise NoDisponible('Proveedor no devolvió JSON')
                 chunks = []; size = 0
@@ -69,12 +74,14 @@ class Transporte:
                         raise NoDisponible('Respuesta excede límite')
                     chunks.append(chunk)
                 content = b''.join(chunks)
+                remaining = response.headers.get('x-ratelimit-requests-remaining')
+                http_info = {'remaining': int(remaining)} if remaining and remaining.isdigit() else {}
         except requests.RequestException:
             # Excepciones requests pueden contener URLs con tokens. No propagarlas ni imprimirlas.
             raise NoDisponible('Fallo de transporte del proveedor') from None
         capture = Captura(content, {'schema_version': SCHEMA, 'provider': provider,
             'source_url': url, 'sha256': sha256(content).hexdigest(), 'captured_at_utc': ahora(),
-            'published_at_utc': None, 'publication_basis': 'unknown', 'content_type': 'application/json'})
+            'published_at_utc': None, 'publication_basis': 'unknown', 'content_type': 'application/json'}, http_info)
         capture.verificar()
         return capture
 
