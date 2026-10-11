@@ -34,7 +34,9 @@ function TablaStats({
 }) {
   if (!st)
     return (
-      <div className="text-[0.8rem] text-mut">sin partidos con ese filtro</div>
+      <div className="text-[0.8rem] text-mut">
+        No hay datos suficientes con este filtro.
+      </div>
     );
   const filas: [string, keyof NonNullable<Stats>["a_favor"]][] = [
     ["Media", "media"],
@@ -202,7 +204,7 @@ export function ListaPartidos({
       <Card>
         <Cabecera v={v} lado={lado} right={null} />
         <div className="text-[0.8rem] text-mut">
-          sin partidos con ese filtro
+          No hay partidos registrados con este filtro.
         </div>
       </Card>
     );
@@ -346,7 +348,7 @@ export function Chip({
     <span
       className="inline-flex items-center gap-1.5 whitespace-nowrap"
       aria-label={`${estado}, ${num(ratio, 1)} veces la variabilidad de referencia`}
-      title={`${estado} · ${Math.round(n_ef)} partidos efectivos ${condicion}`}
+      title={`${estado} · ${Math.round(n_ef)} ${Math.round(n_ef) === 1 ? "partido efectivo" : "partidos efectivos"} ${condicion}`}
     >
       <span
         className={`inline-block w-2 h-2 rounded-full ${color[estado] ?? "bg-mut2"}`}

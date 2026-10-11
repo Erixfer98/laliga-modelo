@@ -25,7 +25,10 @@ test.beforeEach(async ({ page }) => {
   page.on("pageerror", (e) => errors.push(e.message));
 });
 test.afterEach(async ({ page }) => {
-  expect(runtimeErrors.get(page) ?? [], "Errores de JavaScript en la página").toEqual([]);
+  expect(
+    runtimeErrors.get(page) ?? [],
+    "Errores de JavaScript en la página",
+  ).toEqual([]);
 });
 test("autenticación existente: puerta, contraseña incorrecta, entrada y salida", async ({
   browser,

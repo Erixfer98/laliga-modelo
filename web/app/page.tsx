@@ -12,6 +12,8 @@ import { TablaPosiciones } from "@/components/Tabla";
 export default function Inicio() {
   const { liga, boleto } = useStore();
   const [met, setMet] = useState("corners");
+  const [pulsoExpandido, setPulsoExpandido] = useState<string | null>(null);
+  const expandido = pulsoExpandido === liga;
   const {
     data: v,
     error,
@@ -48,7 +50,7 @@ export default function Inicio() {
           ) : (
             <Card
               titulo="Pulso de la liga"
-              desc="Medias descriptivas de los últimos cinco partidos de cada equipo. No son probabilidades ni recomendaciones de apuesta."
+              desc="Medias descriptivas de los últimos cinco partidos registrados de cada equipo. No son probabilidades ni recomendaciones de apuesta."
             >
               <Pills
                 label="Métrica de tendencias"
@@ -60,37 +62,56 @@ export default function Inicio() {
               />
               <div className="flex justify-between mt-5 mb-3 text-xs text-mut">
                 <span>{METRICAS[v.tendencias.metrica]} por partido</span>
-                <span>Media liga {num(v.tendencias.media_liga, 1)}</span>
+                <span>Media de la liga {num(v.tendencias.media_liga, 1)}</span>
               </div>
-              {v.tendencias.filas.map((f) => (
-                <div key={f.equipo} className="border-t border-line2 py-3">
-                  <div className="flex items-center gap-3">
-                    <Crest liga={liga} equipo={f.equipo} size={32} />
-                    <div className="flex-1 min-w-0 font-semibold text-sm truncate">
-                      {f.equipo}
+              <div id="pulso-equipos">
+                {v.tendencias.filas.map((f, index) => (
+                  <div
+                    key={f.equipo}
+                    data-testid="equipo-pulso"
+                    className={`border-t border-line2 py-3 ${index >= 5 && !expandido ? "hidden lg:block" : ""}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Crest liga={liga} equipo={f.equipo} size={32} />
+                      <div className="flex-1 min-w-0 font-semibold text-sm truncate">
+                        {f.equipo}
+                      </div>
+                      <div className="num text-lg">{num(f.prom, 1)}</div>
+                      <span className="text-xs text-mut min-w-10 text-right">
+                        {signed(f.prom - v.tendencias.media_liga, 1)}
+                      </span>
                     </div>
-                    <div className="num text-lg">{num(f.prom, 1)}</div>
-                    <span className="text-xs text-mut min-w-10 text-right">
-                      {signed(f.prom - v.tendencias.media_liga, 1)}
-                    </span>
+                    <Bar
+                      valor={f.prom}
+                      marca={v.tendencias.media_liga}
+                      max={
+                        Math.max(
+                          ...v.tendencias.filas.map((f) => f.prom),
+                          v.tendencias.media_liga,
+                        ) * 1.1
+                      }
+                      color="var(--acc)"
+                      alto={4}
+                    />
+                    <div className="text-xs text-mut">
+                      A favor {num(f.favor, 1)} · en contra {num(f.contra, 1)}
+                    </div>
                   </div>
-                  <Bar
-                    valor={f.prom}
-                    marca={v.tendencias.media_liga}
-                    max={
-                      Math.max(
-                        ...v.tendencias.filas.map((f) => f.prom),
-                        v.tendencias.media_liga,
-                      ) * 1.1
-                    }
-                    color="var(--acc)"
-                    alto={4}
-                  />
-                  <div className="text-xs text-mut">
-                    A favor {num(f.favor, 1)} · en contra {num(f.contra, 1)}
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
+              {v.tendencias.filas.length > 5 && (
+                <button
+                  type="button"
+                  aria-expanded={expandido}
+                  aria-controls="pulso-equipos"
+                  onClick={() => setPulsoExpandido(expandido ? null : liga)}
+                  className="lg:hidden w-full min-h-12 mt-2 rounded-xl border border-line text-sm font-semibold text-acc"
+                >
+                  {expandido
+                    ? "Mostrar solo cinco equipos"
+                    : `Ver los ${v.tendencias.filas.length} equipos`}
+                </button>
+              )}
             </Card>
           )}
         </div>
@@ -105,7 +126,9 @@ export default function Inicio() {
                   <div>
                     <div className="num text-3xl">{rb.n}</div>
                     <div className="text-xs text-mut mt-2">
-                      selecciones guardadas
+                      {rb.n === 1
+                        ? "selección guardada"
+                        : "selecciones guardadas"}
                     </div>
                   </div>
                   <div className="text-right">
@@ -148,7 +171,9 @@ export default function Inicio() {
                         ? "Validación estructural correcta."
                         : "La base presenta incidencias."}{" "}
                       {v.validacion.avisos.length > 0 &&
-                        "Hay avisos de calidad."}
+                        (v.validacion.avisos.length === 1
+                          ? "Hay un aviso de calidad."
+                          : "Hay avisos de calidad.")}
                     </span>
                   )}
                 </Nota>

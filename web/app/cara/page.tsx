@@ -37,7 +37,7 @@ export default function Cara() {
         <div className="eyebrow mb-2">Historia del enfrentamiento</div>
         <h1 className="page-title">Cara a cara.</h1>
         <p className="text-sm text-mut mt-2">
-          Los cruces anteriores son contexto, no una garantía del siguiente.
+          Consulta los enfrentamientos registrados y compara sus estadísticas.
         </p>
       </div>
       <CabeceraPartido sub="Solo se muestran encuentros históricos registrados." />
@@ -57,11 +57,12 @@ export default function Cara() {
         <>
           <Card
             titulo="Récord directo"
-            desc={`Solo ${torneos}${soloCasa ? `, con ${local} en casa` : ""}. Son pocos partidos: sirven como contexto, no como prueba.`}
+            desc={`Encuentros registrados en ${torneos}${soloCasa ? `, con ${local} en casa` : ""}. El historial aporta contexto; no demuestra lo que ocurrirá en el próximo partido.`}
           >
             {v.n === 0 ? (
               <div className="text-[0.84rem] text-mut">
-                {local} y {visitante} no se han cruzado en {torneos}
+                No hay enfrentamientos registrados entre {local} y {visitante}{" "}
+                en {torneos}
                 {soloCasa ? " con el local en casa" : ""}.
               </div>
             ) : (

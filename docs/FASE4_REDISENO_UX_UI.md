@@ -15,6 +15,13 @@ Kuota conserva su marca y adopta una interfaz deportiva de lectura rápida: enfr
 - Tabla conserva todas las columnas; móvil usa filas expandibles. Cara a cara conserva filtros y métricas. El glosario mantiene las definiciones del servidor e incorpora búsqueda diferida y estados vacíos.
 - La puerta privada cambia de presentación; los manejadores de entrada, salida y cookies permanecen intactos.
 
+## Ajustes finales antes de integrar
+
+- Pulso muestra inicialmente cinco equipos por debajo de 1024 px. «Ver los N equipos» y «Mostrar solo cinco equipos» alternan la lista sin cambiar la métrica elegida. A partir de 1024 px se muestra siempre la lista completa: se conservan sus valores, orden, escala de barras y composición de escritorio. El botón declara su estado con `aria-expanded` y apunta a la lista mediante `aria-controls`.
+- Cada mercado identifica a ambos equipos: «Cumplimiento histórico · Real Madrid: 4 de 5 partidos · Alaves: 2 de 5 partidos», usando los recuentos exactos de la API. El detalle mantiene el total y añade el desglose por equipo. No se confunden recuentos históricos con probabilidades futuras.
+- Inicio y Boleto distinguen «1 selección»/«2 selecciones»; el historial distingue «1 partido»/«N partidos», y los avisos y muestras efectivas también ajustan su concordancia. Los estados vacíos y el texto de Cara a cara se refieren a datos registrados, evitando afirmar que no ocurrió un enfrentamiento solo porque no aparece en la base.
+- Se agregan seis comprobaciones de navegador (tres escenarios en móvil y escritorio), incluyendo cambio de tamaño, expansión, conservación de filtros, concordancia y comparación de los recuentos mostrados con la API. Solo la comprobación de singular usa una respuesta histórica controlada; las capturas utilizan exclusivamente datos reales.
+
 ## Boleto y seguridad funcional
 
 Las cuotas comienzan vacías. Añadir requiere una cuota finita entre 1.01 y 10000; cambiar mercado, métrica, equipos o contexto elimina la entrada pendiente. La cuota justa del modelo se identifica como tal y nunca se usa como cuota introducida. `1.90` solo aparece como entrada manual de prueba en pruebas/capturas, no como valor por defecto de la aplicación.
@@ -31,14 +38,16 @@ Una combinación sin modelo disponible conserva sus selecciones y explica por qu
 - Web: `npm test`, **8 aprobadas**; contratos nullable, devolución, resumen sin probabilidades artificiales, restauración íntegra, selección antigua, datos corruptos, identidad y agrupación.
 - TypeScript: `npx tsc --noEmit --incremental false`.
 - Build: `npm run build`, compilación y generación de las rutas existentes correctas.
-- Playwright: **30 aprobadas**, sin omisiones (5.7 minutos reportados en la ejecución local). Dos perfiles Chromium (390×844 táctil y 1440×1000). Autenticación, navegación, teclado, nueve métricas, grupos y líneas, contexto/solicitudes tardías, cuota vacía, comparación con respuestas reales de API, persistencia, quitar, selecciones incompatibles/antiguas, errores/reintento, glosario y temas. Incluye axe WCAG A/AA y ausencia de overflow en las seis rutas, en ambos temas, y gráficos desplegados a 320/1024 px. La revisión detectó y corrigió una etiqueta de referencia con contraste insuficiente sobre las barras.
+- Playwright: **36 aprobadas**, sin omisiones (7.6 minutos reportados en la ejecución local final). Dos perfiles Chromium (390×844 táctil y 1440×1000). Autenticación, navegación, teclado, nueve métricas, grupos y líneas, contexto/solicitudes tardías, cuota vacía, comparación con respuestas reales de API, persistencia, quitar, selecciones incompatibles/antiguas, errores/reintento, glosario y temas. Incluye axe WCAG A/AA y ausencia de overflow en las seis rutas, en ambos temas, y gráficos desplegados a 320/1024 px. La revisión detectó y corrigió una etiqueta de referencia con contraste insuficiente sobre las barras.
+La primera ejecución conjunta tuvo un timeout de petición mientras Python, navegador y capturas compartían recursos. Se interrumpió y se repitió la suite completa del navegador sin las otras tareas: 36 aprobadas, sin ampliar los límites de espera ni omitir casos.
+
 - CI añade la API local y las pruebas de navegador al job web. No añade pasos de publicación.
 
-Se verificaron adicionalmente las seis rutas a 320, 430, 768 y 1024 píxeles: 24 comprobaciones sin desbordamiento horizontal, incluyendo gráficos desplegados en Análisis. Las pruebas usan los CSV del repositorio y el servidor real; solo se interceptan respuestas para inducir retrasos y fallos de conexión. No se regeneraron resultados estadísticos porque el motor y los datos no cambian.
+Se verificaron adicionalmente las seis rutas a 320, 430, 768 y 1024 píxeles: 24 comprobaciones sin desbordamiento horizontal, incluyendo gráficos desplegados en Análisis. Las pruebas usan los CSV del repositorio y el servidor real; se interceptan respuestas en casos aislados para inducir retrasos, fallos de conexión y muestras históricas de tamaño uno destinadas exclusivamente a comprobar los textos. No se regeneraron resultados estadísticos porque el motor y los datos no cambian.
 
 ## Capturas reales
 
-[Galería antes/después](fase4/capturas/README.md). Son 24 PNG de páginas realmente renderizadas con la API local: Inicio, Análisis y Boleto × móvil/escritorio × claro/oscuro × antes/después. Antes corresponde al frontend de `5a2f1ee`; después, al build de esta rama. Las capturas son de página completa: las barras fijas permanecen situadas respecto al viewport inicial.
+[Galería antes/después](fase4/capturas/README.md). Son 24 PNG comparativos de páginas realmente renderizadas con la API local: Inicio, Análisis y Boleto × móvil/escritorio × claro/oscuro × antes/después. Antes corresponde al frontend de `5a2f1ee`; después, al build de esta rama, incluidas las correcciones finales. Se añaden dos capturas móviles de Pulso expandido, una por tema. Las capturas son de página completa: las barras fijas permanecen situadas respecto al viewport inicial.
 
 El entorno bloquea la CDN de ESPN (HTTP 403), por lo que los escudos aparecen con la alternativa real de iniciales. Los datos y probabilidades sí proceden de la API y los CSV del repositorio. Las cuotas del boleto son entradas de prueba, no precios verificados. No se usaron imágenes conceptuales.
 

@@ -35,6 +35,13 @@ try {
         path: `${output}/despues-inicio-${viewport.width}-${colorScheme}.png`,
         fullPage: true,
       });
+      if (viewport.width === 390) {
+        await page.getByRole("button", { name: /^Ver los \d+ equipos$/ }).click();
+        await page.screenshot({
+          path: `${output}/despues-inicio-expandido-${viewport.width}-${colorScheme}.png`,
+          fullPage: true,
+        });
+      }
       await page.goto(`${baseURL}/partido`);
       await page.getByTestId("probabilidad-seleccionada").waitFor();
       await page.screenshot({

@@ -289,8 +289,21 @@ export default function Partido() {
                         {m.mercado}
                       </div>
                       <div className="text-xs text-mut mt-2">
-                        Cuota justa {num(m.justa)} · histórico {m.hl}/{m.nl} y{" "}
-                        {m.hv}/{m.nv}
+                        Cuota justa {num(m.justa)}
+                      </div>
+                      <div
+                        className="text-xs text-mut mt-1 leading-relaxed"
+                        data-testid="historico-mercado"
+                      >
+                        <span className="block">Cumplimiento histórico</span>
+                        <span className="inline-block mr-2">
+                          {local}: {m.hl} de {m.nl}{" "}
+                          {m.nl === 1 ? "partido" : "partidos"}
+                        </span>
+                        <span className="inline-block">
+                          {visitante}: {m.hv} de {m.nv}{" "}
+                          {m.nv === 1 ? "partido" : "partidos"}
+                        </span>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
@@ -354,7 +367,13 @@ export default function Partido() {
               <div className="text-xs text-mut leading-relaxed space-y-2">
                 <p>
                   Cumplimiento histórico: <b>{pct(p.tasa, 1)}</b> ({p.hl + p.hv}{" "}
-                  de {p.nl + p.nv} partidos). Las devoluciones no son aciertos.
+                  de {p.nl + p.nv} {p.nl + p.nv === 1 ? "partido" : "partidos"}
+                  ). Las devoluciones no son aciertos.
+                </p>
+                <p>
+                  {local}: {p.hl} de {p.nl}{" "}
+                  {p.nl === 1 ? "partido" : "partidos"}. {visitante}: {p.hv} de{" "}
+                  {p.nv} {p.nv === 1 ? "partido" : "partidos"}.
                 </p>
                 <p>
                   Sensibilidad heurística: {pct(p.lo, 1)}–{pct(p.hi, 1)}. Sin

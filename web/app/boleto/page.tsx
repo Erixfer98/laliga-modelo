@@ -51,8 +51,8 @@ export default function Boleto() {
           <h1 className="page-title">Tu boleto.</h1>
           <p className="text-sm text-mut mt-2">
             {boleto.length
-              ? `${boleto.length} selecciones · guardado en este dispositivo`
-              : "Una selección es el comienzo. El conjunto cuenta otra historia."}
+              ? `${boleto.length} ${boleto.length === 1 ? "selección" : "selecciones"} · boleto guardado en este dispositivo`
+              : "Añade mercados para consultar la probabilidad conjunta y el valor esperado de tu boleto."}
           </p>
         </div>
         {boleto.length > 0 && (
