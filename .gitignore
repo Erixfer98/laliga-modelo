@@ -4,3 +4,9 @@ __pycache__/
 
 # Artefactos históricos regenerables (tablas y figuras sí se versionan)
 docs/fase2/predicciones*.csv.gz
+
+# Fase 3: registros experimentales regenerables y bases prospectivas locales
+docs/fase3/*.csv.gz
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm

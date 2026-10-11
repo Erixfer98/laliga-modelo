@@ -1,0 +1,11 @@
+metrica,kind,lado,candidato,referencia,partidos,bloques,mejora_brier,ic95_lo,ic95_hi,bloques_14d,ic95_14d_lo,ic95_14d_hi,p_bloques,mejora_logloss,logloss_ic95_lo,logloss_ic95_hi,logloss_inferencia_finita,primario,p_holm
+goles,1x2,total,poisson_regularizado,regularizado_sin_dc,1406,33,4.445544796e-05,-0.000195921801,0.0002626569014,19,-0.0001835057828,0.0002434467393,0.7046476762,0.0002706300425,-0.0006283773314,0.001085857311,True,False,
+goles,btts,total,poisson_regularizado,regularizado_sin_dc,1406,33,0.0001283089608,-6.612823667e-05,0.0003330858565,19,-6.6137274e-06,0.0002525436893,0.2108945527,0.0002600026664,-0.0001406102517,0.0006782518238,True,False,
+goles,ou,local,poisson_regularizado,regularizado_sin_dc,1406,33,0,0,0,19,0,0,1,0,0,0,True,False,
+goles,ou,total,poisson_regularizado,regularizado_sin_dc,1406,33,-1.034625152e-08,-7.440028185e-05,7.147281092e-05,19,-5.808288714e-05,5.861165983e-05,1,-5.917254928e-05,-0.0004164711577,0.0002559941271,True,False,
+goles,ou,visitante,poisson_regularizado,regularizado_sin_dc,1406,33,0,0,0,19,0,0,1,0,0,0,True,False,
+goles_1t,1x2,total,poisson_regularizado,regularizado_sin_dc,1406,33,-0.0001444141291,-0.0004396629279,0.000159176493,19,-0.0004436502384,0.0001036081213,0.3818090955,-0.0004612232614,-0.001300058581,0.0003878329148,True,False,
+goles_1t,btts,total,poisson_regularizado,regularizado_sin_dc,1406,33,-1.673646523e-05,-0.0001042039743,7.351496076e-05,19,-8.692631559e-05,4.992408834e-05,0.7331334333,-1.735003254e-05,-0.0003014667888,0.0002789037329,True,False,
+goles_1t,ou,local,poisson_regularizado,regularizado_sin_dc,1406,33,0,0,0,19,0,0,1,0,0,0,True,False,
+goles_1t,ou,total,poisson_regularizado,regularizado_sin_dc,1406,33,-6.473426213e-05,-0.0001954515732,5.383167353e-05,19,-0.0001875175367,6.590716148e-05,0.3513243378,-0.0001728387153,-0.0005258915635,0.000155349119,True,False,
+goles_1t,ou,visitante,poisson_regularizado,regularizado_sin_dc,1406,33,0,0,0,19,0,0,1,0,0,0,True,False,

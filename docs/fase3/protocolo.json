@@ -1,0 +1,65 @@
+{
+  "tipo": "protocolo exploratorio congelado antes de inspeccionar resultados externos Fase 3",
+  "frozen_at_utc": "2026-10-11T02:14:12.244500+00:00",
+  "base_commit": "319386b4adc1d9c515e372a71efbfc75ecdcf1e3",
+  "codigo_banco": {
+    "experimentos/lambdas.py": "778c44411c64632089a98fac45716a71c06692e6bc844bcaf94e702592039d87",
+    "experimentos/distribuciones.py": "a8aac4dcd695def958f6fcf2b39d7cb3fb9e6da2235cc404d9fc0dd472f0fcb6",
+    "experimentos/temporal.py": "5f61d85ab40d4384182053e17a26bcfe1802d9b0b988ae2b6a19389d807e96f8"
+  },
+  "seleccion": {
+    "kappa": [
+      1,
+      3,
+      10,
+      20
+    ],
+    "xi": [
+      0,
+      0.005,
+      0.01
+    ],
+    "ventana_dias": [
+      0,
+      180
+    ],
+    "rho_goles_1t": [
+      0,
+      -0.05
+    ],
+    "meses_internos": 3,
+    "min_partidos": 100,
+    "min_meses": 2,
+    "embargo_dias": 1,
+    "score": "Brier OU primario macro por liga; tiros local, resto total",
+    "desempate": "ID lexicográfico"
+  },
+  "nb": {
+    "condicion": "Pearson interno OOS >1.2 y >=30 observaciones positivas",
+    "metricas": [
+      "tiros",
+      "tiros_a_puerta",
+      "corners",
+      "amarillas",
+      "rojas"
+    ],
+    "alpha_limites": [
+      0,
+      2
+    ],
+    "estimacion": "MLE sobre las mismas predicciones internas del candidato elegido; no externa"
+  },
+  "inferencia": {
+    "replicas": 2000,
+    "semilla": 20261011,
+    "bloques_dias": [
+      7,
+      14
+    ],
+    "holm": "7 mercados primarios x hasta 2 estrategias x 3 referencias",
+    "favorable_exploratoria": ">=300 partidos, >=12 semanas, Holm<=.05, IC semanal favorable frente a 3 referencias, LogLoss no peor actual, mejora >=70% meses y >=2/3 ligas"
+  },
+  "independiente": false,
+  "prueba_independiente": "solo partidos futuros con predicción registrada antes del kickoff, tras congelar commit y configuración",
+  "produccion": "modelo vigente; ninguna activación"
+}
