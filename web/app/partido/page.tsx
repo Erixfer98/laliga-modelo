@@ -25,6 +25,9 @@ import {
   Toggle,
 } from "@/components/ui";
 import { CabeceraPartido, usePartido } from "@/components/Selectores";
+import { LambdaSummary } from "@/components/LambdaSummary";
+import { LineSelector } from "@/components/LineSelector";
+import { EvidenceSummary } from "@/components/EvidenceSummary";
 import {
   Chip,
   GraficoModelo,
@@ -239,11 +242,19 @@ export default function Partido() {
   return (
     <>
       {cabecera}
-      <div className="grid lg:grid-cols-[minmax(0,1.7fr)_minmax(300px,1fr)] gap-6 items-start">
-        <div className="min-w-0">
+      <LambdaSummary v={v} />
+      <nav aria-label="Secciones del análisis" className="flex flex-wrap gap-2 mb-5 text-xs font-bold">
+        <a className="min-h-11 inline-flex items-center px-3 rounded-lg bg-card border border-line2" href="#expectativa">01 · Lambdas</a>
+        <a className="min-h-11 inline-flex items-center px-3 rounded-lg bg-card border border-line2" href="#mercados">02 · Líneas</a>
+        <a className="min-h-11 inline-flex items-center px-3 rounded-lg bg-card border border-line2" href="#distribucion">03 · Distribución</a>
+        <a className="min-h-11 inline-flex items-center px-3 rounded-lg bg-card border border-line2" href="#evidencia">04 · Evidencia</a>
+        <a className="min-h-11 inline-flex items-center px-3 rounded-lg bg-card border border-line2" href="#seleccion">05 · Decidir</a>
+      </nav>
+      <div className="grid lg:grid-cols-[minmax(0,1.8fr)_minmax(275px,0.75fr)] gap-5 items-start">
+        <div id="mercados" className="min-w-0 scroll-mt-36">
           <Card
-            titulo="Mercados"
-            desc="Probabilidades del modelo para cada mercado. La calificación orientativa mezcla 60% probabilidad y 40% cumplimiento histórico; la volatilidad puede reducirla. No representa rentabilidad ni garantía de acierto."
+            titulo="02 · Explorá escenarios y líneas"
+            desc="Elegí una categoría, línea y dirección. Las probabilidades siempre vienen del motor, no del historial."
           >
             {loading && (
               <p role="status" className="text-xs text-mut">
@@ -257,13 +268,42 @@ export default function Partido() {
               onChange={cambiarGrupo}
               small
             />
+            <div className="mt-4">
+              <LineSelector
+                grupo={grupo}
+                mercados={v.mercados}
+                elegido={p.mercado}
+                loading={loading}
+                onSelect={(mercado) => setSel({ clave, cfg: s.cfg, grupo, pata: mercado })}
+                onExtend={(linea, over) => {
+                  const cfg = s.cfg ?? v.cfg;
+                  const [centro, rango] = cfg[grupo];
+                  const abajo = centro - rango, arriba = centro + rango;
+                  const nuevoCentro = linea > arriba ? centro + (linea - arriba)
+                    : linea < abajo ? centro - (abajo - linea) : centro;
+                  setSel({
+                    clave, grupo,
+                    cfg: { ...cfg, [grupo]: [nuevoCentro, rango] },
+                    pata: grupo + " " + (over ? "Over" : "Under") + " " + linea,
+                  });
+                }}
+              />
+            </div>
+            <div aria-live="polite" className="rounded-xl border border-line2 px-4 py-3 mb-4">
+              <div className="text-xs text-mut mb-1">Selección actual</div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-extrabold text-sm sm:text-base">{p.mercado}</span>
+                <span className="num text-2xl text-acc">{loading ? "…" : pct(p.prob, 1)}</span>
+              </div>
+              <p className="text-xs text-mut mt-2">Cuota justa {num(p.justa)} · Sensibilidad {pct(p.lo, 1)}–{pct(p.hi, 1)} · Devolución {pct(p.push, 1)}</p>
+            </div>
             <details
               className="mt-3 mb-4"
               open={ajustes}
               onToggle={(e) => setAjustes(e.currentTarget.open)}
             >
               <summary className="flex min-h-11 items-center justify-between text-xs font-semibold text-mut">
-                Ajustar líneas e historial <span aria-hidden="true">⌄</span>
+                Opciones avanzadas: líneas e historial <span aria-hidden="true">⌄</span>
               </summary>
               <div className="grid sm:grid-cols-2 gap-3 pt-3">
                 {conLineas && (
@@ -560,7 +600,20 @@ export default function Partido() {
           </p>
         </aside>
       </div>
-      <div className="lg:max-w-[calc(63%_-_12px)] mt-6">
+      <section id="distribucion" className="mt-6 scroll-mt-36" aria-label="Distribución de probabilidades">
+        <Card titulo="03 · Cómo se distribuyen los resultados"
+          desc="Cada escenario corresponde a la selección activa. El gráfico proviene del motor y distingue aciertos y devoluciones cuando corresponde.">
+          {estadoDetalle.error ? (
+            <ErrorBox error={estadoDetalle.error} reintentar={estadoDetalle.reintentar} />
+          ) : detalle ? (
+            <GraficoModelo v={v} p={detalle} />
+          ) : (
+            <p role="status" className="text-sm text-mut py-4">Preparando la distribución de la selección…</p>
+          )}
+        </Card>
+      </section>
+      <EvidenceSummary v={v} p={p} n={n} filtro={filtro} />
+      <div className="w-full mt-5">
         {estadoDetalle.loading && (
           <p role="status" className="text-xs text-mut">
             Actualizando detalle histórico…
@@ -594,12 +647,6 @@ export default function Partido() {
           <div className="disclosure-body">
             {detalle && <ListaPartidos v={v} p={detalle} lado="l" />}
             {detalle && <ListaPartidos v={v} p={detalle} lado="v" />}
-          </div>
-        </details>
-        <details className="disclosure">
-          <summary>Distribución de resultados</summary>
-          <div className="disclosure-body">
-            {detalle && <GraficoModelo v={v} p={detalle} />}
           </div>
         </details>
         <details className="disclosure">
