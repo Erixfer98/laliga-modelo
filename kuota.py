@@ -21,6 +21,9 @@ import numpy as np
 import pandas as pd
 
 import modelo as mo
+import probabilidades as pr
+from functools import lru_cache
+from itertools import product
 
 LIGAS = {"laliga": "La Liga", "premier": "Premier League", "seriea": "Serie A", "bundesliga": "Bundesliga", "ligue1": "Ligue 1", "ligamx": "Liga MX"}
 GOL = ("goles", "goles_1t", "goles_2t")
@@ -38,7 +41,9 @@ def ligas_disponibles(carpeta: str = CARPETA_DATOS) -> dict:
 
 
 def cargar(liga: str, carpeta: str = CARPETA_DATOS) -> pd.DataFrame:
-    return mo.cargar(f"{carpeta}/bbdd_{liga}.csv")
+    df = mo.cargar(f"{carpeta}/bbdd_{liga}.csv")
+    df.attrs["liga"] = liga
+    return df
 
 
 def incertidumbre(df: pd.DataFrame, met: str) -> pd.DataFrame:
@@ -162,10 +167,13 @@ def bajar_nivel(cls: str) -> tuple:
     return NIVELES[min([c for _, c in NIVELES].index(cls) + 1, len(NIVELES) - 1)]
 
 
-def kelly(p: float, cuota: float) -> float:
-    """Fraccion de banca segun Kelly: (b*p - q) / b, con b = cuota - 1. Negativa = sin valor."""
-    b = cuota - 1
-    return (b * p - (1 - p)) / b if b > 0 else 0.0
+def kelly(p: float, cuota: float, push: float = 0.0) -> float:
+    """Kelly individual con acierto, fallo y devolución; nunca recomienda fracción negativa."""
+    if not all(math.isfinite(x) for x in (p, cuota, push)) or cuota <= 1:
+        raise ValueError("probabilidades y cuota deben ser finitas; cuota > 1")
+    if p < 0 or push < 0 or p + push > 1 + 1e-12:
+        raise ValueError("probabilidades de liquidación inválidas")
+    return pr.kelly({cuota: p, 1.0: push, 0.0: max(0., 1-p-push)})
 
 
 def evaluar(mk: dict, hl: pd.DataFrame, hv: pd.DataFrame, vol: dict = None) -> dict:
@@ -181,6 +189,10 @@ def evaluar(mk: dict, hl: pd.DataFrame, hv: pd.DataFrame, vol: dict = None) -> d
     if volatil:
         txt, cls = bajar_nivel(cls)
     return {"hl": int(cl.sum()), "nl": len(hl), "hv": int(cv.sum()), "nv": len(hv), "tasa": float(tasa), "cal": txt, "cls": cls,
+            "push_l": int((hl[mk["col_l"]] == mk["linea"]).sum()) if mk["regla"]["tipo"] == "ou" else 0,
+            "push_v": int((hv[mk["col_v"]] == mk["linea"]).sum()) if mk["regla"]["tipo"] == "ou" else 0,
+            "serie_push_l": [bool(x) for x in ((hl[mk["col_l"]] == mk["linea"]) if mk["regla"]["tipo"] == "ou" else pd.Series(False, index=hl.index))],
+            "serie_push_v": [bool(x) for x in ((hv[mk["col_v"]] == mk["linea"]) if mk["regla"]["tipo"] == "ou" else pd.Series(False, index=hv.index))],
             "serie_l": [bool(x) for x in cl], "serie_v": [bool(x) for x in cv], "volatil": volatil, "tag": ("↕ " if volatil else "") + txt}
 
 
@@ -198,7 +210,7 @@ def stats_historial(h: pd.DataFrame, linea: float, over: bool) -> dict:
 
 # ================================================================== mercados (linea configurable)
 def lineas(centro: float, rango: int) -> list:
-    return [x for x in np.arange(centro - rango, centro + rango + 0.01, 1.0) if x > 0]
+    return [x for x in np.arange(centro - rango, centro + rango + 0.01, 1.0) if x >= 0]
 
 
 def centro_defecto(lam: float, met: str) -> float:
@@ -215,67 +227,78 @@ def cfg_defecto(lam_l: float, lam_v: float, met: str, local: str, visitante: str
 
 
 def mercados(r: dict, met: str, local: str, visitante: str, cfg: dict) -> list:
-    """cfg = {grupo: (centro, rango)}. Devuelve lista de mercados con su regla de evaluacion historica. Cada mercado
-    trae prob (lambda central) y lo / hi = pesimista / optimista: la misma probabilidad calculada en las esquinas
-    bajo/alto de las lambdas (minimo y maximo de las 4 esquinas; en mercados de un solo equipo, de sus 2 extremos).
-    Todo sale de las mismas lambdas bajo-alto que se muestran arriba. "region" (funcion) marca en la matriz los
-    marcadores con los que gana la pata; a_json la quita."""
-    m, lam_l, lam_v = r["matriz"], r["lambda_local"], r["lambda_visitante"]
-    esq, (ll, lh), (vl, vh) = r["rango"]["esquinas"], r["rango"]["lam_l"], r["rango"]["lam_v"]
-    k = m.shape[0]; tot = np.add.outer(np.arange(k), np.arange(k))
+    """Mercados y liquidaciones en el mismo soporte. Lo/hi son extremos de la
+    rejilla de sensibilidad que incluye el centro, sin cobertura validada."""
+    m = r["matriz"]
+    muestras = r["rango"]["esquinas"].values()
     out = []
 
-    def add(nombre, grupo, f, col_l, col_v, linea, over, region):
-        """f(matriz) -> probabilidad; se evalua en la matriz central y en las 4 esquinas."""
-        p, ps = f(m), [f(e) for e in esq.values()]
-        out.append({"mercado": nombre, "grupo": grupo, "prob": float(min(max(p, 0), 1)),
-                    "lo": float(min(max(min(ps), 0), 1)), "hi": float(min(max(max(ps), 0), 1)),
-                    "col_l": col_l, "col_v": col_v, "linea": linea, "over": over, "region": region})
+    def add(nombre, grupo, col_l, col_v, linea, over, regla):
+        win, push = pr.liquidacion(regla, m.shape[0]-1)
+        ps = [pr.prob_evento(e, win) for e in muestras]
+        pushes = [pr.prob_evento(e, push) for e in muestras]
+        p, pp = pr.prob_evento(m, win), pr.prob_evento(m, push)
+        out.append({"mercado": nombre, "grupo": grupo, "prob": p, "push": pp, "loss": max(0., 1-p-pp),
+                    "lo": min(ps), "hi": max(ps), "push_lo": min(pushes), "push_hi": max(pushes),
+                    "justa": mo.cuota_justa(p, pp), "regla": regla,
+                    "escenarios": [{"prob": pw, "push": pu} for pw, pu in zip(ps, pushes)],
+                    "col_l": col_l, "col_v": col_v, "linea": linea, "over": over,
+                    "region": lambda x, y, win=win: bool(win[x, y])})
 
-    def add1(nombre, grupo, lam, lam_lo, lam_hi, ln, over, col_l, col_v, region):
-        """mercado de un solo equipo: Poisson con su lambda central, baja y alta."""
-        ps = [mo.prob_over(x, ln) for x in (lam, lam_lo, lam_hi)]
-        if not over: ps = [1 - x for x in ps]
-        out.append({"mercado": nombre, "grupo": grupo, "prob": float(ps[0]), "lo": float(min(ps[1:])), "hi": float(max(ps[1:])),
-                    "col_l": col_l, "col_v": col_v, "linea": ln, "over": over, "region": region})
+    def resultado(nombre, grupo, col_l, col_v, lado):
+        add(nombre, grupo, col_l, col_v, .5, True, {"tipo": "resultado", "lado": lado})
 
-    p1 = lambda x: np.tril(x, -1).sum(); px = lambda x: np.trace(x); p2 = lambda x: np.triu(x, 1).sum(); bt = lambda x: x[1:, 1:].sum()
-    # quien gana / quien hace mas: sale de la matriz
     if met in GOL:
-        add(f"Gana {local}", "Resultado", p1, "gano", "perdio", 0.5, True, lambda x, y: x > y)
-        add("Empate", "Resultado", px, "empato", "empato", 0.5, True, lambda x, y: x == y)
-        add(f"Gana {visitante}", "Resultado", p2, "perdio", "gano", 0.5, True, lambda x, y: x < y)
-        add(f"{local} o empate", "Resultado", lambda x: p1(x) + px(x), "no_perdio", "no_gano", 0.5, True, lambda x, y: x >= y)
-        add(f"{visitante} o empate", "Resultado", lambda x: p2(x) + px(x), "no_gano", "no_perdio", 0.5, True, lambda x, y: x <= y)
-        add("Ambos anotan: Sí", "Resultado", bt, "btts", "btts", 0.5, True, lambda x, y: x > 0 and y > 0)
-        add("Ambos anotan: No", "Resultado", lambda x: 1 - bt(x), "btts", "btts", 0.5, False, lambda x, y: x == 0 or y == 0)
-    for ln in lineas(*cfg["Total"]):
-        add(f"Total Over {ln}", "Total", lambda x, ln=ln: x[tot > ln].sum(), "total", "total", ln, True, lambda x, y, ln=ln: x + y > ln)
-        add(f"Total Under {ln}", "Total", lambda x, ln=ln: 1 - x[tot > ln].sum(), "total", "total", ln, False, lambda x, y, ln=ln: x + y < ln)
+        resultado(f"Gana {local}", "Resultado", "gano", "perdio", "local")
+        resultado("Empate", "Resultado", "empato", "empato", "empate")
+        resultado(f"Gana {visitante}", "Resultado", "perdio", "gano", "visitante")
+        resultado(f"{local} o empate", "Resultado", "no_perdio", "no_gano", "local_empate")
+        resultado(f"{visitante} o empate", "Resultado", "no_gano", "no_perdio", "visitante_empate")
+        for si in (True, False):
+            add("Ambos anotan: " + ("Sí" if si else "No"), "Resultado", "btts", "btts", .5, si,
+                {"tipo": "btts", "si": si})
     if met in MAYOR_NUMERO:
         que = NOM[met].lower()
-        add(f"Más {que}: {local}", "Mayor número", p1, "gano", "perdio", 0.5, True, lambda x, y: x > y)
-        add(f"Más {que}: empate", "Mayor número", px, "empato", "empato", 0.5, True, lambda x, y: x == y)
-        add(f"Más {que}: {visitante}", "Mayor número", p2, "perdio", "gano", 0.5, True, lambda x, y: x < y)
-    for ln in lineas(*cfg[local]):
-        add1(f"{local} Over {ln}", local, lam_l, ll, lh, ln, True, "a_favor", "en_contra", lambda x, y, ln=ln: x > ln)
-        add1(f"{local} Under {ln}", local, lam_l, ll, lh, ln, False, "a_favor", "en_contra", lambda x, y, ln=ln: x < ln)
-    for ln in lineas(*cfg[visitante]):
-        add1(f"{visitante} Over {ln}", visitante, lam_v, vl, vh, ln, True, "en_contra", "a_favor", lambda x, y, ln=ln: y > ln)
-        add1(f"{visitante} Under {ln}", visitante, lam_v, vl, vh, ln, False, "en_contra", "a_favor", lambda x, y, ln=ln: y < ln)
-    return out
+        resultado(f"Más {que}: {local}", "Mayor número", "gano", "perdio", "local")
+        resultado(f"Más {que}: empate", "Mayor número", "empato", "empato", "empate")
+        resultado(f"Más {que}: {visitante}", "Mayor número", "perdio", "gano", "visitante")
+    for grupo, lado, col_l, col_v in (("Total", "total", "total", "total"),
+                                     (local, "local", "a_favor", "en_contra"),
+                                     (visitante, "visitante", "en_contra", "a_favor")):
+        for ln in lineas(*cfg[grupo]):
+            for over in (True, False):
+                add(f"{grupo} {'Over' if over else 'Under'} {ln}", grupo, col_l, col_v, ln, over,
+                    {"tipo": "ou", "lado": lado, "linea": float(ln), "over": over})
+    orden = {"Resultado": 0, "Total": 1, "Mayor número": 2, local: 3, visitante: 4}
+    return sorted(out, key=lambda mk: orden[mk["grupo"]])
 
 
 # ================================================================== analisis de un partido
 def analizar_partido(df: pd.DataFrame, local: str, visitante: str, met: str, inc: pd.DataFrame, cfg: dict = None) -> dict:
-    """Todo lo que el modelo dice de un partido en una metrica: lambdas con su rango 80%, varianza de cada equipo vs liga,
+    """Todo lo que el modelo dice de un partido en una metrica: lambdas con su rango heurístico, varianza de cada equipo vs liga,
     medias de la liga, lineas (cfg) y la lista de mercados con prob / pesimista / optimista. inc = incertidumbre(df, met)."""
     r = mo.analizar(df, local, visitante, met, inc=inc)
     lam_l, lam_v = r["lambda_local"], r["lambda_visitante"]
     (ll, lh), (vl, vh) = r["rango"]["lam_l"], r["rango"]["lam_v"]
     if cfg is None:
         cfg = cfg_defecto(lam_l, lam_v, met, local, visitante)
+    if set(cfg) != {"Total", local, visitante}:
+        raise ValueError("cfg debe incluir Total y ambos equipos")
+    if any(not isinstance(v, (list, tuple)) or len(v) != 2 for v in cfg.values()):
+        raise ValueError("cada cfg requiere [centro, amplitud]")
+    for centro, amplitud in cfg.values():
+        try:
+            pr.validar_linea(float(centro))
+        except (ValueError, TypeError) as exc:
+            raise ValueError("centro de línea inválido") from exc
+        if not isinstance(amplitud, (int, float)) or not float(amplitud).is_integer() or not 0 <= amplitud <= 10:
+            raise ValueError("amplitud de líneas debe ser un entero entre 0 y 10")
+    cfg = {key: [float(value[0]), int(value[1])] for key, value in cfg.items()}
     lst = mercados(r, met, local, visitante, cfg)
+    for mk in lst:
+        mk["seleccion"] = {"liga": df.attrs.get("liga"), "local": local, "visitante": visitante,
+                           "metrica": met, "regla": mk["regla"], "version": pr.VERSION}
+
 
     def var(eq, cond):
         return {"equipo": eq, "condicion": cond, "estado": str(inc.loc[eq, f"estado_{cond}"]),
@@ -284,27 +307,36 @@ def analizar_partido(df: pd.DataFrame, local: str, visitante: str, met: str, inc
     return {"metrica": met, "nombre": NOM[met], "local": local, "visitante": visitante,
             "lambda_local": lam_l, "lambda_visitante": lam_v,
             "rango": {"local": [ll, lh], "visitante": [vl, vh], "total": [ll + vl, lh + vh]},
+            "distribucion": r["distribucion"], "sensibilidad": {key: val for key, val in r["rango"].items() if key != "esquinas"},
             "var": v, "vol": {local: v["local"]["estado"] == "volátil", visitante: v["visitante"]["estado"] == "volátil"},
             "medias_liga": {k: float(x) for k, x in mo.medias_liga(df, met).items()},
             "cfg": cfg, "grupos": list(dict.fromkeys(x["grupo"] for x in lst)), "mercados": lst, "matriz": r["matriz"]}
 
 
 def ev_pata(mk: dict, cuota: float) -> dict:
-    """EV con la cuota de la casa: Poisson y pesimista. EV = prob × cuota − 1."""
-    return {"ev": mk["prob"] * cuota - 1, "ev_lo": mk["lo"] * cuota - 1, "justa": mo.cuota_justa(mk["prob"])}
+    """EV = acierto × cuota + devolución − 1; mínimo de escenarios pareados."""
+    if not math.isfinite(cuota) or cuota <= 1:
+        raise ValueError("cuota debe ser finita y mayor que 1")
+    escenarios = mk.get("escenarios", [{"prob": mk["lo"], "push": mk.get("push", 0)}])
+    return {"ev": mk["prob"] * cuota + mk.get("push", 0) - 1,
+            "ev_lo": min(e["prob"] * cuota + e["push"] - 1 for e in escenarios),
+            "justa": mo.cuota_justa(mk["prob"], mk.get("push", 0))}
 
 
 def pata(partido: str, met: str, mk: dict, e: dict, cuota: float) -> dict:
     """Lo que se guarda en el boleto al agregar un mercado."""
     return {"partido": partido, "metrica": NOM[met], "mercado": mk["mercado"], "prob": mk["prob"], "cuota": cuota,
-            "cal": e["tag"], "cls": e["cls"], "lo": mk["lo"], "hi": mk["hi"]}
+            "cal": e["tag"], "cls": e["cls"], "lo": mk["lo"], "hi": mk["hi"],
+            "push": mk["push"], "justa": mk["justa"], "seleccion": mk["seleccion"]}
 
 
 # ================================================================== graficos del modelo ("Que dice el modelo")
-def matriz_datos(m: np.ndarray, region, k: int = 6) -> dict:
+def matriz_datos(m: np.ndarray, region, k: int = 6, regla: dict = None) -> dict:
     """Marcadores exactos (filas = local, columnas = visitante): probabilidad y si con ese marcador gana la pata."""
-    return {"k": k, "max": float(m[:k, :k].max()),
-            "celdas": [[{"p": float(m[x, y]), "gana": bool(region(x, y))} for y in range(k)] for x in range(k)]}
+    k = min(k, m.shape[0])
+    push = pr.liquidacion(regla, m.shape[0]-1)[1] if regla else np.zeros(m.shape, dtype=bool)
+    return {"masa_visible": float(m[:k, :k].sum()), "k": k, "max": float(m[:k, :k].max()),
+            "celdas": [[{"p": float(m[x, y]), "gana": bool(region(x, y)), "push": bool(push[x, y])} for y in range(k)] for x in range(k)]}
 
 
 def distribucion_datos(m: np.ndarray, mk: dict) -> list:
@@ -319,7 +351,7 @@ def distribucion_datos(m: np.ndarray, mk: dict) -> list:
     hi = len(dist)
     while hi > 1 and dist[hi - 1] < 0.005: hi -= 1
     hi = min(len(dist), max(hi, int(mk["linea"]) + 2))
-    return [{"x": s, "p": float(dist[s]), "gana": bool(cond(s))} for s in range(hi)]
+    return [{"x": s, "p": float(dist[s]), "gana": bool(cond(s)), "push": bool(s == mk["linea"])} for s in range(hi)]
 
 
 def diferencia_datos(m: np.ndarray, mk: dict) -> list:
@@ -337,10 +369,12 @@ def diferencia_datos(m: np.ndarray, mk: dict) -> list:
 def grafico_modelo(m: np.ndarray, mk: dict, met: str) -> dict:
     """Que grafico va con la pata: matriz (goles, Resultado/Total), diferencia (Mayor numero) o distribucion (resto)."""
     if met in GOL and mk["grupo"] in ("Resultado", "Total"):
-        return {"tipo": "matriz", **matriz_datos(m, mk["region"])}
+        return {"tipo": "matriz", **matriz_datos(m, mk["region"], regla=mk["regla"])}
     if mk["grupo"] == "Mayor número":
-        return {"tipo": "diferencia", "valores": diferencia_datos(m, mk)}
-    return {"tipo": "distribucion", "valores": distribucion_datos(m, mk)}
+        vals = diferencia_datos(m, mk)
+        return {"tipo": "diferencia", "valores": vals, "masa_visible": sum(v["p"] for v in vals)}
+    vals = distribucion_datos(m, mk)
+    return {"tipo": "distribucion", "valores": vals, "masa_visible": sum(v["p"] for v in vals)}
 
 
 # ================================================================== cara a cara (torneo vigente + anterior)
@@ -369,27 +403,138 @@ def cara_a_cara(df: pd.DataFrame, local: str, visitante: str, solo_casa: bool = 
 
 
 # ================================================================== boleto y stake
+@lru_cache(maxsize=8)
+def _modelo_boleto(liga, local, visitante, met, mtime):
+    df = cargar(liga)
+    if local == visitante or local not in equipos(df) or visitante not in equipos(df):
+        raise ValueError("equipos inválidos")
+    return mo.analizar(df, local, visitante, met, inc=incertidumbre(df, met))
+
+
 def resumen_boleto(legs: list) -> dict:
-    """Probabilidad, cuota y EV del boleto (o None si esta vacio).
-    Pesimista / optimista = producto de la prob. pesimista / optimista de cada pata."""
+    """Recalcula desde identidades de selección; nunca confía en probabilidades del cliente.
+
+    Mismo partido y métrica: intersección y liquidación en una matriz compartida.
+    Métricas distintas: no hay distribución conjunta. Partidos distintos:
+    independencia explícita (hipótesis no validada). Las cuotas se multiplican:
+    no incorpora reglas especiales/precios de una casa para same-game parlays.
+    """
     if not legs:
         return None
-    prob = float(np.prod([l["prob"] for l in legs])); cuota = float(np.prod([l["cuota"] for l in legs]))
-    lo = float(np.prod([l.get("lo", l["prob"]) for l in legs])); hi = float(np.prod([l.get("hi", l["prob"]) for l in legs]))
-    return {"n": len(legs), "prob": prob, "cuota": cuota, "ev": prob * cuota - 1, "lo": lo, "hi": hi,
-            "ev_lo": lo * cuota - 1, "ev_hi": hi * cuota - 1, "justa": mo.cuota_justa(prob),
-            "mismo_partido": len({l["partido"] for l in legs}) < len(legs)}
+    if len(legs) > 12:
+        raise ValueError("máximo 12 selecciones")
+    try:
+        cuotas = [float(l["cuota"]) for l in legs]
+    except (TypeError, KeyError, ValueError) as exc:
+        raise ValueError("cuota inválida") from exc
+    if any(not math.isfinite(c) or c <= 1 or c > 10000 for c in cuotas):
+        raise ValueError("cuotas deben estar entre 1 (excluido) y 10000")
+    cuota = math.prod(cuotas)
+    rb = {"n": len(legs), "cuota": cuota, "prob": None, "lo": None, "hi": None,
+          "ev": None, "ev_lo": None, "ev_hi": None, "justa": None,
+          "mismo_partido": False, "disponible": False, "kelly": None, "advertencias": [],
+          "metodo_rango": "sensibilidad heurística, cobertura no validada", "modelos": []}
+    def unavailable(motivo, estado):
+        rb.update(estado=estado, advertencias=[motivo])
+        return rb
+    groups, games, seen = {}, {}, set()
+    for leg, c in zip(legs, cuotas):
+        sel = leg.get("seleccion")
+        if not isinstance(sel, dict) or sel.get("version") != pr.VERSION or not sel.get("liga"):
+            return unavailable("Selección antigua o sin identidad verificable: vuelve a agregarla.", "sin_modelo")
+        liga, local, vis, met = (sel.get(key) for key in ("liga", "local", "visitante", "metrica"))
+        if not all(isinstance(x, str) for x in (liga, local, vis, met)):
+            raise ValueError("identidad de selección inválida")
+        if liga not in LIGAS or met not in mo.METRICAS:
+            raise ValueError("liga o métrica no implementada")
+        regla = pr.validar_regla(sel.get("regla"))
+        if not isinstance(regla, dict):
+            raise ValueError("regla de liquidación requerida")
+        # Validar antes de acceder a datos o reservar matrices.
+        try:
+            pr.liquidacion(regla, 6)
+        except (KeyError, TypeError) as exc:
+            raise ValueError("regla de liquidación inválida") from exc
+        game = (liga, local, vis)
+        key = (*game, met)
+        ident = (*key, json.dumps(regla, sort_keys=True))
+        if ident in seen:
+            return unavailable("Selecciones duplicadas: elimina la repetida.", "duplicado")
+        seen.add(ident)
+        groups.setdefault(key, []).append((regla, c))
+        games.setdefault(game, set()).add(met)
+    rb["mismo_partido"] = len(games) < len(legs)
+    if rb["mismo_partido"]:
+        rb["advertencias"].append("EV y Kelly suponen producto de cuotas ganadoras y eliminación de pushes. No aplican si la casa usa otro precio o liquidación para la combinada del mismo partido.")
+    if any(len(mets) > 1 for mets in games.values()):
+        return unavailable("Métricas distintas del mismo partido: no existe distribución conjunta válida.", "sin_modelo")
+    if len(games) > 1:
+        rb["advertencias"].append("Se asume independencia entre partidos distintos; no está validada empíricamente.")
+    central, candidates, probs, lows, highs = [], [], [], [], []
+    max_retornos = []
+    for key, sels in groups.items():
+        liga, local, vis, met = key
+        ruta = f"{CARPETA_DATOS}/bbdd_{liga}.csv"
+        mtime = os.path.getmtime(ruta)
+        r = _modelo_boleto(*key, mtime)
+        rb["modelos"].append({"liga": liga, "local": local, "visitante": vis, "metrica": met,
+                              "revision_csv_mtime": mtime, "lambda_local": r["lambda_local"],
+                              "lambda_visitante": r["lambda_visitante"], "distribucion": r["distribucion"],
+                              "rango_local": r["rango"]["lam_l"], "rango_visitante": r["rango"]["lam_v"]})
+        reglas, odds = zip(*sels)
+        dist, prob = pr.retornos(r["matriz"], reglas, odds)
+        acierto_posible, max_retorno = pr.compatibilidad(reglas, odds)
+        max_retornos.append(max_retorno)
+        if not acierto_posible and max_retorno > 0:
+            rb["advertencias"].append("Sin acierto total posible en un grupo; se conservan los retornos parciales por devoluciones.")
+        cs = [pr.retornos(m, reglas, odds) for m in r["rango"]["esquinas"].values()]
+        central.append(dist); candidates.append([d for d, _ in cs]); probs.append(prob)
+        lows.append(min(p for _, p in cs)); highs.append(max(p for _, p in cs))
+    combined = pr.combinar(central)
+    rb.update(disponible=True, estado="calculado", prob=math.prod(probs), lo=math.prod(lows), hi=math.prod(highs),
+              ev=pr.ev(combined), push=combined.get(1.0, 0.0),
+              liquidaciones=[{"retorno": r, "prob": p} for r, p in sorted(combined.items())])
+    # Un boleto sin pushes tiene dos retornos: 0 o cuota total.
+    binary = all(all(ret in (0., math.prod(c for _, c in groups[key])) for ret in d)
+                 for key, cs in zip(groups, candidates) for d in cs)
+    if binary:
+        rb.update(ev_lo=rb["lo"]*cuota-1, ev_hi=rb["hi"]*cuota-1,
+                  kelly=pr.kelly({cuota: rb["lo"], 0.: 1-rb["lo"]}), justa=mo.cuota_justa(rb["prob"]))
+    elif math.prod(len(cs) for cs in candidates) <= 4096:
+        ds = [pr.combinar(ds) for ds in product(*candidates)]
+        rb.update(ev_lo=min(pr.ev(d) for d in ds), ev_hi=max(pr.ev(d) for d in ds),
+                  kelly=min(pr.kelly(d) for d in ds))
+        if len(legs) == 1:
+            rb["justa"] = mo.cuota_justa(rb["prob"], rb["push"])
+        else:
+            rb["advertencias"].append("Cuota justa única no disponible para un boleto con retornos parciales por devoluciones.")
+    else:
+        rb["advertencias"].append("Kelly y extremos de EV no disponibles: demasiados escenarios de devolución.")
+    if len(legs) > 1 and math.prod(max_retornos) <= 1:
+        rb.update(estado="incompatible", kelly=None)
+        rb["advertencias"].append("Selecciones incompatibles: ningún retorno con beneficio es posible; stake deshabilitado.")
+    rb["advertencias"].append("Rangos y Kelly de sensibilidad son heurísticos; no garantizan cobertura ni rentabilidad.")
+    return rb
 
 
 def stake(legs: list, banca: float) -> dict:
-    """Kelly con la probabilidad pesimista del boleto: si aun asi hay valor, la apuesta aguanta un modelo optimista.
-    opciones = Kelly, ½, ¼ y ⅛ con fraccion de banca y monto."""
+    if not math.isfinite(banca) or banca <= 0:
+        raise ValueError("banca debe ser finita y positiva")
     rb = resumen_boleto(legs)
-    if not rb:
+    return stake_desde_resumen(rb, banca)
+
+
+def stake_desde_resumen(rb, banca):
+    if rb is None:
         return None
-    f = kelly(rb["lo"], rb["cuota"])
-    return {"kelly": f, "sin_valor": f <= 0, "banca": banca, "boleto": rb,
-            "opciones": [{"nombre": nm, "fraccion": f / d, "monto": banca * f / d} for nm, d in (("Kelly", 1), ("½ Kelly", 2), ("¼ Kelly", 4), ("⅛ Kelly", 8))]}
+    if not math.isfinite(banca) or banca <= 0:
+        raise ValueError("banca debe ser finita y positiva")
+    f = rb["kelly"]
+    return {"kelly": f, "disponible": f is not None, "sin_valor": f is not None and f <= 0,
+            "banca": banca, "boleto": rb, "advertencia": " ".join(rb["advertencias"]),
+            "opciones": [] if f is None or f <= 0 else [
+                {"nombre": nm, "fraccion": f/d, "monto": banca*f/d}
+                for nm, d in (("Kelly", 1), ("½ Kelly", 2), ("¼ Kelly", 4), ("⅛ Kelly", 8))]}
 
 
 # ================================================================== vistas: el paquete completo que necesita cada pantalla
@@ -475,11 +620,11 @@ def contexto_armar(nombre_liga: str, partido: str, an: dict, n: int, grp: str, e
             f"varianza {vl_['estado']} {vl_['ratio']:.1f}x la liga, {vl_['n_ef']:.0f} partidos efectivos en casa), "
             f"λ visitante {an['lambda_visitante']:.2f} ({vl:.2f}-{vh:.2f}, {vv_['estado']} {vv_['ratio']:.1f}x, {vv_['n_ef']:.0f} fuera), "
             f"λ total {an['lambda_local'] + an['lambda_visitante']:.2f} ({tl:.2f}-{th:.2f}); media liga local {ml['local']:.2f}, visita {ml['visitante']:.2f}, total {ml['total']:.2f}. "
-            f"El rango es el intervalo del 80% del promedio del equipo (t de Student, desv/raíz(n)): incertidumbre de la λ, no la varianza Poisson. "
+            f"El rango es sensibilidad heurística de ataque y defensa, sin cobertura validada; la rejilla incluye puntos interiores y el centro. "
             f"Validación con últimos {n} partidos.\n"
             "Mercados del grupo " + grp + ":\n" + "\n".join(
                 f"- {mk['mercado']}: prob Poisson {mk['prob']:.0%} (pesimista {mk['lo']:.0%}, optimista {mk['hi']:.0%})"
-                f", cuota justa {mo.cuota_justa(mk['prob'])}, {local} cumplió {ev_['hl']}/{ev_['nl']}, {visitante} {ev_['hv']}/{ev_['nv']}, "
+                f", cuota justa {mk['justa']}, {local} cumplió {ev_['hl']}/{ev_['nl']}, {visitante} {ev_['hv']}/{ev_['nv']}, "
                 f"calificación {ev_['tag']}"
                 for mk, ev_ in evaluados) + contexto_boleto(legs, con_metrica=True))
 
@@ -499,8 +644,8 @@ def contexto_analizar(nombre_liga: str, partido: str, an: dict, sel: str, mk: di
     return (f"Vista: Analizar. Liga {nombre_liga}. Partido {partido}. Métrica {NOM[met]}. Pata: {sel}. Prob modelo (Poisson) {mk['prob']:.0%} "
             f"(pesimista {mk['lo']:.0%}, optimista {mk['hi']:.0%}; Poisson con la λ del extremo en contra / a favor). "
             f"Varianza vs liga: {local} {vl_['estado']} {vl_['ratio']:.1f}x en casa, {visitante} {vv_['estado']} {vv_['ratio']:.1f}x fuera"
-            f", cuota justa {mo.cuota_justa(mk['prob'])}, calificación {e['tag']}, cumplimiento histórico {e['tasa']:.0%} ({e['hl']}/{e['nl']} {local}, {e['hv']}/{e['nv']} {visitante}) "
-            f"en últimos {n} partidos, filtro {filtro}. λ {local} {an['lambda_local']:.2f} (rango 80% {ll:.2f}-{lh:.2f}), λ {visitante} {an['lambda_visitante']:.2f} ({vl:.2f}-{vh:.2f}), "
+            f", cuota justa {mk['justa']}, calificación {e['tag']}, cumplimiento histórico {e['tasa']:.0%} ({e['hl']}/{e['nl']} {local}, {e['hv']}/{e['nv']} {visitante}) "
+            f"en últimos {n} partidos, filtro {filtro}. λ {local} {an['lambda_local']:.2f} (rango heurístico {ll:.2f}-{lh:.2f}), λ {visitante} {an['lambda_visitante']:.2f} ({vl:.2f}-{vh:.2f}), "
             f"media liga local {ml['local']:.2f} visita {ml['visitante']:.2f} total {ml['total']:.2f}.\n"
             f"{local} últimos {len(hl)}: {_st(hl)}. Resultados (reciente→antiguo): " + _res(hl) +
             f"\n{visitante} últimos {len(hv)}: {_st(hv)}. Resultados: " + _res(hv) + contexto_boleto(legs))
@@ -517,13 +662,13 @@ DICCIONARIO = [
     ("Modelo", "Ataque / defensa", "Fuerza del equipo relativa a la liga. 1.00 = promedio; 1.30 = produce 30% más que un equipo promedio; 0.80 = 20% menos."),
     ("Modelo", "Peso por recencia", "Los partidos recientes pesan más que los viejos al calcular las fuerzas. Un partido de hace ~140 días pesa la mitad que uno de hoy."),
     ("Modelo", "Matriz de resultados", "Tabla con la probabilidad de cada marcador exacto (filas = local, columnas = visitante). Verde = marcadores con los que gana la pata."),
-    ("Modelo", "Rango bajo–alto de λ", "Entre paréntesis junto a cada λ: hasta dónde puede estar equivocado el promedio del equipo. Se calcula sobre sus propios partidos (con la misma recencia del modelo): promedio ± t × desviación estándar ÷ √n. El multiplicador t sale de la distribución t de Student y baja solo conforme hay más partidos (3 partidos 1.89, 21 partidos 1.33, muchos 1.28); el rango cubre el 80% de los casos. Mide confianza en la λ, no cuánto varía un partido: eso ya lo cubre Poisson."),
-    ("Modelo", "Pesimista / optimista", "La probabilidad del mercado calculada con el mismo Poisson pero con las λ del extremo que va en contra (pesimista) o a favor (optimista) de la pata. Salen de las mismas λ bajo–alto que ves arriba, así que un Over y su Under siempre cuadran. El EV pesimista usa la prob. pesimista: si sigue positivo, la pata aguanta aunque el promedio esté algo inflado."),
+    ("Modelo", "Rango bajo–alto de λ", "Sensibilidad heurística de los promedios ponderados de ataque y defensa, propagada a λ. Se evalúa una rejilla interior y la estimación central. No es un intervalo de confianza validado; no garantiza extremos globales ni cobertura. La referencia de liga permanece fija. Para cero eventos se usa un límite Poisson de cero eventos como sensibilidad."),
+    ("Modelo", "Pesimista / optimista", "Mínimo y máximo de la probabilidad en una rejilla de sensibilidad que incluye el punto central. Evalúa ataque y defensa. No garantiza extremos globales ni cobertura. En líneas enteras Over + Under + devolución = 1; el EV usa acierto y devolución de cada mismo escenario."),
     ("Modelo", "Varianza vs liga (🟢🟡🔴⚪)", "Ancho del rango del equipo (relativo a su promedio, en esa condición: casa o fuera) dividido entre el ancho mediano de los equipos de la liga. 🟢 estable < 0.8×, 🟡 normal 0.8–1.2×, 🔴 volátil > 1.2×, ⚪ pocos datos = menos de 5 partidos efectivos en esa condición; ahí se usa la dispersión típica de la liga en lugar de la del equipo."),
     ("Modelo", "Encogimiento (K)", (f"Al calcular la fuerza de un equipo se le suman {mo.K_ENCOGE} partidos 'extra' al promedio de la liga, para que un equipo con pocos partidos o una racha rara no se vaya a extremos." if mo.K_ENCOGE else "Desactivado (K = 0): la fuerza de cada equipo es su promedio ponderado puro, sin acercarlo al promedio de la liga.") + " Se ajusta con K_ENCOGE en modelo.py."),
-    ("Mercados", "Cuota justa", "1 dividido entre la probabilidad Poisson. Es la cuota a la que no ganas ni pierdes a largo plazo. Si la casa paga más que la justa, hay valor."),
-    ("Mercados", "EV (valor esperado)", "prob. × cuota − 1. Positivo = a largo plazo ganas; negativo = pierdes. EV +0.10 = ganas 10 centavos por cada Q1 apostado, en promedio."),
-    ("Mercados", "Over / Under", "Más de / menos de una línea. Total Over 2.5 goles = 3 o más goles en el partido. Las líneas .5 no permiten empate."),
+    ("Mercados", "Cuota justa", "(1 − probabilidad de devolución) dividido entre probabilidad de acierto. Si el acierto es imposible, no está disponible. Es la cuota a la que no ganas ni pierdes a largo plazo. Si la casa paga más que la justa, hay valor."),
+    ("Mercados", "EV (valor esperado)", "probabilidad de acierto × cuota + probabilidad de devolución − 1. Positivo = a largo plazo ganas; negativo = pierdes. EV +0.10 = ganas 10 centavos por cada Q1 apostado, en promedio."),
+    ("Mercados", "Over / Under", "Más de / menos de una línea. Total Over 2.5 goles = 3 o más goles en el partido. Las líneas .5 no permiten devolución; en líneas enteras la igualdad devuelve la apuesta y no cuenta como acierto."),
     ("Mercados", "Línea y ± líneas", "Línea = el centro que quieres ver (ej. 9.5 corners). ± líneas = cuántas líneas alrededor mostrar (±2 con 9.5 muestra 7.5, 8.5, 9.5, 10.5 y 11.5)."),
     ("Mercados", "1X2 / doble oportunidad", "1 = gana local, X = empate, 2 = gana visitante. 1X = local o empate; X2 = visitante o empate."),
     ("Mercados", "Ambos anotan (BTTS)", "Sí = los dos equipos marcan al menos un gol. No = al menos uno se queda en cero."),
@@ -540,7 +685,7 @@ DICCIONARIO = [
     ("Validación", "Cara a cara", "Enfrentamientos directos entre los dos equipos solo en el torneo vigente y el anterior. Récord y la ficha completa de cada partido (las 9 métricas): la pastilla de color marca al equipo que hizo más. Son pocos partidos (2 o 3): contexto, no prueba."),
     ("Validación", "Tabla de λ", "Una fila por equipo y el total: λ = esperado del modelo, bajo–alto = hasta dónde puede estar equivocado ese promedio, liga = media de la liga en esa condición, Δ = λ menos la media liga, var. = varianza del equipo vs liga (🟢🟡🔴⚪ y ×N)."),
     ("Banca", "Banca", "Dinero total destinado a apostar. Todo el stake se calcula como porcentaje de esto."),
-    ("Banca", "Kelly", "Fracción de banca que maximiza el crecimiento si la probabilidad fuera exacta: ((cuota−1)·p − (1−p)) / (cuota−1). Se calcula con la prob. pesimista del boleto (producto de las pesimistas de cada pata): si con esa aún hay valor, el stake aguanta un modelo demasiado optimista."),
+    ("Banca", "Kelly", "Maximiza el crecimiento logarítmico de la distribución de retornos, incluyendo devoluciones. Se usa el mínimo Kelly de los escenarios heurísticos calculados. Si falta distribución conjunta, hay duplicados o incompatibilidad, no se recomienda stake. Partidos distintos suponen independencia no validada."),
     ("Banca", "½, ¼, ⅛ Kelly", "La mitad, un cuarto y un octavo del Kelly completo. Para parlays usa ¼ o ⅛: menos crecimiento pero mucha menos probabilidad de quebrar."),
     ("Banca", "Patas no independientes", "Dos patas del mismo partido (ej. gana Madrid + over 2.5) están relacionadas; multiplicar sus probabilidades da un número inexacto."),
     ("Datos", "Fuente", "football-data.co.uk para las 5 ligas europeas; ESPN para Liga MX. Se descarga todos los días a las 6:00 am (Guatemala) por GitHub Actions."),
@@ -582,7 +727,7 @@ def a_json(x):
     if isinstance(x, (int, np.integer)):
         return int(x)
     if isinstance(x, (float, np.floating)):
-        return None if math.isnan(x) else float(x)
+        return None if not math.isfinite(x) else float(x)
     return x
 
 

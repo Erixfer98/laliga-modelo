@@ -46,13 +46,13 @@ export function Matriz({ g, local, visitante }: { g: Extract<Grafico, { tipo: "m
               <th className="text-[0.72rem] text-mut2 font-medium p-0.5">{x}</th>
               {fila.map((c, y) => {
                 const a = 0.15 + 0.85 * (c.p / g.max);
-                return <td key={y} className="text-center py-1.5 rounded-md" style={{ background: c.gana ? `rgba(46,158,91,${a.toFixed(2)})` : `rgba(120,130,150,${(a * 0.6).toFixed(2)})` }}>{Math.round(c.p * 100)}</td>;
+                return <td key={y} className="text-center py-1.5 rounded-md" style={{ background: c.gana ? `rgba(46,158,91,${a.toFixed(2)})` : `rgba(120,130,150,${(a * 0.6).toFixed(2)})` }}>{Math.round(c.p * 100)}{c.push ? " ↩" : ""}</td>;
               })}
             </tr>
           ))}
         </tbody>
       </table>
-      <Nota>Filas = {local} · columnas = {visitante}. Cada celda es el % de ese marcador exacto según Poisson. Verde = marcadores con los que gana la pata; más intenso = más probable.</Nota>
+      <Nota>Filas = {local} · columnas = {visitante}. Cada celda es el % de ese marcador exacto según Poisson. Verde = marcadores con los que gana la pata; más intenso = más probable. ↩ = devolución. Masa visible {pct(g.masa_visible, 1)}, sin renormalizar.</Nota>
     </>
   );
 }

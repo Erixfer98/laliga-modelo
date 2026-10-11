@@ -35,7 +35,10 @@ export type PartidoCara = {
 export type VistaCara = { liga: string; nombre: string; local: string; visitante: string; torneos: string[]; solo_casa: boolean; n: number; G: number; E: number; P: number; partidos: PartidoCara[] };
 
 export type Var = { equipo: string; condicion: string; estado: string; ratio: number; n_ef: number };
+export type Seleccion = { liga: string; local: string; visitante: string; metrica: string; regla: Record<string, unknown>; version: string };
 export type Mercado = {
+  push: number; loss: number; justa: number | null; seleccion: Seleccion; escenarios: { prob: number; push: number }[];
+  push_l: number; push_v: number; serie_push_l: boolean[]; serie_push_v: boolean[];
   mercado: string; grupo: string; prob: number; lo: number; hi: number; col_l: string; col_v: string; linea: number; over: boolean;
   hl: number; nl: number; hv: number; nv: number; tasa: number; cal: string; cls: string; serie_l: boolean[]; serie_v: boolean[]; volatil: boolean; tag: string;
 };
@@ -43,8 +46,8 @@ export type Hist = { fecha: string; condicion: string; rival: string; marcador: 
 export type StatCol = { media: number; mediana: number; desv: number; min: number; max: number; pct: number };
 export type Stats = { a_favor: StatCol; en_contra: StatCol; total: StatCol } | null;
 export type Grafico =
-  | { tipo: "matriz"; k: number; max: number; celdas: { p: number; gana: boolean }[][] }
-  | { tipo: "distribucion" | "diferencia"; valores: { x: number; p: number; gana: boolean }[] };
+  | { tipo: "matriz"; masa_visible: number; k: number; max: number; celdas: { p: number; gana: boolean; push: boolean }[][] }
+  | { tipo: "distribucion" | "diferencia"; masa_visible: number; valores: { x: number; p: number; gana: boolean }[] };
 export type Pata = Mercado & { grafico: Grafico; historial_local: Hist[]; historial_visitante: Hist[]; stats_local: Stats; stats_visitante: Stats };
 export type Cfg = Record<string, [number, number]>;
 
@@ -55,9 +58,9 @@ export type VistaPartido = {
   cfg: Cfg; grupos: string[]; n: number; filtro: string; mercados: Mercado[]; pata: Pata; contexto_armar: string; contexto_analizar: string;
 };
 
-export type Leg = { partido: string; metrica: string; mercado: string; prob: number; cuota: number; cal: string; cls: string; lo: number; hi: number };
-export type ResumenBoleto = { n: number; prob: number; cuota: number; ev: number; lo: number; hi: number; ev_lo: number; ev_hi: number; justa: number; mismo_partido: boolean } | null;
-export type Stake = { kelly: number; sin_valor: boolean; banca: number; opciones: { nombre: string; fraccion: number; monto: number }[] } | null;
+export type Leg = { seleccion?: Seleccion; push?: number; justa?: number | null; partido: string; metrica: string; mercado: string; prob: number; cuota: number; cal: string; cls: string; lo: number; hi: number };
+export type ResumenBoleto = { n: number; disponible: boolean; estado: string; advertencias: string[]; prob: number | null; cuota: number; ev: number | null; lo: number | null; hi: number | null; ev_lo: number | null; ev_hi: number | null; justa: number | null; mismo_partido: boolean } | null;
+export type Stake = { kelly: number | null; disponible: boolean; advertencia: string; sin_valor: boolean; banca: number; opciones: { nombre: string; fraccion: number; monto: number }[] } | null;
 export type Diccionario = { grupo: string; descripcion: string; items: { termino: string; definicion: string }[] }[];
 
 // ---------------------------------------------------------------- llamadas

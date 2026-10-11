@@ -47,6 +47,7 @@ export function HistorialEquipo({ v, p, lado }: { v: VistaPartido; p: Pata; lado
   const st = lado === "l" ? p.stats_local : p.stats_visitante;
   const serie = lado === "l" ? p.serie_l : p.serie_v;
   const hits = lado === "l" ? p.hl : p.hv;
+  const pushes = lado === "l" ? p.push_l : p.push_v;
   const col = lado === "l" ? p.col_l : p.col_v;
   const [refF, refC] = lado === "l" ? [ml.local, ml.visitante] : [ml.visitante, ml.local];
   const color = lado === "l" ? "var(--acc)" : "var(--vis)";
@@ -62,7 +63,7 @@ export function HistorialEquipo({ v, p, lado }: { v: VistaPartido; p: Pata; lado
   }
   return (
     <Card>
-      <Cabecera v={v} lado={lado} right={<div><span className="num text-[1.5rem]">{hits}/{h.length}</span> <span className="text-[0.78rem] text-mut font-semibold">cumplió</span></div>} />
+      <Cabecera v={v} lado={lado} right={<div><span className="num text-[1.5rem]">{hits}/{h.length}</span> <span className="text-[0.78rem] text-mut font-semibold">cumplió · {pushes} devoluciones</span></div>} />
       {chart}
       <div className="text-[0.72rem] text-mut2">{sub} · antiguo → reciente · C casa / F fuera</div>
       <div className="mt-3"><TablaStats st={st} linea={p.linea} over={p.over} refF={refF} refC={refC} refT={ml.total} /></div>
@@ -82,7 +83,7 @@ export function ListaPartidos({ v, p, lado }: { v: VistaPartido; p: Pata; lado: 
     const casa = g.condicion === "Casa";
     const [gf, gc] = casa ? [gl, gv] : [gv, gl];
     const res = gf > gc ? "g" : gf < gc ? "p" : "e";
-    return { g, ok: serie[i], gl, gv, casa, res, home: casa ? equipo : g.rival, away: casa ? g.rival : equipo };
+    return { g, ok: serie[i], push: (lado === "l" ? p.serie_push_l : p.serie_push_v)[i], gl, gv, casa, res, home: casa ? equipo : g.rival, away: casa ? g.rival : equipo };
   });
   const cuenta = (r: string) => filas.filter((f) => f.res === r).length;
   const forma = filas.map((f) => f.res).reverse();
@@ -102,12 +103,12 @@ export function ListaPartidos({ v, p, lado }: { v: VistaPartido; p: Pata; lado: 
           <div className={`flex-1 min-w-0 truncate ${f.casa ? "text-mut" : "font-extrabold"}`}>{f.away}</div>
           <div className={`w-[54px] shrink-0 text-right leading-tight ${f.ok ? "text-ok" : "text-mut2"}`}>
             {esCol(col) ? (
-              <><b className="text-[1.05rem]">{f.g[col]}</b><div className="text-[0.62rem]">{col === "total" ? `${f.g.a_favor}·${f.g.en_contra}` : v.metrica === "goles" ? "" : QUE[col]}</div></>
+              <><b className="text-[1.05rem]">{f.g[col]}{f.push ? " ↩" : ""}</b><div className="text-[0.62rem]">{col === "total" ? `${f.g.a_favor}·${f.g.en_contra}` : v.metrica === "goles" ? "" : QUE[col]}</div></>
             ) : <b className="text-[1.05rem]">{f.ok ? "✓" : "✗"}</b>}
           </div>
         </div>
       ))}
-      <Nota>Racha: antiguo → reciente. Marcador verde = ganó, rojo = perdió, gris = empate. Valor en verde = en ese partido se cumplió la pata.</Nota>
+      <Nota>Racha: antiguo → reciente. Marcador verde = ganó, rojo = perdió, gris = empate. Valor en verde = acierto. ↩ = devolución; no cuenta como acierto.</Nota>
     </Card>
   );
 }
@@ -117,7 +118,7 @@ export function GraficoModelo({ v, p }: { v: VistaPartido; p: Pata }) {
   const g = p.grafico, et = METRICAS[v.metrica].toLowerCase();
   if (g.tipo === "matriz") return <Matriz g={g} local={v.local} visitante={v.visitante} />;
   if (g.tipo === "diferencia") return <BarrasPoisson valores={g.valores} signo nota={`Diferencia de ${et}: ${v.local} menos ${v.visitante}, según Poisson. Positivo = más el local, negativo = más el visitante. Verde = gana la pata.`} />;
-  return <BarrasPoisson valores={g.valores} nota={`Probabilidad de cada cantidad de ${et}${p.grupo === "Total" ? " total" : " " + p.grupo} según Poisson. Verde = cantidades con las que gana la pata.`} />;
+  return <BarrasPoisson valores={g.valores} nota={`Probabilidad de cada cantidad de ${et}${p.grupo === "Total" ? " total" : " " + p.grupo} según Poisson. Verde = acierto; igualdad en línea entera = devolución. Masa visible ${pct(g.masa_visible, 1)}, sin renormalizar.`} />;
 }
 
 export function Chip({ estado, ratio, n_ef, condicion }: { estado: string; ratio: number; n_ef: number; condicion: string }) {

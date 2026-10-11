@@ -1,25 +1,5 @@
-"""
-modelo.py — Poisson (+ Dixon-Coles en goles) para cada par de columnas local/visitante de la BBDD.
-
-Misma logica que el Excel modelo_poisson_dixon_coles_laliga:
-  1. Cada partido pesa mas cuanto mas reciente (peso = exp(-XI * dias_atras)).
-  2. Por equipo: promedio ponderado de lo que hace y lo que concede, en casa y fuera.
-  3. Fuerza = promedio del equipo / promedio de la liga. El promedio del equipo se "encoge" hacia el de la liga
-     como si tuviera K_ENCOGE partidos extra al promedio (K_ENCOGE = 0 -> promedio puro, comportamiento anterior).
-  4. lambda_local = ataque_casa(local) * defensa_fuera(visitante) * promedio_liga_casa
-     lambda_visitante = ataque_fuera(visitante) * defensa_casa(local) * promedio_liga_fuera
-  5. Matriz de marcadores con Poisson; en goles se aplica la correccion Dixon-Coles (rho).
-  6. Rango bajo-alto de cada lambda: hasta donde puede estar equivocado el promedio del equipo por tener
-     pocos partidos o partidos muy dispares. Sobre el mismo vector de partidos (misma recencia):
-        n_ef = partidos efectivos (los viejos pesan menos)   media, desv = promedio y desviacion ponderados
-        rango = media +- t(0.90, n_ef - 1) * desv / sqrt(n_ef)    (cubre el 80%: percentiles 10 y 90)
-     El multiplicador t sube solo cuando hay pocos partidos (3 partidos 1.89, 21 partidos 1.33, muchos 1.28).
-     Ese error relativo se aplica a la lambda del partido. Es incertidumbre del promedio, distinta de la
-     varianza partido a partido, que ya esta en Poisson.
-  7. Pesimista / optimista de un mercado = el mismo Poisson con las lambdas del extremo que va en contra /
-     a favor de la pata (se evaluan las 4 esquinas bajo/alto de las dos lambdas y se toma min y max).
-
-Uso: python modelo.py "Real Madrid" "Barcelona"
+"""Poisson y Dixon-Coles con soporte dinámico y sensibilidad heurística.
+Los rangos propagan producción y concesión; su cobertura no está validada.
 """
 
 import math
@@ -28,18 +8,17 @@ import sys
 import numpy as np
 import pandas as pd
 from scipy.stats import t as t_student
+from scipy.stats import poisson as poisson_dist
+import probabilidades as pr
 
 RUTA_DATOS = "datos/bbdd_laliga.csv"
 XI = 0.005          # decaimiento por dia. 0.005 = un partido de hace 140 dias pesa la mitad
 RHO = -0.05         # Dixon-Coles, solo goles. Tipico -0.03 a -0.13; 0 = Poisson puro
-K_ENCOGE = 0        # encogimiento: cada equipo se calcula como si tuviera K partidos extra al promedio de la liga. 0 = promedio puro (comportamiento de la app publicada).
-                    # Evita fuerzas extremas con pocos partidos (lambda = 0 de un recien ascendido) y corrige el exceso de
-                    # confianza que mostro el backtest (backtest.py): con 0 el modelo decia 85% y acertaba 79%; con 10, 85%.
-                    # Se dejo en 0 (20/09/2026) para que el resultado sea identico al de Streamlit Cloud; subir a 10 lo reactiva.
-CONFIANZA = 0.90    # percentil superior del rango -> percentiles 10 y 90 (intervalo del 80%)
+K_ENCOGE = 0        # Mantiene las medias ponderadas sin encogimiento.
+CONFIANZA = 0.90    # Cuantil t usado como heurística; NO implica cobertura validada.
 PJ_MIN = 5          # partidos efectivos minimos en esa condicion para fiarse del rango -> si no, "pocos datos"
 CORTES_VAR = (0.8, 1.2)   # ancho relativo del equipo / mediana de la liga: < 0.8 estable, > 1.2 volatil
-K_MAX = {           # tamano de la matriz por metrica (hasta cuantos eventos por equipo)
+K_MAX = {           # soporte mínimo compatible; la cola determina el límite dinámico
     "goles": 10, "goles_1t": 8, "goles_2t": 8,
     "tiros": 35, "tiros_a_puerta": 18, "corners": 20, "faltas": 35, "amarillas": 10, "rojas": 4,
 }
@@ -82,6 +61,11 @@ def fuerzas(df: pd.DataFrame, metrica: str) -> pd.DataFrame:
     col_l, col_v, _ = METRICAS[metrica]
     d = df.dropna(subset=[col_l, col_v])
     w = d["peso"]
+    vals = d[[col_l, col_v]].to_numpy(dtype=float)
+    if d.empty or not np.isfinite(w).all() or (w <= 0).any():
+        raise ValueError("datos o pesos insuficientes/invalidos")
+    if not np.isfinite(vals).all() or (vals < 0).any() or (vals != np.floor(vals)).any():
+        raise ValueError("la métrica requiere conteos enteros, finitos y no negativos")
     prom_casa = np.average(d[col_l], weights=w)     # lo que hace un local promedio
     prom_fuera = np.average(d[col_v], weights=w)    # lo que hace un visitante promedio
 
@@ -102,8 +86,8 @@ def fuerzas(df: pd.DataFrame, metrica: str) -> pd.DataFrame:
         gc_fuera = media(fuera[col_l].values, wf, prom_casa)
         filas.append({
             "equipo": eq, "pj_casa": len(casa), "pj_fuera": len(fuera),
-            "ataque_casa": gf_casa / prom_casa, "defensa_casa": gc_casa / prom_fuera,
-            "ataque_fuera": gf_fuera / prom_fuera, "defensa_fuera": gc_fuera / prom_casa,
+            "ataque_casa": gf_casa / prom_casa if prom_casa > 0 else 1.0, "defensa_casa": gc_casa / prom_fuera if prom_fuera > 0 else 1.0,
+            "ataque_fuera": gf_fuera / prom_fuera if prom_fuera > 0 else 1.0, "defensa_fuera": gc_fuera / prom_casa if prom_casa > 0 else 1.0,
         })
     out = pd.DataFrame(filas).set_index("equipo")
     out.attrs["prom_casa"], out.attrs["prom_fuera"] = prom_casa, prom_fuera
@@ -111,6 +95,8 @@ def fuerzas(df: pd.DataFrame, metrica: str) -> pd.DataFrame:
 
 
 def lambdas(f: pd.DataFrame, local: str, visitante: str) -> tuple:
+    if local not in f.index or visitante not in f.index:
+        raise ValueError("equipo sin datos válidos para la métrica")
     lam_l = f.loc[local, "ataque_casa"] * f.loc[visitante, "defensa_fuera"] * f.attrs["prom_casa"]
     lam_v = f.loc[visitante, "ataque_fuera"] * f.loc[local, "defensa_casa"] * f.attrs["prom_fuera"]
     return float(lam_l), float(lam_v)
@@ -118,7 +104,9 @@ def lambdas(f: pd.DataFrame, local: str, visitante: str) -> tuple:
 
 # ------------------------------------------------------------------ matriz
 def poisson(lam: float, k: int) -> float:
-    return math.exp(-lam) * lam ** k / math.factorial(k)
+    if not math.isfinite(lam) or lam < 0 or not isinstance(k, (int, np.integer)) or k < 0:
+        raise ValueError("parámetros Poisson inválidos")
+    return float(poisson_dist.pmf(k, lam))
 
 
 def tau(x: int, y: int, lam_l: float, lam_v: float, rho: float) -> float:
@@ -135,14 +123,8 @@ def tau(x: int, y: int, lam_l: float, lam_v: float, rho: float) -> float:
 
 
 def matriz(lam_l: float, lam_v: float, k_max: int, dixon_coles: bool, rho: float = RHO) -> np.ndarray:
-    """Matriz P(local = fila, visitante = columna), normalizada para que sume 1."""
-    m = np.zeros((k_max + 1, k_max + 1))
-    for x in range(k_max + 1):
-        for y in range(k_max + 1):
-            m[x, y] = poisson(lam_l, x) * poisson(lam_v, y)
-            if dixon_coles:
-                m[x, y] *= tau(x, y, lam_l, lam_v, rho)
-    return m / m.sum()
+    """k_max es un mínimo compatible; la cola determina el soporte necesario."""
+    return pr.distribucion(lam_l, lam_v, dixon_coles, rho, k_max)[0]
 
 
 # ------------------------------------------------------------------ mercados
@@ -162,33 +144,51 @@ def mercados(m: np.ndarray, lineas: list) -> dict:
     return p
 
 
-def cuota_justa(prob: float) -> float:
-    return round(1 / prob, 2) if prob > 0 else float("inf")
+def cuota_justa(prob: float, push: float = 0.0):
+    if not math.isfinite(prob) or not math.isfinite(push) or not 0 <= prob <= 1 + 1e-14 or not 0 <= push <= 1 + 1e-14 or prob + push > 1 + 1e-14:
+        raise ValueError("probabilidad o devolución inválida")
+    if prob <= 0:
+        return None
+    cuota = max(prob, 1 - push) / prob
+    return round(cuota, 2) if math.isfinite(cuota) else None
 
 
 def analizar(df: pd.DataFrame, local: str, visitante: str, metrica: str, lineas: list = None, inc: pd.DataFrame = None) -> dict:
-    """inc = incertidumbre(df, metrica) (opcional). Si se pasa, el resultado trae "rango":
-    lam_l / lam_v = (bajo, alto), esquinas = {(bajo|alto local, bajo|alto visitante): matriz}."""
     f = fuerzas(df, metrica)
     lam_l, lam_v = lambdas(f, local, visitante)
-    _, _, dc = METRICAS[metrica]
-    m = matriz(lam_l, lam_v, K_MAX[metrica], dc)
+    dc = METRICAS[metrica][2]
+    rango = None
+    if inc is not None:
+        rl, tl = rango_componentes(inc, local, "casa", visitante, "fuera", lam_l, f.attrs["prom_casa"])
+        rv, tv = rango_componentes(inc, visitante, "fuera", local, "casa", lam_v, f.attrs["prom_fuera"])
+        # Dominio admisible de DC con rho negativo: ambas lambdas <= -1/rho.
+        if dc and RHO < 0:
+            rl = (rl[0], min(rl[1], -1 / RHO))
+            rv = (rv[0], min(rv[1], -1 / RHO))
+        k = max(pr.limite(rl[1]), pr.limite(rv[1]), K_MAX[metrica])
+        # Rejilla interior y central: empate y otros eventos no son monótonos.
+        puntos = sorted(set((float(a), float(b)) for a in np.linspace(*rl, 7)
+                            for b in np.linspace(*rv, 7)) | {(lam_l, lam_v)})
+        muestras = {point: pr.distribucion(*point, dc, RHO, k)[0] for point in puntos}
+        rango = {"lam_l": rl, "lam_v": rv, "esquinas": muestras,
+                 "metodo": "sensibilidad heurística en rejilla 7x7 y estimación central",
+                 "cobertura_validada": False, "componentes_local": tl, "componentes_visitante": tv,
+                 "dominio_dc": -1 / RHO if dc and RHO < 0 else None}
+    else:
+        k = K_MAX[metrica]
+    m, metadata = pr.distribucion(lam_l, lam_v, dc, RHO, k)
     if lineas is None:
         centro = round(lam_l + lam_v)
-        lineas = [centro - 1.5, centro - 0.5, centro + 0.5, centro + 1.5]
-        lineas = [ln for ln in lineas if ln > 0]
-    p = mercados(m, lineas)
+        lineas = [ln for ln in (centro - 1.5, centro - .5, centro + .5, centro + 1.5) if ln > 0]
     r = {"metrica": metrica, "lambda_local": lam_l, "lambda_visitante": lam_v,
-         "matriz": m, "mercados": p, "fuerzas": f}
-    if inc is not None:
-        rl, rv = rango_lambda(inc, local, "casa", lam_l), rango_lambda(inc, visitante, "fuera", lam_v)
-        esq = {(a, b): matriz(rl[a], rv[b], K_MAX[metrica], dc) for a in (0, 1) for b in (0, 1)}
-        r["rango"] = {"lam_l": rl, "lam_v": rv, "esquinas": esq}
+         "matriz": m, "mercados": mercados(m, lineas), "fuerzas": f, "distribucion": metadata}
+    if rango is not None:
+        r["rango"] = rango
     return r
 
 
 # ------------------------------------------------------------------ incertidumbre de la lambda
-def incertidumbre(df: pd.DataFrame, metrica: str) -> pd.DataFrame:
+def _inc_ofensiva(df: pd.DataFrame, metrica: str) -> pd.DataFrame:
     """Por equipo y condicion (casa / fuera), sobre lo que produce (a favor) con la misma recencia del modelo:
       n_ef   = (sum w)^2 / sum w^2   partidos efectivos
       media  = promedio ponderado      desv = desviacion ponderada (corregida por n_ef)
@@ -226,8 +226,45 @@ def incertidumbre(df: pd.DataFrame, metrica: str) -> pd.DataFrame:
     return out
 
 
+def incertidumbre(df: pd.DataFrame, metrica: str) -> pd.DataFrame:
+    out = _inc_ofensiva(df, metrica)
+    cl, cv, _ = METRICAS[metrica]
+    swap = df.copy()
+    swap[cl], swap[cv] = df[cv].values, df[cl].values
+    defensa = _inc_ofensiva(swap, metrica)
+    for col in defensa.columns:
+        out["def_" + col] = defensa[col]
+    return out
+
+
+def rango_componentes(inc, atacante, cond_a, defensor, cond_d, lam, referencia):
+    exposicion_liga = float(inc[f"n_ef_{cond_a}"].sum())
+    ref = referencia if referencia > 0 else -math.log(.1) / exposicion_liga
+    def componente(eq, cond, prefijo):
+        row = inc.loc[eq]
+        mean = float(row[f"{prefijo}media_{cond}"])
+        n = float(row[f"{prefijo}n_ef_{cond}"])
+        rel = float(row[f"{prefijo}rel_{cond}"])
+        if n == 0:
+            mean = referencia  # Mismo fallback que fuerzas(): media de liga.
+        # Cero observado: límite Poisson unilateral para cero eventos (exposición efectiva).
+        # Es un recurso de sensibilidad, no un IC validado para datos ponderados.
+        upper = mean * (1 + rel) if mean > 0 else -math.log(.1) / (n if n > 0 else exposicion_liga)
+        return {"equipo": eq, "condicion": cond, "media": mean, "n_ef": n,
+                "rango": (max(0.0, mean * (1 - rel)), upper),
+                "origen": "historial" if n > 0 else "referencia de liga sin historial"}
+    off = componente(atacante, cond_a, "")
+    deff = componente(defensor, cond_d, "def_")
+    # Liga sin eventos: no dividir por cero; referencia de sensibilidad de cero eventos.
+    lo = off["rango"][0] * deff["rango"][0] / ref
+    hi = off["rango"][1] * deff["rango"][1] / ref
+    return (min(lo, lam), max(hi, lam)), {"ataque": off, "defensa": deff,
+            "referencia_liga": referencia, "denominador_sensibilidad": ref,
+            "referencia_liga_fija": True}
+
+
 def rango_lambda(inc: pd.DataFrame, equipo: str, cond: str, lam: float) -> tuple:
-    """(bajo, alto) de la lambda del partido: el error relativo del promedio del equipo aplicado a su lambda."""
+    """Helper ofensivo legado. analizar() propaga ataque y defensa con rango_componentes."""
     rel = float(inc.loc[equipo, f"rel_{cond}"]) if equipo in inc.index else 1.0
     return max(lam * (1 - rel), 0.0), lam * (1 + rel)
 
@@ -275,4 +312,4 @@ def medias_liga(df: pd.DataFrame, metrica: str) -> dict:
 
 def prob_over(lam: float, linea: float, k_max: int = 60) -> float:
     """P(Poisson(lam) > linea) para lineas de un solo equipo."""
-    return 1 - sum(poisson(lam, k) for k in range(int(math.floor(linea)) + 1))
+    return float(poisson_dist.sf(math.floor(linea), lam))
