@@ -57,3 +57,21 @@ test("opciones no OU y línea adicional respetan motor", async ({ page }) => {
   await expect(page.getByRole("group", { name: "Líneas disponibles" })
     .getByRole("button", { name: "Línea " + linea })).toHaveAttribute("aria-pressed", "true");
 });
+
+
+test("navegación analítica sin desbordes en anchos representativos", async ({ page }) => {
+  await page.goto("/partido");
+  await expect(page.getByTestId("lambda-summary")).toBeVisible();
+  await page.getByRole("group", { name: "Grupo de mercados" })
+    .getByRole("button", { name: "Total" }).click();
+  for (const width of [375, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect(page.getByRole("group", { name: "Líneas disponibles" })).toBeVisible();
+    await expect(page.getByTestId("lambda-total")).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Cómo se distribuyen/ })).toBeVisible();
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
+      "Overflow horizontal a " + width + "px",
+    ).toBe(true);
+  }
+});
