@@ -31,9 +31,14 @@ export function Icono({ d, size = 22 }: { d: string; size?: number }) {
   );
 }
 const LINKS = [
-  { href: "/", nombre: "Inicio", icono: PATHS.home },
   { href: "/partido", nombre: "Analizar", icono: PATHS.ball },
+  { href: "/", nombre: "Explorar", icono: PATHS.home },
   { href: "/boleto", nombre: "Boleto", icono: PATHS.ticket },
+];
+const RECURSOS = [
+  { href: "/tabla", nombre: "Tabla de posiciones" },
+  { href: "/cara", nombre: "Cara a cara" },
+  { href: "/diccionario", nombre: "Cómo funciona y glosario" },
 ];
 
 function Apariencia() {
@@ -91,12 +96,7 @@ export function Header({ conClave }: { conClave?: boolean }) {
           aria-label="Navegación principal"
           className="hidden lg:flex items-center h-full gap-6 text-sm font-bold"
         >
-          {[
-            ...LINKS,
-            { href: "/tabla", nombre: "Tabla" },
-            { href: "/cara", nombre: "Cara a cara" },
-            { href: "/diccionario", nombre: "Cómo funciona" },
-          ].map((p) => (
+          {LINKS.map((p) => (
             <Link
               key={p.href}
               href={p.href}
@@ -111,6 +111,19 @@ export function Header({ conClave }: { conClave?: boolean }) {
               )}
             </Link>
           ))}
+          <details className="relative h-full flex items-center">
+            <summary className="list-none min-h-11 flex gap-2 items-center text-sm font-semibold text-mut hover:text-txt">
+              Más análisis <span aria-hidden="true">⌄</span>
+            </summary>
+            <div className="absolute top-[calc(100%_-_10px)] left-0 z-50 w-56 rounded-card border border-line bg-card shadow-lg p-2">
+              {RECURSOS.map((r) => (
+                <Link key={r.href} href={r.href}
+                  className="flex items-center min-h-11 rounded-lg px-3 text-sm font-semibold text-mut hover:bg-card2 hover:text-txt">
+                  {r.nombre}
+                </Link>
+              ))}
+            </div>
+          </details>
         </nav>
         <details className="relative ml-auto">
           <summary
@@ -225,11 +238,9 @@ export function BarraInferior() {
             ✕
           </button>
         </div>
-        {[
-          { href: "/tabla", name: "Tabla de posiciones" },
-          { href: "/cara", name: "Cara a cara" },
-          { href: "/diccionario", name: "Cómo funciona y glosario" },
-        ].map((l) => (
+        {RECURSOS.map((r) => {
+          const l = { href: r.href, name: r.nombre };
+          return (
           <Link
             key={l.href}
             href={l.href}
@@ -239,7 +250,8 @@ export function BarraInferior() {
             {l.name}
             <span aria-hidden="true">→</span>
           </Link>
-        ))}
+          );
+        })}
         <div className="mt-4">
           <Apariencia />
         </div>
