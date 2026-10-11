@@ -1,67 +1,170 @@
 "use client";
-// Cabecera de partido estilo app: escudo + nombre de cada equipo; tocas un equipo para cambiarlo.
 import { useEffect, useState } from "react";
 import { api, LIGAS, type VistaInicio } from "@/lib/api";
 import { useStore } from "@/lib/store";
 import { Crest, LigaLogo } from "./Crest";
-
-const cacheEquipos: Record<string, string[]> = {};
-
-/** Lista de equipos de la liga (se pide una vez por liga). */
+const cache: Record<string, { equipos: string[]; time: number }> = {};
+const pending: Record<string, Promise<string[]> | undefined> = {};
 export function useEquipos(liga: string) {
-  const [eq, setEq] = useState<{ liga: string; equipos: string[] }>({ liga, equipos: cacheEquipos[liga] ?? [] });
+  const [rev, setRev] = useState(0);
+  const [result, setResult] = useState<{
+    liga: string;
+    equipos: string[];
+    error: string | null;
+  }>({ liga: "", equipos: [], error: null });
   useEffect(() => {
-    if (cacheEquipos[liga]) { setEq({ liga, equipos: cacheEquipos[liga] }); return; }
-    let vivo = true;
-    api<VistaInicio>(`/liga/${liga}`).then((v) => { cacheEquipos[liga] = v.equipos; if (vivo) setEq({ liga, equipos: v.equipos }); }).catch(() => {});
-    return () => { vivo = false; };
-  }, [liga]);
-  return eq.liga === liga ? eq.equipos : cacheEquipos[liga] ?? [];
+    let live = true;
+    if (cache[liga] && Date.now() - cache[liga].time < 300000) {
+      setResult({ liga, equipos: cache[liga].equipos, error: null });
+      return;
+    }
+    pending[liga] ??= api<VistaInicio>(`/liga/${liga}`)
+      .then((v) => {
+        cache[liga] = { equipos: v.equipos, time: Date.now() };
+        return v.equipos;
+      })
+      .finally(() => {
+        delete pending[liga];
+      });
+    pending[liga]!.then((equipos) => {
+      if (live) setResult({ liga, equipos, error: null });
+    }).catch((e: Error) => {
+      if (live) setResult({ liga, equipos: [], error: e.message });
+    });
+    return () => {
+      live = false;
+    };
+  }, [liga, rev]);
+  return {
+    equipos: result.liga === liga ? result.equipos : [],
+    error: result.liga === liga ? result.error : null,
+    reintentar: () => {
+      delete cache[liga];
+      setRev((v) => v + 1);
+    },
+  };
 }
-
-/** Partido vigente de la liga (guardado o el de defecto) y cómo cambiarlo. */
 export function usePartido() {
   const { liga, partidos, setPartido } = useStore();
-  const equipos = useEquipos(liga);
-  const g = partidos[liga];
-  const local = g?.local && equipos.includes(g.local) ? g.local : equipos.includes("Real Madrid") ? "Real Madrid" : equipos[0] ?? "";
-  const otros = equipos.filter((e) => e !== local);
-  const visitante = g?.visitante && otros.includes(g.visitante) ? g.visitante : otros[0] ?? "";
+  const { equipos, error, reintentar } = useEquipos(liga);
+  const saved = partidos[liga];
+  const local =
+    saved?.local && equipos.includes(saved.local)
+      ? saved.local
+      : equipos.includes("Real Madrid")
+        ? "Real Madrid"
+        : (equipos[0] ?? "");
+  const others = equipos.filter((e) => e !== local);
+  const visitante =
+    saved?.visitante && others.includes(saved.visitante)
+      ? saved.visitante
+      : (others[0] ?? "");
   return {
-    equipos, local, visitante, listo: equipos.length > 1,
-    setLocal: (l: string) => setPartido(liga, { local: l, visitante: l === visitante ? equipos.find((e) => e !== l) ?? "" : visitante }),
+    equipos,
+    local,
+    visitante,
+    listo: equipos.length > 1,
+    error,
+    reintentar,
+    setLocal: (l: string) =>
+      setPartido(liga, {
+        local: l,
+        visitante:
+          l === visitante ? (equipos.find((e) => e !== l) ?? "") : visitante,
+      }),
     setVisitante: (v: string) => setPartido(liga, { local, visitante: v }),
   };
 }
-
-function Equipo({ liga, nombre, lado, opciones, onChange }: { liga: string; nombre: string; lado: "l" | "v"; opciones: string[]; onChange: (v: string) => void }) {
-  return (
-    <label className="relative flex-1 flex flex-col items-center gap-2 cursor-pointer min-w-0">
-      <Crest liga={liga} equipo={nombre} size={64} lado={lado} className="shadow-[0_8px_24px_rgba(0,0,0,.35)]" />
-      <span className="text-[0.95rem] font-extrabold text-center leading-tight px-1">{nombre}</span>
-      <span className={`text-[0.66rem] font-bold uppercase tracking-[0.08em] ${lado === "l" ? "text-acc" : "text-vis"}`}>{lado === "l" ? "Local" : "Visitante"} ▾</span>
-      <select className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" value={nombre} onChange={(e) => onChange(e.target.value)} aria-label={lado === "l" ? "Local" : "Visitante"}>
-        {opciones.map((e) => <option key={e} value={e}>{e}</option>)}
-      </select>
-    </label>
-  );
-}
-
 export function CabeceraPartido({ sub }: { sub?: React.ReactNode }) {
   const { liga } = useStore();
-  const { equipos, local, visitante, setLocal, setVisitante } = usePartido();
+  const {
+    equipos,
+    local,
+    visitante,
+    setLocal,
+    setVisitante,
+    error,
+    reintentar,
+  } = usePartido();
   return (
-    <section className="hero rounded-card px-3 pt-4 pb-3 my-2.5">
-      <div className="flex items-start gap-2">
-        <Equipo liga={liga} nombre={local} lado="l" opciones={equipos} onChange={setLocal} />
-        <div className="flex flex-col items-center pt-4 w-14 shrink-0">
-          <span className="num text-[1.4rem] text-mut2">vs</span>
+    <section
+      className="match-stripe rounded-card bg-card border border-line2 p-4 md:p-6 mb-5"
+      aria-label="Elegir enfrentamiento"
+    >
+      <div className="flex items-center gap-2 text-xs text-mut mb-5">
+        <LigaLogo liga={liga} size={20} />
+        <span className="font-semibold">{LIGAS[liga]}</span>
+        <span className="ml-auto text-[.7rem]">Selección manual</span>
+      </div>
+      <div className="grid grid-cols-[1fr_28px_1fr] items-start gap-2 md:gap-8">
+        {[
+          {
+            nombre: local,
+            label: "Local",
+            opciones: equipos,
+            change: setLocal,
+            lado: "l" as const,
+          },
+          {
+            nombre: visitante,
+            label: "Visitante",
+            opciones: equipos.filter((e) => e !== local),
+            change: setVisitante,
+            lado: "v" as const,
+          },
+        ].map((team, i) => (
+          <div
+            key={team.label}
+            className={i ? "col-start-3 row-start-1 min-w-0" : "min-w-0"}
+          >
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-3">
+              <Crest
+                liga={liga}
+                equipo={team.nombre}
+                size={64}
+                lado={team.lado}
+              />
+              <div className="min-w-0 text-center md:text-left">
+                <div className="eyebrow mb-1">{team.label}</div>
+                <div className="text-sm md:text-xl font-extrabold tracking-tight leading-snug min-h-10 md:min-h-7">
+                  {team.nombre || "Elige un equipo"}
+                </div>
+              </div>
+            </div>
+            <label className="block mt-3">
+              <span className="sr-only">Equipo {team.label.toLowerCase()}</span>
+              <select
+                disabled={!equipos.length}
+                className="ctl text-sm!"
+                value={team.nombre}
+                onChange={(e) => team.change(e.target.value)}
+                aria-label={`Equipo ${team.label.toLowerCase()}`}
+              >
+                <option value="" disabled>
+                  Elige un equipo
+                </option>
+                {team.opciones.map((e) => (
+                  <option key={e} value={e}>
+                    {e}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        ))}
+        <div className="col-start-2 row-start-1 text-mut text-xs font-bold pt-6 text-center">
+          VS
         </div>
-        <Equipo liga={liga} nombre={visitante} lado="v" opciones={equipos.filter((e) => e !== local)} onChange={setVisitante} />
       </div>
-      <div className="flex items-center justify-center gap-2 mt-3 text-[0.76rem] font-bold text-mut">
-        <LigaLogo liga={liga} size={18} /> {LIGAS[liga]}{sub && <span className="text-mut2">· {sub}</span>}
-      </div>
+      {sub && <div className="text-xs text-mut mt-4">{sub}</div>}
+      {error && (
+        <div role="alert" className="text-sm text-bad mt-3">
+          No pudimos cargar los equipos.{" "}
+          <button onClick={reintentar} className="underline min-h-11">
+            Reintentar equipos
+          </button>
+        </div>
+      )}
     </section>
   );
 }

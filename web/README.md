@@ -62,3 +62,19 @@ la web muestra las iniciales del equipo en un círculo de color.
 Cada `git push` vuelve a publicar las dos. El Action diario (6:00 am) actualiza los datos y también redespliega la API.
 
 Pendiente para después: el analista IA y el registro de uso (hoy siguen en `app.py` de Streamlit).
+
+## Pruebas del rediseño
+
+Instalar dependencias Python desde la raíz (`pip install -r requirements-dev.txt`) y web con `npm ci`. Ejecutar:
+
+```bash
+npm test
+npx tsc --noEmit --incremental false
+npm run build
+npx playwright install --with-deps chromium
+npm run test:e2e
+```
+
+Playwright inicia la API real en 8000 y el build web en 3100 con una contraseña exclusiva de pruebas. No modifica la autenticación de producción. Necesita `python` con las dependencias del proyecto en `PATH`. Puede reutilizar una API local existente; en CI inicia ambos servidores. Para Chromium del sistema, definir `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`.
+
+El informe y las capturas reales están en [Fase 4](../docs/FASE4_REDISENO_UX_UI.md). La selección de enfrentamientos sigue siendo manual. Los escudos pueden mostrar iniciales si la CDN no responde. La fuente se sirve desde `public/fonts`, con su licencia OFL.

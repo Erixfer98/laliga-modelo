@@ -1,48 +1,72 @@
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url("/fonts/plus-jakarta-sans-latin.woff2") format("woff2");
+}
 
-/* =====================================================================
-   PALETA Y FORMA DE KUOTA. Cambia estos valores y toda la app cambia.
-   acc = local y botones · vis = visitante · ok/bad/warn = verde/rojo/ámbar
-   ===================================================================== */
 :root {
-  --bg: #0a0d14;
-  --card: #141924;
-  --card2: #1b2231;
-  --line: #232b3b;
-  --line2: #1c2333;
-  --txt: #f2f4f8;
-  --mut: #98a2b6;
-  --mut2: #6f7a8f;
-  --acc: #3d7bff;
-  --vis: #b47cff;
-  --ok: #1fcf6e;
-  --bad: #ff5c5c;
-  --warn: #ffb020;
-  --miss: #2a3244;
-  --mark: #ffffff;
-  --barbg: #232b3b;
-  --radius: 20px;
-  color-scheme: dark;
-}
-
-/* Tema claro: se activa solo si el sistema lo pide o con <html data-theme="light"> */
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-    --bg: #f3f4f8; --card: #ffffff; --card2: #eef0f5; --line: #e3e6ee; --line2: #eceef4;
-    --txt: #0f1219; --mut: #5c6577; --mut2: #8a93a6; --acc: #2b62f0; --vis: #7c3aed;
-    --ok: #12994f; --bad: #d92d2d; --warn: #b96a00; --miss: #d5d9e2; --mark: #0f1219; --barbg: #e3e6ee;
-    color-scheme: light;
-  }
-}
-:root[data-theme="light"] {
-  --bg: #f3f4f8; --card: #ffffff; --card2: #eef0f5; --line: #e3e6ee; --line2: #eceef4;
-  --txt: #0f1219; --mut: #5c6577; --mut2: #8a93a6; --acc: #2b62f0; --vis: #7c3aed;
-  --ok: #12994f; --bad: #d92d2d; --warn: #b96a00; --miss: #d5d9e2; --mark: #0f1219; --barbg: #e3e6ee;
+  --bg: #f4f6f8;
+  --card: #fff;
+  --card2: #eef2f6;
+  --line: #cbd5e1;
+  --line2: #e2e8f0;
+  --txt: #101c2d;
+  --mut: #475569;
+  --mut2: #526277;
+  --acc: #1d4ed8;
+  --vis: #6d28d9;
+  --ok: #166534;
+  --bad: #b91c1c;
+  --warn: #92400e;
+  --miss: #cbd5e1;
+  --mark: #0f172a;
+  --barbg: #e2e8f0;
+  --radius: 16px;
   color-scheme: light;
 }
-
-/* Los colores de arriba como clases de Tailwind: bg-card, text-mut, border-line, ... */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b1018;
+    --card: #121a25;
+    --card2: #1b2635;
+    --line: #405065;
+    --line2: #2a3647;
+    --txt: #f1f5f9;
+    --mut: #b1bdce;
+    --mut2: #9aabc0;
+    --acc: #93b7ff;
+    --vis: #c4a7ff;
+    --ok: #86efac;
+    --bad: #fca5a5;
+    --warn: #fcd34d;
+    --miss: #405065;
+    --mark: #f1f5f9;
+    --barbg: #2a3647;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0b1018;
+  --card: #121a25;
+  --card2: #1b2635;
+  --line: #405065;
+  --line2: #2a3647;
+  --txt: #f1f5f9;
+  --mut: #b1bdce;
+  --mut2: #9aabc0;
+  --acc: #93b7ff;
+  --vis: #c4a7ff;
+  --ok: #86efac;
+  --bad: #fca5a5;
+  --warn: #fcd34d;
+  --miss: #405065;
+  --mark: #f1f5f9;
+  --barbg: #2a3647;
+  color-scheme: dark;
+}
 @theme inline {
   --color-bg: var(--bg);
   --color-card: var(--card);
@@ -60,11 +84,15 @@
   --color-miss: var(--miss);
   --color-mark: var(--mark);
   --color-barbg: var(--barbg);
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans:
+    "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, sans-serif;
   --radius-card: var(--radius);
 }
-
-html { -webkit-text-size-adjust: 100%; }
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: 130px;
+}
 body {
   background: var(--bg);
   color: var(--txt);
@@ -72,76 +100,208 @@ body {
   font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
 }
-
-/* números grandes estilo marcador */
-.num { font-weight: 800; line-height: 1; letter-spacing: -0.03em; }
-
-/* calificación de una pata */
-.tag { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 0.7rem; font-weight: 800; white-space: nowrap; letter-spacing: 0.01em; }
-.tag.exc { background: #14532d; color: #bbf7d0; }
-.tag.bue { background: #166534; color: #dcfce7; }
-.tag.reg { background: #78350f; color: #fde68a; }
-.tag.mal { background: #7f1d1d; color: #fecaca; }
-.tag.pes { background: #450a0a; color: #fca5a5; }
-
-/* controles nativos (select, input) con el mismo look que las tarjetas */
+button,
+a,
+input,
+select,
+summary {
+  -webkit-tap-highlight-color: transparent;
+}
+button:not(:disabled),
+summary {
+  cursor: pointer;
+}
+:focus-visible {
+  outline: 3px solid var(--acc);
+  outline-offset: 4px;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+.num {
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+.page-title {
+  font-size: clamp(1.55rem, 3vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1.15;
+}
+.eyebrow {
+  color: var(--mut);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
 .ctl {
-  width: 100%; min-height: 44px; padding: 8px 14px; border-radius: 14px;
-  background: var(--card2); color: var(--txt); border: 1px solid transparent; font-size: 0.92rem; font-weight: 600;
-  outline: none;
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--card2);
+  color: var(--txt);
+  border: 1px solid var(--line);
+  font-size: 16px;
+  font-weight: 600;
 }
-.ctl:focus { border-color: var(--acc); }
-select.ctl { appearance: none; -webkit-appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--mut) 50%), linear-gradient(135deg, var(--mut) 50%, transparent 50%);
-  background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%; background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; padding-right: 32px; }
-input[type="number"].ctl { -moz-appearance: textfield; }
-input[type="number"].ctl::-webkit-outer-spin-button, input[type="number"].ctl::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-
-/* tablas compactas de estadísticas */
-table.st { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
-table.st th { text-align: right; font-weight: 600; color: var(--mut2); padding: 6px 4px; border-bottom: 1px solid var(--line); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
-table.st th:first-child, table.st td:first-child { text-align: left; }
-table.st td { text-align: right; padding: 8px 4px; border-bottom: 1px solid var(--line2); }
-table.st tr:last-child td { border-bottom: none; }
-table.st tr.liga td { color: var(--mut); font-style: italic; }
-
-/* scroll horizontal sin barra visible (pills) */
-.scrollx { overflow-x: auto; scrollbar-width: none; }
-.scrollx::-webkit-scrollbar { display: none; }
-
-details > summary { list-style: none; cursor: pointer; }
-details > summary::-webkit-details-marker { display: none; }
-
-/* cabecera de partido: fondo con un brillo suave de los dos colores */
-.hero { background: radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--acc) 22%, transparent) 0%, transparent 55%),
-                    radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--vis) 22%, transparent) 0%, transparent 55%), var(--card); }
-.hero-ok { background: linear-gradient(135deg, color-mix(in srgb, var(--acc) 26%, transparent) 0%, transparent 60%), var(--card); }
-
-/* barra de navegación inferior: deja espacio a la barra del iPhone */
-.safe-b { padding-bottom: env(safe-area-inset-bottom); }
-
-/* ===== logo: la pelota entra dando botes y se aplasta al caer; "Ku" y "ta" tiemblan al recibirla ===== */
-.logo-anim .logo-pelota { animation: bola-entra 1.5s cubic-bezier(.3,.7,.4,1) both; transform-origin: 50% 100%; }
-.logo-anim .logo-bola { animation: bola-gira 1.5s linear both; transform-origin: 50% 50%; }
-.logo-anim .logo-ku { animation: logo-tiembla 0.5s ease-out 1.12s both; display: inline-block; transform-origin: 50% 100%; }
-.logo-anim .logo-ta { animation: logo-tiembla 0.5s ease-out 1.15s both; display: inline-block; transform-origin: 50% 100%; }
-@keyframes bola-entra {
-  0%   { transform: translate(3.2em, -2.5em) scale(1); opacity: 0; }
-  6%   { opacity: 1; }
-  24%  { transform: translate(2.2em, .1em) scale(1.2, .78); }
-  30%  { transform: translate(1.9em, -.2em) scale(.95, 1.08); }
-  46%  { transform: translate(1.15em, -1em) scale(1); }
-  62%  { transform: translate(.55em, .1em) scale(1.18, .8); }
-  67%  { transform: translate(.45em, -.1em) scale(.96, 1.06); }
-  78%  { transform: translate(.15em, -.35em) scale(1); }
-  88%  { transform: translate(0, .1em) scale(1.22, .74); }
-  94%  { transform: translate(0, .02em) scale(.96, 1.05); }
-  100% { transform: translate(0, .1em) scale(1); }
+select.ctl {
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--mut) 50%),
+    linear-gradient(135deg, var(--mut) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 50%,
+    calc(100% - 13px) 50%;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 32px;
 }
-@keyframes bola-gira { from { transform: rotate(0deg); } to { transform: rotate(-720deg); } }
-@keyframes logo-tiembla {
-  0%   { transform: translateY(0) scaleY(1); }
-  30%  { transform: translateY(.06em) scaleY(.88); }
-  60%  { transform: translateY(-.03em) scaleY(1.04); }
-  100% { transform: translateY(0) scaleY(1); }
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border: 1px solid var(--line2);
+  background: var(--card2);
+  color: var(--mut);
 }
-@media (prefers-reduced-motion: reduce) { .logo-anim .logo-pelota, .logo-anim .logo-bola, .logo-anim .logo-ku, .logo-anim .logo-ta { animation: none; } }
+.tag.exc,
+.tag.bue {
+  color: var(--ok);
+}
+.tag.reg {
+  color: var(--warn);
+}
+.tag.mal,
+.tag.pes {
+  color: var(--bad);
+}
+.primary {
+  background: #1d4ed8;
+  color: #fff;
+}
+.scrollx {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+.safe-b {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+table.st {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+table.st th {
+  text-align: right;
+  color: var(--mut);
+  padding: 10px 6px;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+table.st td {
+  text-align: right;
+  padding: 10px 6px;
+  border-bottom: 1px solid var(--line2);
+}
+table.st th:first-child,
+table.st td:first-child {
+  text-align: left;
+}
+table.st tr:last-child td {
+  border-bottom: 0;
+}
+table.st tr.liga td {
+  color: var(--mut);
+}
+.hero,
+.hero-ok {
+  background: var(--card);
+  border: 1px solid var(--line2);
+}
+.disclosure {
+  border: 1px solid var(--line2);
+  border-radius: var(--radius);
+  background: var(--card);
+  margin-top: 12px;
+  overflow: hidden;
+}
+.disclosure > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 56px;
+  padding: 16px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  list-style: none;
+}
+.disclosure > summary::after {
+  content: "+";
+  font-size: 1.2rem;
+  color: var(--mut);
+}
+.disclosure[open] > summary::after {
+  content: "−";
+}
+.disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+.disclosure-body {
+  padding: 0 16px 16px;
+}
+.prob-track {
+  display: flex;
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--barbg);
+}
+.prob-track span {
+  min-width: 0;
+}
+.prob-win {
+  background: #2563eb;
+}
+.prob-push {
+  background: #b45309;
+}
+.prob-loss {
+  background: #64748b;
+}
+.match-stripe {
+  border-top: 3px solid #2563eb;
+}
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  padding: 12px 20px;
+  background: var(--txt);
+  color: var(--bg);
+  border-radius: 8px;
+  transform: translateY(-200%);
+}
+.skip-link:focus {
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}
