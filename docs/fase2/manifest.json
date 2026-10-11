@@ -1,0 +1,157 @@
+{
+  "tipo": "retrospectivo_con_estadisticas_actuales; no replay as-of certificado",
+  "version_motor": "poisson-dc-v2",
+  "parametros": {
+    "XI": 0.005,
+    "RHO": -0.05,
+    "K_ENCOGE": 0,
+    "PJ_MIN": 5
+  },
+  "metricas": [
+    "goles",
+    "goles_1t",
+    "goles_2t",
+    "tiros",
+    "tiros_a_puerta",
+    "corners",
+    "amarillas",
+    "rojas"
+  ],
+  "holdout_desde": "2026-07-01",
+  "semilla_bootstrap": 20261010,
+  "bootstrap_replicas": 1000,
+  "logloss_epsilon_diagnostico": 1e-15,
+  "platt_isotonica_min_partidos": 100,
+  "platt_isotonica_min_clase": 20,
+  "embargo_calibracion_dias": 1,
+  "datos": [
+    {
+      "archivo": "datos/bbdd_bundesliga.csv",
+      "sha256": "75e0ea3df527f766b8a4026e943a6c6a72e8609c707c09b9c296d472271e085b",
+      "liga": "bundesliga",
+      "partidos": 333,
+      "desde": "2025-08-22",
+      "hasta": "2026-09-13",
+      "temporadas": {
+        "2025-26": 306,
+        "2026-27": 27
+      },
+      "cuotas_verificables": false,
+      "disponibilidad_historica_verificable": false
+    },
+    {
+      "archivo": "datos/bbdd_laliga.csv",
+      "sha256": "ad8ba593db49088cbcc40d50d391d86d5ee90ea8953d30af07e53ca79ec4348d",
+      "liga": "laliga",
+      "partidos": 439,
+      "desde": "2025-08-15",
+      "hasta": "2026-09-17",
+      "temporadas": {
+        "2025-26": 380,
+        "2026-27": 59
+      },
+      "cuotas_verificables": false,
+      "disponibilidad_historica_verificable": false
+    },
+    {
+      "archivo": "datos/bbdd_ligamx.csv",
+      "sha256": "fa2d3456be0df72acb2405c717488614fc7937bbb69d998d98a5d1389c132920",
+      "liga": "ligamx",
+      "partidos": 243,
+      "desde": "2026-01-09",
+      "hasta": "2026-09-19",
+      "temporadas": {
+        "Clausura 2026": 167,
+        "Apertura 2026": 76
+      },
+      "cuotas_verificables": false,
+      "disponibilidad_historica_verificable": false
+    },
+    {
+      "archivo": "datos/bbdd_ligue1.csv",
+      "sha256": "fad465efa75e6b5d32c28d7881b93715c12550a49bf3cd471e0aae4d4c8f5c19",
+      "liga": "ligue1",
+      "partidos": 342,
+      "desde": "2025-08-15",
+      "hasta": "2026-09-13",
+      "temporadas": {
+        "2025-26": 306,
+        "2026-27": 36
+      },
+      "cuotas_verificables": false,
+      "disponibilidad_historica_verificable": false
+    },
+    {
+      "archivo": "datos/bbdd_premier.csv",
+      "sha256": "5bbc5ac236fd26dd5815aa16dd6dfc36bb940c9d6380291a7dedaf64547e97b7",
+      "liga": "premier",
+      "partidos": 420,
+      "desde": "2025-08-15",
+      "hasta": "2026-09-14",
+      "temporadas": {
+        "2025-26": 380,
+        "2026-27": 40
+      },
+      "cuotas_verificables": false,
+      "disponibilidad_historica_verificable": false
+    },
+    {
+      "archivo": "datos/bbdd_seriea.csv",
+      "sha256": "d242ce61e3ca33ba83540c65e2fcbf0ce2065feb23cf964dc6e302aeb1cc9f8c",
+      "liga": "seriea",
+      "partidos": 420,
+      "desde": "2025-08-23",
+      "hasta": "2026-09-14",
+      "temporadas": {
+        "2025-26": 380,
+        "2026-27": 40
+      },
+      "cuotas_verificables": false,
+      "disponibilidad_historica_verificable": false
+    }
+  ],
+  "filas_mercados": 1423144,
+  "filas_comunes": 1423144,
+  "filas_conteos": 68000,
+  "codigo_sha256": {
+    "modelo.py": "3174ae9816314eb1faa9f8a352f30873e644122a709afc7395ff15afc71e0b02",
+    "probabilidades.py": "f04c3526a5218085c78a9a40710d2dc4454eb5c9d9e64fcd7c7c5132ae5e3183",
+    "kuota.py": "f884df424bdb930bb2e67c8d200b023c4920f2c2ab40feaf3d18ada4bd6f83d5",
+    "evaluacion/__init__.py": "a41b74e59dee9673e80079bf203c8f49c2df5902a4c8282023047af8a7d3a85b",
+    "evaluacion/__main__.py": "aa83bed32dc63f57f67a773d4d8c4da89835a1e5a0556a2b59434a6d68887344",
+    "evaluacion/calibradores.py": "c49923748939677e5d23fc0507eed442492538e5e60bc4b03e6a79eb29c8b0f0",
+    "evaluacion/datos.py": "f089493ed66e49c55bdb6dc176d68e12fbcab5436c96a0eeb56cb96940242608",
+    "evaluacion/mercados.py": "0fdbe0841817800251552468d9e30946dbf926a3d1b217834b40c5a4d0a6ab22",
+    "evaluacion/metricas.py": "f87ac375b54947352c2d9535c7cea6b1c7b92c68e14a4b1bf8763bce8ea84ccc",
+    "evaluacion/reportes.py": "84794daf60eb56b03a51bd3030ebe687faf43083b7f7a3930f907f351e0575b2",
+    "evaluacion/temporal.py": "dfe250e6ea4d9592dc214f1b190677e4f8a45fc4b9369d449a132dd93ad91c75"
+  },
+  "artefactos_sha256": {
+    "predicciones.csv.gz": "4394dee41309c115cb0b26f46308252fc1cb39b4bfee2ef2a53ba6ae10f4b51c",
+    "predicciones_conteos.csv.gz": "b86bc505558f79a2f9e4f3f5aadaa71a98d3805969c03a3ea7305d5e235d24d8",
+    "abstenciones.csv": "5f9b9cf42649de7545fff711f4b2db2580c8a0b26c8a4f005bf70964a59007cc"
+  },
+  "entorno": {
+    "python": "3.12.14",
+    "numpy": "2.5.4",
+    "pandas": "3.0.6",
+    "scipy": "1.18.1",
+    "matplotlib": "3.11.2"
+  },
+  "comando": {
+    "datos": [
+      "datos/bbdd_bundesliga.csv",
+      "datos/bbdd_laliga.csv",
+      "datos/bbdd_ligamx.csv",
+      "datos/bbdd_ligue1.csv",
+      "datos/bbdd_premier.csv",
+      "datos/bbdd_seriea.csv"
+    ],
+    "salida": "docs/fase2",
+    "procesos": 2,
+    "guardar_predicciones": false,
+    "reusar_predicciones": true
+  },
+  "cuotas_verificadas": false,
+  "calibracion_en_produccion": false
+}
