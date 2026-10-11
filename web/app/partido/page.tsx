@@ -1,13 +1,14 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
+  api,
   METRICAS,
   METRICA_CORTA,
   type Cfg,
   type VistaPartido,
 } from "@/lib/api";
-import { useApi } from "@/lib/useApi";
+import { useAnalisis } from "@/lib/useAnalisis";
 import { useStore } from "@/lib/store";
 import { identidadSeleccion } from "@/lib/selecciones";
 import { num, pct, signed } from "@/lib/fmt";
@@ -47,22 +48,34 @@ export default function Partido() {
   const [solo, setSolo] = useState(false);
   const [ajustes, setAjustes] = useState(false);
   const [precio, setPrecio] = useState({ key: "", value: "" });
+  const actual = useRef({ key: "", disponible: false });
+  const registro = useRef<AbortController | null>(null);
+  const [verificando, setVerificando] = useState("");
+  const contextoRegistro = JSON.stringify([clave, s, n, filtro]);
+  useEffect(() => () => registro.current?.abort(), [contextoRegistro]);
+  actual.current = { key: "", disponible: false };
   const [aviso, setAviso] = useState({ key: "", texto: "" });
   const {
-    data: v,
+    v,
+    mercado,
+    p: detalle,
     error,
     loading,
     reintentar,
-  } = useApi<VistaPartido>(listo ? `/liga/${liga}/partido` : null, {
-    local,
-    visitante,
-    met,
-    n,
-    filtro,
-    grupo: s.grupo,
-    pata: s.pata,
-    cfg: s.cfg ? JSON.stringify(s.cfg) : undefined,
-  });
+    detalle: estadoDetalle,
+  } = useAnalisis(
+    listo ? `/liga/${liga}/partido` : null,
+    {
+      local,
+      visitante,
+      met,
+      n,
+      filtro,
+      cfg: s.cfg ? JSON.stringify(s.cfg) : undefined,
+    },
+    s.grupo,
+    s.pata,
+  );
   const cabecera = (
     <>
       <div className="flex justify-between items-end mb-5">
@@ -113,12 +126,12 @@ export default function Partido() {
       </>
     );
   const grupo = s.grupo && v.grupos.includes(s.grupo) ? s.grupo : v.grupos[0];
-  const p = v.pata;
+  const p = mercado!;
   const lista = v.mercados.filter(
     (m) => m.grupo === grupo && (!solo || m.cls === "exc" || m.cls === "bue"),
   );
   const conLineas = !["Resultado", "Mayor número"].includes(grupo);
-  const [centro, rango] = v.cfg[grupo] ?? [0.5, 1];
+  const [centro, rango] = (s.cfg ?? v.cfg)[grupo] ?? [0.5, 1];
   const quoteKey = `${clave}|${p.mercado}`;
   const cuota = precio.key === quoteKey ? precio.value : "";
   const cuotaN = Number(cuota) || 0;
@@ -140,30 +153,88 @@ export default function Partido() {
   const cambiarLineas = (c: number, r: number) =>
     setSel({
       clave,
-      cfg: { ...v.cfg, [grupo]: [c, r] },
+      cfg: { ...(s.cfg ?? v.cfg), [grupo]: [c, r] },
       grupo,
       pata: undefined,
     });
-  const agregar = () => {
-    if (!cuotaValida || loading || duplicada) return;
-    addLeg({
-      partido: v.partido,
-      metrica: METRICAS[met],
-      mercado: p.mercado,
-      prob: p.prob,
-      cuota: cuotaN,
-      cal: p.tag,
-      cls: p.cls,
-      lo: p.lo,
-      hi: p.hi,
-      push: p.push,
-      justa: p.justa,
-      seleccion: p.seleccion,
-    });
-    setAviso({
-      key: quoteKey,
-      texto: "Selección añadida. Puedes revisarla en tu boleto.",
-    });
+  const registroKey = JSON.stringify([
+    contextoRegistro,
+    p.mercado,
+    v.data_version,
+    cuota,
+  ]);
+  actual.current = {
+    key: registroKey,
+    disponible:
+      cuotaValida &&
+      !loading &&
+      !duplicada &&
+      !estadoDetalle.error &&
+      !estadoDetalle.loading,
+  };
+  const agregar = async () => {
+    if (
+      !cuotaValida ||
+      loading ||
+      duplicada ||
+      estadoDetalle.error ||
+      estadoDetalle.loading
+    )
+      return;
+    if (verificando === registroKey) return;
+    const controller = new AbortController();
+    registro.current?.abort();
+    registro.current = controller;
+    setVerificando(registroKey);
+    try {
+      await api(
+        `/liga/${liga}/partido`,
+        {
+          local,
+          visitante,
+          met,
+          modo: "version",
+          data_version: v.data_version,
+        },
+        controller.signal,
+      );
+      if (
+        controller.signal.aborted ||
+        actual.current.key !== registroKey ||
+        !actual.current.disponible
+      )
+        return;
+      addLeg({
+        partido: v.partido,
+        metrica: METRICAS[met],
+        mercado: p.mercado,
+        prob: p.prob,
+        cuota: cuotaN,
+        cal: p.tag,
+        cls: p.cls,
+        lo: p.lo,
+        hi: p.hi,
+        push: p.push,
+        justa: p.justa,
+        seleccion: p.seleccion,
+      });
+      setAviso({
+        key: quoteKey,
+        texto: "Selección añadida. Puedes revisarla en tu boleto.",
+      });
+    } catch (e) {
+      if (!controller.signal.aborted && actual.current.key === registroKey) {
+        setAviso({
+          key: quoteKey,
+          texto: (e as Error).message.includes("409")
+            ? "El análisis cambió antes de añadir. Actualiza los datos e inténtalo de nuevo."
+            : "No pudimos verificar la selección. Inténtalo de nuevo.",
+        });
+        reintentar();
+      }
+    } finally {
+      setVerificando((previous) => (previous === registroKey ? "" : previous));
+    }
   };
   return (
     <>
@@ -174,6 +245,11 @@ export default function Partido() {
             titulo="Mercados"
             desc="Probabilidades del modelo para cada mercado. La calificación orientativa mezcla 60% probabilidad y 40% cumplimiento histórico; la volatilidad puede reducirla. No representa rentabilidad ni garantía de acierto."
           >
+            {loading && (
+              <p role="status" className="text-xs text-mut">
+                Actualizando mercados…
+              </p>
+            )}
             <Pills
               label="Grupo de mercados"
               opciones={v.grupos}
@@ -278,6 +354,7 @@ export default function Partido() {
                 return (
                   <button
                     key={m.mercado}
+                    disabled={loading}
                     aria-pressed={active}
                     onClick={() =>
                       setSel({ clave, cfg: s.cfg, grupo, pata: m.mercado })
@@ -347,7 +424,7 @@ export default function Partido() {
                 className="num text-5xl text-acc"
                 data-testid="probabilidad-seleccionada"
               >
-                {pct(p.prob, 1)}
+                {loading ? "…" : pct(p.prob, 1)}
               </span>
               <span className="text-xs text-mut mb-1">
                 de acierto
@@ -441,7 +518,14 @@ export default function Partido() {
               )}
               <Btn
                 primary
-                disabled={!cuotaValida || loading || duplicada}
+                disabled={
+                  !cuotaValida ||
+                  loading ||
+                  duplicada ||
+                  !!estadoDetalle.error ||
+                  estadoDetalle.loading ||
+                  verificando === registroKey
+                }
                 onClick={agregar}
                 className="w-full mt-4"
               >
@@ -477,7 +561,20 @@ export default function Partido() {
         </aside>
       </div>
       <div className="lg:max-w-[calc(63%_-_12px)] mt-6">
-        {" "}
+        {estadoDetalle.loading && (
+          <p role="status" className="text-xs text-mut">
+            Actualizando detalle histórico…
+          </p>
+        )}
+        {estadoDetalle.error && (
+          <ErrorBox
+            error={estadoDetalle.error}
+            reintentar={() => {
+              reintentar();
+              estadoDetalle.reintentar();
+            }}
+          />
+        )}{" "}
         <details className="disclosure">
           <summary>Historial y comparación de equipos</summary>
           <div className="disclosure-body">
@@ -488,21 +585,21 @@ export default function Partido() {
                 : "local en casa y visitante fuera"}
               . Es contexto histórico, no una probabilidad futura.
             </p>
-            <HistorialEquipo v={v} p={p} lado="l" />
-            <HistorialEquipo v={v} p={p} lado="v" />
+            {detalle && <HistorialEquipo v={v} p={detalle} lado="l" />}
+            {detalle && <HistorialEquipo v={v} p={detalle} lado="v" />}
           </div>
         </details>
         <details className="disclosure">
           <summary>Partido a partido</summary>
           <div className="disclosure-body">
-            <ListaPartidos v={v} p={p} lado="l" />
-            <ListaPartidos v={v} p={p} lado="v" />
+            {detalle && <ListaPartidos v={v} p={detalle} lado="l" />}
+            {detalle && <ListaPartidos v={v} p={detalle} lado="v" />}
           </div>
         </details>
         <details className="disclosure">
           <summary>Distribución de resultados</summary>
           <div className="disclosure-body">
-            <GraficoModelo v={v} p={p} />
+            {detalle && <GraficoModelo v={v} p={detalle} />}
           </div>
         </details>
         <details className="disclosure">
@@ -562,13 +659,15 @@ export default function Partido() {
         <a
           href="#seleccion"
           className="flex items-center gap-3 min-h-[60px]"
-          aria-label={`Ver selección: ${p.mercado}, ${pct(p.prob, 1)}`}
+          aria-label={`Ver selección: ${p.mercado}, ${loading ? "…" : pct(p.prob, 1)}`}
         >
           <div className="flex-1 min-w-0">
             <div className="text-[.65rem] text-mut">Tu selección</div>
             <div className="font-bold text-xs truncate mt-1">{p.mercado}</div>
           </div>
-          <div className="num text-xl text-acc">{pct(p.prob, 1)}</div>
+          <div className="num text-xl text-acc">
+            {loading ? "…" : pct(p.prob, 1)}
+          </div>
           <span className="text-xs text-mut">Ver →</span>
         </a>
       </div>

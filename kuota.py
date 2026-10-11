@@ -226,7 +226,7 @@ def cfg_defecto(lam_l: float, lam_v: float, met: str, local: str, visitante: str
             local: [centro_defecto(lam_l, met), 1], visitante: [centro_defecto(lam_v, met), 1]}
 
 
-def mercados(r: dict, met: str, local: str, visitante: str, cfg: dict) -> list:
+def mercados(r: dict, met: str, local: str, visitante: str, cfg: dict, _memo=None) -> list:
     """Mercados y liquidaciones en el mismo soporte. Lo/hi son extremos de la
     rejilla de sensibilidad que incluye el centro, sin cobertura validada."""
     m = r["matriz"]
@@ -234,16 +234,18 @@ def mercados(r: dict, met: str, local: str, visitante: str, cfg: dict) -> list:
     out = []
 
     def add(nombre, grupo, col_l, col_v, linea, over, regla):
-        win, push = pr.liquidacion(regla, m.shape[0]-1)
-        ps = [pr.prob_evento(e, win) for e in muestras]
-        pushes = [pr.prob_evento(e, push) for e in muestras]
-        p, pp = pr.prob_evento(m, win), pr.prob_evento(m, push)
-        out.append({"mercado": nombre, "grupo": grupo, "prob": p, "push": pp, "loss": max(0., 1-p-pp),
-                    "lo": min(ps), "hi": max(ps), "push_lo": min(pushes), "push_hi": max(pushes),
-                    "justa": mo.cuota_justa(p, pp), "regla": regla,
-                    "escenarios": [{"prob": pw, "push": pu} for pw, pu in zip(ps, pushes)],
-                    "col_l": col_l, "col_v": col_v, "linea": linea, "over": over,
-                    "region": lambda x, y, win=win: bool(win[x, y])})
+        def calcular():
+            win, push = pr.liquidacion(regla, m.shape[0]-1)
+            ps = [pr.prob_evento(e, win) for e in muestras]
+            pushes = [pr.prob_evento(e, push) for e in muestras]
+            p, pp = pr.prob_evento(m, win), pr.prob_evento(m, push)
+            return {"mercado": nombre, "grupo": grupo, "prob": p, "push": pp, "loss": max(0., 1-p-pp),
+                        "lo": min(ps), "hi": max(ps), "push_lo": min(pushes), "push_hi": max(pushes),
+                        "justa": mo.cuota_justa(p, pp), "regla": regla,
+                        "escenarios": [{"prob": pw, "push": pu} for pw, pu in zip(ps, pushes)],
+                        "col_l": col_l, "col_v": col_v, "linea": linea, "over": over,
+                        "region": lambda x, y, win=win: bool(win[x, y]), "_mascara": win}
+        out.append(dict(_memo(regla, calcular) if _memo else calcular()))
 
     def resultado(nombre, grupo, col_l, col_v, lado):
         add(nombre, grupo, col_l, col_v, .5, True, {"tipo": "resultado", "lado": lado})
@@ -274,10 +276,10 @@ def mercados(r: dict, met: str, local: str, visitante: str, cfg: dict) -> list:
 
 
 # ================================================================== analisis de un partido
-def analizar_partido(df: pd.DataFrame, local: str, visitante: str, met: str, inc: pd.DataFrame, cfg: dict = None) -> dict:
+def analizar_partido(df: pd.DataFrame, local: str, visitante: str, met: str, inc: pd.DataFrame, cfg: dict = None, _modelo: dict = None, _memo=None) -> dict:
     """Todo lo que el modelo dice de un partido en una metrica: lambdas con su rango heurístico, varianza de cada equipo vs liga,
     medias de la liga, lineas (cfg) y la lista de mercados con prob / pesimista / optimista. inc = incertidumbre(df, met)."""
-    r = mo.analizar(df, local, visitante, met, inc=inc)
+    r = mo.analizar(df, local, visitante, met, inc=inc) if _modelo is None else _modelo
     lam_l, lam_v = r["lambda_local"], r["lambda_visitante"]
     (ll, lh), (vl, vh) = r["rango"]["lam_l"], r["rango"]["lam_v"]
     if cfg is None:
@@ -294,7 +296,7 @@ def analizar_partido(df: pd.DataFrame, local: str, visitante: str, met: str, inc
         if not isinstance(amplitud, (int, float)) or not float(amplitud).is_integer() or not 0 <= amplitud <= 10:
             raise ValueError("amplitud de líneas debe ser un entero entre 0 y 10")
     cfg = {key: [float(value[0]), int(value[1])] for key, value in cfg.items()}
-    lst = mercados(r, met, local, visitante, cfg)
+    lst = mercados(r, met, local, visitante, cfg, _memo=_memo)
     for mk in lst:
         mk["seleccion"] = {"liga": df.attrs.get("liga"), "local": local, "visitante": visitante,
                            "metrica": met, "regla": mk["regla"], "version": pr.VERSION}
@@ -556,17 +558,27 @@ def vista_cara(df: pd.DataFrame, liga: str, local: str, visitante: str, solo_cas
     return {"liga": liga, "nombre": LIGAS.get(liga, liga), **cc, "contexto_ia": contexto_cara(LIGAS.get(liga, liga), cc, legs or [])}
 
 
-def vista_partido(df: pd.DataFrame, liga: str, local: str, visitante: str, met: str, inc: pd.DataFrame = None, cfg: dict = None,
-                  n: int = 5, filtro: str = "Todos", sel: str = None, legs: list = None, grupo: str = None) -> dict:
-    """Armar + Analizar en un solo paquete: mercados de todos los grupos ya evaluados con los ultimos n partidos
-    (filtro "Como jugarán" = local en casa / visitante fuera) y el detalle de la pata `sel` (grafico del modelo,
-    historial y estadisticas de cada equipo). Si `sel` no existe, se toma el primer mercado del `grupo` (o el primero de todos)."""
+def preparar_partido(df, local, visitante, met, inc, cfg=None, n=5, filtro="Todos", _modelo=None, _memo=None):
+    """Estado reutilizable. Los consumidores no deben mutar los objetos compartidos."""
     inc = incertidumbre(df, met) if inc is None else inc
-    an = analizar_partido(df, local, visitante, met, inc, cfg)
-    nombre_liga = LIGAS.get(liga, liga); partido = f"{local} vs {visitante} ({nombre_liga})"
+    an = analizar_partido(df, local, visitante, met, inc, cfg, _modelo=_modelo, _memo=_memo)
     cond_l, cond_v = ("Casa", "Fuera") if filtro != "Todos" else (None, None)
     hl, hv = historial(df, local, met, n, cond_l), historial(df, visitante, met, n, cond_v)
     evaluados = [{**mk, **evaluar(mk, hl, hv, an["vol"])} for mk in an["mercados"]]
+    return an, hl, hv, evaluados
+
+
+def vista_partido(df: pd.DataFrame, liga: str, local: str, visitante: str, met: str, inc: pd.DataFrame = None, cfg: dict = None,
+                  n: int = 5, filtro: str = "Todos", sel: str = None, legs: list = None, grupo: str = None, _preparado=None, modo="completo") -> dict:
+    """Armar + Analizar en un solo paquete: mercados de todos los grupos ya evaluados con los ultimos n partidos
+    (filtro "Como jugarán" = local en casa / visitante fuera) y el detalle de la pata `sel` (grafico del modelo,
+    historial y estadisticas de cada equipo). Si `sel` no existe, se toma el primer mercado del `grupo` (o el primero de todos)."""
+    an, hl, hv, evaluados = preparar_partido(df, local, visitante, met, inc, cfg, n, filtro) if _preparado is None else _preparado
+    nombre_liga = LIGAS.get(liga, liga); partido = f"{local} vs {visitante} ({nombre_liga})"
+    base = {k: v for k, v in an.items() if k not in ("mercados", "matriz")}
+    if modo == "resumen":
+        return {"liga": liga, "nombre_liga": nombre_liga, "partido": partido, **base,
+                "n": n, "filtro": filtro, "mercados": evaluados}
     nombres = [x["mercado"] for x in evaluados]
     if sel not in nombres:
         del_grupo = [x["mercado"] for x in evaluados if x["grupo"] == grupo]
@@ -575,6 +587,8 @@ def vista_partido(df: pd.DataFrame, liga: str, local: str, visitante: str, met: 
     detalle = {**mk, "grafico": grafico_modelo(an["matriz"], mk, met),
                "historial_local": historial_json(hl), "historial_visitante": historial_json(hv),
                "stats_local": stats_historial(hl, mk["linea"], mk["over"]), "stats_visitante": stats_historial(hv, mk["linea"], mk["over"])}
+    if modo == "detalle":
+        return detalle
     base = {k: v for k, v in an.items() if k not in ("mercados", "matriz")}
     return {"liga": liga, "nombre_liga": nombre_liga, "partido": partido, **base, "n": n, "filtro": filtro, "mercados": evaluados, "pata": detalle,
             "boleto": resumen_boleto(legs or []),

@@ -1,0 +1,642 @@
+[
+  {
+    "width": 390,
+    "kind": "mercado",
+    "ms": 1590.3364010000005,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "mercado",
+    "ms": 1599.7029500000008,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "mercado",
+    "ms": 1565.5391840000011,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "mercado",
+    "ms": 1651.3612999999987,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "mercado",
+    "ms": 1367.1770540000034,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "mercado",
+    "ms": 1366.7741709999973,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "mercado",
+    "ms": 579.7528979999988,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "mercado",
+    "ms": 1034.433140000001,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "mercado",
+    "ms": 766.2451050000018,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "mercado",
+    "ms": 515.2839920000006,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "grupo",
+    "ms": 537.5123109999986,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "grupo",
+    "ms": 534.4231069999987,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "grupo",
+    "ms": 681.6404360000015,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "grupo",
+    "ms": 1066.2400039999993,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "grupo",
+    "ms": 1032.4825410000012,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "grupo",
+    "ms": 1068.9970169999979,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "grupo",
+    "ms": 999.9521050000003,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "grupo",
+    "ms": 997.2057419999983,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "grupo",
+    "ms": 532.9983920000013,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "grupo",
+    "ms": 616.4105009999985,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "linea",
+    "ms": 1006.000172,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "linea",
+    "ms": 571.6581990000013,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "linea",
+    "ms": 524.5483810000005,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "linea",
+    "ms": 563.834766,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "linea",
+    "ms": 739.8771460000062,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "linea",
+    "ms": 534.5335880000057,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "linea",
+    "ms": 594.4332520000025,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "linea",
+    "ms": 835.4506299999994,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "linea",
+    "ms": 508.52380500000436,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "linea",
+    "ms": 582.0026599999983,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "metrica",
+    "ms": 940.5578410000016,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "metrica",
+    "ms": 932.6139749999929,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "metrica",
+    "ms": 973.2697400000034,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "metrica",
+    "ms": 1424.7061160000012,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "metrica",
+    "ms": 1000.8936059999978,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "metrica",
+    "ms": 965.0123319999984,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "metrica",
+    "ms": 901.5001080000002,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "metrica",
+    "ms": 931.9240409999984,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "metrica",
+    "ms": 416.260113999997,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 390,
+    "kind": "metrica",
+    "ms": 901.902141999999,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "mercado",
+    "ms": 1231.4345210000029,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "mercado",
+    "ms": 1164.2021440000026,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "mercado",
+    "ms": 1132.2650490000015,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "mercado",
+    "ms": 569.7053060000035,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "mercado",
+    "ms": 497.89502000000357,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "mercado",
+    "ms": 498.55099500000506,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "mercado",
+    "ms": 1000.7999469999995,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "mercado",
+    "ms": 965.0242699999944,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "mercado",
+    "ms": 950.2491549999977,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "mercado",
+    "ms": 632.8112760000004,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "grupo",
+    "ms": 1018.5324539999929,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "grupo",
+    "ms": 981.3914919999952,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "grupo",
+    "ms": 550.4868360000037,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "grupo",
+    "ms": 487.85141999999905,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "grupo",
+    "ms": 979.4478450000024,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "grupo",
+    "ms": 1081.8525119999904,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "grupo",
+    "ms": 1032.2892690000008,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "grupo",
+    "ms": 1049.7079080000112,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "grupo",
+    "ms": 1101.4518110000063,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "grupo",
+    "ms": 1164.7222360000014,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "linea",
+    "ms": 1070.0309080000006,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "linea",
+    "ms": 1038.5807080000086,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "linea",
+    "ms": 1650.12391699999,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "linea",
+    "ms": 624.8729949999979,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "linea",
+    "ms": 1204.1633120000042,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "linea",
+    "ms": 566.6897540000064,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "linea",
+    "ms": 1220.5067069999932,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "linea",
+    "ms": 1132.3307280000008,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "linea",
+    "ms": 1315.9392490000027,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "linea",
+    "ms": 575.7333870000002,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "metrica",
+    "ms": 932.4752429999935,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "metrica",
+    "ms": 935.3397289999994,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "metrica",
+    "ms": 945.490942000004,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "metrica",
+    "ms": 1035.470816999994,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "metrica",
+    "ms": 947.4344589999964,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "metrica",
+    "ms": 1018.276503000001,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "metrica",
+    "ms": 963.9913039999956,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "metrica",
+    "ms": 934.5642249999946,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "metrica",
+    "ms": 898.7702260000078,
+    "requests": [
+      "completo"
+    ]
+  },
+  {
+    "width": 1440,
+    "kind": "metrica",
+    "ms": 1016.1061429999972,
+    "requests": [
+      "completo"
+    ]
+  }
+]

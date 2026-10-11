@@ -121,9 +121,11 @@ test("historial de mercados identifica ambos equipos y distingue partido de part
   await page.route("**/liga/laliga/partido?**", async (route) => {
     const response = await route.fetch();
     const v = await response.json();
-    for (const m of v.mercados)
+    for (const m of v.mercados ?? [])
       Object.assign(m, { hl: 1, nl: 1, hv: 0, nv: 1 });
-    Object.assign(v.pata, { hl: 1, nl: 1, hv: 0, nv: 1 });
+    if (v.pata) Object.assign(v.pata, { hl: 1, nl: 1, hv: 0, nv: 1 });
+    if (new URL(route.request().url()).searchParams.get("modo") === "detalle")
+      Object.assign(v, { hl: 1, nl: 1, hv: 0, nv: 1 });
     await route.fulfill({ response, json: v });
   });
   await page.reload();

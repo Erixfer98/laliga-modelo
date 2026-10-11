@@ -1,0 +1,762 @@
+[
+  {
+    "visible_ms": 26.800000000745058,
+    "width": 390,
+    "kind": "mercado",
+    "ms": 385.5423180000016,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 40.90000000037253,
+    "width": 390,
+    "kind": "mercado",
+    "ms": 246.41066900000078,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 29.300000000745058,
+    "width": 390,
+    "kind": "mercado",
+    "ms": 155.13583500000095,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 33.799999999813735,
+    "width": 390,
+    "kind": "mercado",
+    "ms": 230.83568100000048,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 31.90000000037253,
+    "width": 390,
+    "kind": "mercado",
+    "ms": 180.02538900000036,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 25.899999999441206,
+    "width": 390,
+    "kind": "mercado",
+    "ms": 184.32271599999876,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 30.899999999441206,
+    "width": 390,
+    "kind": "mercado",
+    "ms": 201.58591499999966,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 25.5,
+    "width": 390,
+    "kind": "mercado",
+    "ms": 238.46940600000016,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 43.59999999962747,
+    "width": 390,
+    "kind": "mercado",
+    "ms": 209.8676290000003,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 36.60000000055879,
+    "width": 390,
+    "kind": "mercado",
+    "ms": 167.80129400000078,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 40.799999999813735,
+    "width": 390,
+    "kind": "grupo",
+    "ms": 230.6297169999998,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 51.10000000055879,
+    "width": 390,
+    "kind": "grupo",
+    "ms": 200.76095799999894,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 53.30000000074506,
+    "width": 390,
+    "kind": "grupo",
+    "ms": 221.93174100000033,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 42.69999999925494,
+    "width": 390,
+    "kind": "grupo",
+    "ms": 189.54355999999825,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 163.20000000018626,
+    "width": 390,
+    "kind": "grupo",
+    "ms": 297.2753279999997,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 54.69999999925494,
+    "width": 390,
+    "kind": "grupo",
+    "ms": 230.31668899999931,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 52.30000000074506,
+    "width": 390,
+    "kind": "grupo",
+    "ms": 230.7124700000022,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 35.90000000037253,
+    "width": 390,
+    "kind": "grupo",
+    "ms": 184.20072300000174,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 44,
+    "width": 390,
+    "kind": "grupo",
+    "ms": 193.28783599999952,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 34.299999999813735,
+    "width": 390,
+    "kind": "grupo",
+    "ms": 168.183943,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 441.80000000074506,
+    "width": 390,
+    "kind": "linea",
+    "ms": 505.853664000002,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 412.20000000018626,
+    "width": 390,
+    "kind": "linea",
+    "ms": 518.3607110000012,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 263.20000000018626,
+    "width": 390,
+    "kind": "linea",
+    "ms": 365.01047599999947,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 282.69999999925494,
+    "width": 390,
+    "kind": "linea",
+    "ms": 399.64017599999715,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 205.30000000074506,
+    "width": 390,
+    "kind": "linea",
+    "ms": 283.513382000001,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 264.29999999981374,
+    "width": 390,
+    "kind": "linea",
+    "ms": 353.9987880000008,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 296.5,
+    "width": 390,
+    "kind": "linea",
+    "ms": 463.08031100000153,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 331.29999999981374,
+    "width": 390,
+    "kind": "linea",
+    "ms": 527.4718820000016,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 253.09999999962747,
+    "width": 390,
+    "kind": "linea",
+    "ms": 365.3136630000008,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 227.29999999981374,
+    "width": 390,
+    "kind": "linea",
+    "ms": 316.71480999999767,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 1112.9000000003725,
+    "width": 390,
+    "kind": "metrica",
+    "ms": 1347.1326520000002,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 256,
+    "width": 390,
+    "kind": "metrica",
+    "ms": 439.6985569999997,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 184.5,
+    "width": 390,
+    "kind": "metrica",
+    "ms": 360.3235679999998,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 198.70000000018626,
+    "width": 390,
+    "kind": "metrica",
+    "ms": 356.0396089999995,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 266.70000000018626,
+    "width": 390,
+    "kind": "metrica",
+    "ms": 429.1167920000007,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 185,
+    "width": 390,
+    "kind": "metrica",
+    "ms": 458.3603340000009,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 255.70000000018626,
+    "width": 390,
+    "kind": "metrica",
+    "ms": 559.0196140000007,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 582,
+    "width": 390,
+    "kind": "metrica",
+    "ms": 1182.0063910000026,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 310.69999999925494,
+    "width": 390,
+    "kind": "metrica",
+    "ms": 538.6384529999996,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 272.70000000018626,
+    "width": 390,
+    "kind": "metrica",
+    "ms": 389.3031609999998,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 63.40000000037253,
+    "width": 1440,
+    "kind": "mercado",
+    "ms": 1981.455915999999,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 76,
+    "width": 1440,
+    "kind": "mercado",
+    "ms": 443.22248099999706,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 155.09999999962747,
+    "width": 1440,
+    "kind": "mercado",
+    "ms": 756.3934809999992,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 64.70000000018626,
+    "width": 1440,
+    "kind": "mercado",
+    "ms": 343.65389100000175,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 38.80000000074506,
+    "width": 1440,
+    "kind": "mercado",
+    "ms": 243.70162699999491,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 47.40000000037253,
+    "width": 1440,
+    "kind": "mercado",
+    "ms": 236.87925800000085,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 41.10000000055879,
+    "width": 1440,
+    "kind": "mercado",
+    "ms": 270.04608200000075,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 42.200000000186265,
+    "width": 1440,
+    "kind": "mercado",
+    "ms": 283.2804980000001,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 64.29999999981374,
+    "width": 1440,
+    "kind": "mercado",
+    "ms": 321.523721000005,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 30.799999999813735,
+    "width": 1440,
+    "kind": "mercado",
+    "ms": 221.2153060000055,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 76.70000000018626,
+    "width": 1440,
+    "kind": "grupo",
+    "ms": 378.59318899999926,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 123.70000000018626,
+    "width": 1440,
+    "kind": "grupo",
+    "ms": 304.8938070000004,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 60.700000000186265,
+    "width": 1440,
+    "kind": "grupo",
+    "ms": 320.8294290000049,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 54.700000000186265,
+    "width": 1440,
+    "kind": "grupo",
+    "ms": 309.04007000000274,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 56.80000000074506,
+    "width": 1440,
+    "kind": "grupo",
+    "ms": 290.0647269999972,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 46.5,
+    "width": 1440,
+    "kind": "grupo",
+    "ms": 398.72184800000105,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 97.8999999994412,
+    "width": 1440,
+    "kind": "grupo",
+    "ms": 389.9874820000041,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 46.700000000186265,
+    "width": 1440,
+    "kind": "grupo",
+    "ms": 209.19671899999958,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 81.80000000074506,
+    "width": 1440,
+    "kind": "grupo",
+    "ms": 311.34549600000173,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 45.5,
+    "width": 1440,
+    "kind": "grupo",
+    "ms": 233.17280899999605,
+    "requests": [
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 250.20000000018626,
+    "width": 1440,
+    "kind": "linea",
+    "ms": 426.99948399999994,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 254.8999999994412,
+    "width": 1440,
+    "kind": "linea",
+    "ms": 359.24830400000064,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 294.79999999981374,
+    "width": 1440,
+    "kind": "linea",
+    "ms": 590.5242819999985,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 544.2000000001863,
+    "width": 1440,
+    "kind": "linea",
+    "ms": 721.5558390000006,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 400.09999999962747,
+    "width": 1440,
+    "kind": "linea",
+    "ms": 627.2221280000012,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 406.6000000005588,
+    "width": 1440,
+    "kind": "linea",
+    "ms": 590.316697000002,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 267.8999999994412,
+    "width": 1440,
+    "kind": "linea",
+    "ms": 432.08237300000474,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 387.30000000074506,
+    "width": 1440,
+    "kind": "linea",
+    "ms": 561.5705480000033,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 462.20000000018626,
+    "width": 1440,
+    "kind": "linea",
+    "ms": 637.0708009999944,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 406.3999999994412,
+    "width": 1440,
+    "kind": "linea",
+    "ms": 575.5190569999977,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 385.70000000018626,
+    "width": 1440,
+    "kind": "metrica",
+    "ms": 959.4014430000025,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 165.1000000005588,
+    "width": 1440,
+    "kind": "metrica",
+    "ms": 277.9788200000039,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 175.69999999925494,
+    "width": 1440,
+    "kind": "metrica",
+    "ms": 343.5878719999964,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 303.1000000005588,
+    "width": 1440,
+    "kind": "metrica",
+    "ms": 2002.4071049999984,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 304.09999999962747,
+    "width": 1440,
+    "kind": "metrica",
+    "ms": 715.9871659999917,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 296.09999999962747,
+    "width": 1440,
+    "kind": "metrica",
+    "ms": 614.7556049999985,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 171.29999999981374,
+    "width": 1440,
+    "kind": "metrica",
+    "ms": 392.17260999999417,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 241,
+    "width": 1440,
+    "kind": "metrica",
+    "ms": 491.741984999986,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 232,
+    "width": 1440,
+    "kind": "metrica",
+    "ms": 490.81821100000525,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  },
+  {
+    "visible_ms": 184.29999999981374,
+    "width": 1440,
+    "kind": "metrica",
+    "ms": 386.50753299999633,
+    "requests": [
+      "resumen",
+      "detalle"
+    ]
+  }
+]

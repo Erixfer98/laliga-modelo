@@ -299,9 +299,11 @@ export function ErrorBox({
       <div role="alert">
         <h2 className="text-lg font-bold">No pudimos cargar los datos</h2>
         <p className="text-sm text-mut mt-2">
-          {error.includes("422")
-            ? "No se puede analizar esta selección con los datos disponibles. Revisa el enfrentamiento o los filtros."
-            : "La conexión no está disponible en este momento. Tus selecciones siguen guardadas en este dispositivo."}
+          {error.includes("409")
+            ? "Los datos o el modelo cambiaron. Actualiza el análisis antes de añadir al boleto."
+            : error.includes("422")
+              ? "No se puede analizar esta selección con los datos disponibles. Revisa el enfrentamiento o los filtros."
+              : "La conexión no está disponible en este momento. Tus selecciones siguen guardadas en este dispositivo."}
         </p>
       </div>
       <Btn

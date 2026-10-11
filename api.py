@@ -21,6 +21,15 @@ Pendiente (necesitan claves): login de usuarios, registro de uso y el analista I
 import json
 import math
 import os
+import hashlib
+from time import perf_counter
+from threading import RLock, BoundedSemaphore
+from cache_analisis import CacheAnalisis
+import modelo
+import probabilidades
+from pathlib import Path
+
+_CODIGO_ANALISIS = hashlib.sha256(b"".join(Path(__file__).with_name(p).read_bytes() for p in ("modelo.py", "probabilidades.py", "kuota.py"))).hexdigest()
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
@@ -36,26 +45,54 @@ async def valor_invalido(request, exc):
     return JSONResponse(status_code=422, content={"detail": str(exc)})
 
 
-_cache = {}   # liga -> {"mtime", "df", "inc": {metrica: incertidumbre}}; se recarga solo si cambia el CSV (el Action lo actualiza a diario)
+_cache = {}
+_datos_lock = RLock()
+_analisis_en_vuelo = BoundedSemaphore(2)
+_modelos = CacheAnalisis(entradas=12, bytes_max=32 * 1024 * 1024)
+_mercados = CacheAnalisis(entradas=512, bytes_max=16 * 1024 * 1024)
+_vistas = CacheAnalisis(entradas=24, bytes_max=32 * 1024 * 1024)
 
 
 def datos(liga: str) -> dict:
     if liga not in kuota.LIGAS:
         raise HTTPException(404, "liga desconocida")
     ruta = f"{kuota.CARPETA_DATOS}/bbdd_{liga}.csv"
-    if not os.path.exists(ruta):
-        raise HTTPException(404, f"liga desconocida: {liga}")
-    mt = os.path.getmtime(ruta)
-    if _cache.get(liga, {}).get("mtime") != mt:
-        _cache[liga] = {"mtime": mt, "df": kuota.cargar(liga), "inc": {}}
-    return _cache[liga]
+    with _datos_lock:
+        if not os.path.exists(ruta):
+            raise HTTPException(404, f"liga desconocida: {liga}")
+        st = os.stat(ruta)
+        firma = (st.st_mtime_ns, st.st_ctime_ns, st.st_size, st.st_ino, modelo.XI)
+        if _cache.get(liga, {}).get("firma") != firma:
+            # Leer una única instantánea: el hash identifica exactamente el CSV analizado.
+            from io import BytesIO
+            for intento in range(3):
+                with open(ruta, "rb") as archivo:
+                    antes = os.fstat(archivo.fileno())
+                    contenido = archivo.read()
+                    despues = os.fstat(archivo.fileno())
+                if (antes.st_mtime_ns, antes.st_ctime_ns, antes.st_size) == (despues.st_mtime_ns, despues.st_ctime_ns, despues.st_size):
+                    firma = (antes.st_mtime_ns, antes.st_ctime_ns, antes.st_size, antes.st_ino, modelo.XI)
+                    break
+            else:
+                raise HTTPException(503, "Datos actualizándose; reintenta")
+            df = modelo.cargar(BytesIO(contenido))
+            df.attrs["liga"] = liga
+            _cache[liga] = {"firma": firma, "mtime": antes.st_mtime,
+                            "version": hashlib.sha256(contenido).hexdigest(), "df": df, "inc": {}}
+        return _cache[liga]
 
 
 def incert(liga: str, met: str):
-    c = datos(liga)
-    if met not in c["inc"]:
-        c["inc"][met] = kuota.incertidumbre(c["df"], met)
-    return c["inc"][met]
+    with _datos_lock:
+        c = datos(liga)
+        return incertidumbre_snapshot(c, met)
+
+
+def incertidumbre_snapshot(c, met):
+    with _datos_lock:
+        if met not in c["inc"]:
+            c["inc"][met] = kuota.incertidumbre(c["df"], met)
+        return c["inc"][met]
 
 
 def validar_equipos(liga: str, *equipos: str):
@@ -87,7 +124,13 @@ def cara(liga: str, local: str, visitante: str, solo_casa: bool = False):
 
 
 @app.get("/liga/{liga}/partido")
-def partido(liga: str, local: str, visitante: str, met: str = "goles", n: int = 5, filtro: str = "Todos", pata: str = None, cfg: str = None, grupo: str = None):
+def partido(liga: str, local: str, visitante: str, met: str = "goles", n: int = 5, filtro: str = "Todos", pata: str = None, cfg: str = None, grupo: str = None, modo: str = "completo", data_version: str = None):
+    """Máximo dos análisis en vuelo por proceso; sin cambiar el contrato existente."""
+    with _analisis_en_vuelo:
+        return _partido_calculado(liga, local, visitante, met, n, filtro, pata, cfg, grupo, modo, data_version)
+
+
+def _partido_calculado(liga: str, local: str, visitante: str, met: str = "goles", n: int = 5, filtro: str = "Todos", pata: str = None, cfg: str = None, grupo: str = None, modo: str = "completo", data_version: str = None):
     """cfg = lineas elegidas por el usuario, en JSON: {"Total": [10.5, 1], "<local>": [4.5, 1], "<visitante>": [4.5, 1]}. Sin cfg usa las de defecto.
     pata = mercado a detallar; si no existe, el primero del grupo (o el primero de todos)."""
     validar_equipos(liga, local, visitante)
@@ -98,8 +141,41 @@ def partido(liga: str, local: str, visitante: str, met: str = "goles", n: int = 
     cfg_d = json.loads(cfg) if cfg else None
     if cfg_d is not None and not isinstance(cfg_d, dict):
         raise ValueError("cfg debe ser un objeto")
-    v = kuota.vista_partido(datos(liga)["df"], liga, local, visitante, met, incert(liga, met), cfg_d, n, filtro, pata, grupo=grupo)
-    return kuota.a_json(v)
+    if modo not in ("completo", "resumen", "detalle", "version"):
+        raise ValueError("modo inválido")
+    inicio_t = perf_counter()
+    c = datos(liga)
+    if local not in kuota.equipos(c["df"]) or visitante not in kuota.equipos(c["df"]):
+        raise HTTPException(404, "equipo desconocido")
+    version_modelo = (_CODIGO_ANALISIS, probabilidades.VERSION, modelo.RHO, modelo.XI, tuple(sorted(modelo.K_MAX.items())), repr(modelo.METRICAS))
+    version = hashlib.sha256((c["version"] + repr(version_modelo)).encode()).hexdigest()
+    if data_version is not None and data_version != version:
+        raise HTTPException(409, "Los datos o el modelo cambiaron; actualiza el análisis")
+    if modo == "version":
+        return JSONResponse({"data_version": version}, headers={"Cache-Control": "no-store"})
+    inc = incertidumbre_snapshot(c, met)
+    clave = (liga, c["version"], version_modelo, local, visitante, met)
+    datos_t = perf_counter()
+    r = _modelos.obtener(clave, lambda: modelo.analizar(c["df"], local, visitante, met, inc=inc))
+    modelo_t = perf_counter()
+    memo = lambda regla, calcular: _mercados.obtener((clave, json.dumps(regla, sort_keys=True)), calcular)
+    preparada = _vistas.obtener((clave, json.dumps(cfg_d, sort_keys=True), n, filtro),
+        lambda: kuota.preparar_partido(c["df"], local, visitante, met, inc, cfg_d, n, filtro, _modelo=r, _memo=memo))
+    vista_t = perf_counter()
+    v = kuota.vista_partido(c["df"], liga, local, visitante, met, inc, cfg_d, n, filtro, pata,
+                           grupo=grupo, _preparado=preparada, modo=modo)
+    detalle_t = perf_counter()
+    convertido = {**kuota.a_json(v), "data_version": version}
+    json_t = perf_counter()
+    respuesta = JSONResponse(convertido)
+    fin_t = perf_counter()
+    tiempos = (("datos", datos_t-inicio_t), ("modelo", modelo_t-datos_t),
+               ("mercados", vista_t-modelo_t), ("detalle", detalle_t-vista_t),
+               ("conversion", json_t-detalle_t), ("serializacion", fin_t-json_t))
+    respuesta.headers["Server-Timing"] = ", ".join(f"{nombre};dur={dur*1000:.3f}" for nombre, dur in tiempos)
+    respuesta.headers["Cache-Control"] = "no-store"
+    return respuesta
+
 
 
 @app.post("/boleto")
