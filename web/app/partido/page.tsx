@@ -303,7 +303,7 @@ export default function Partido() {
               onToggle={(e) => setAjustes(e.currentTarget.open)}
             >
               <summary className="flex min-h-11 items-center justify-between text-xs font-semibold text-mut">
-                Opciones avanzadas: líneas e historial <span aria-hidden="true">⌄</span>
+                Ajustar líneas e historial (avanzado) <span aria-hidden="true">⌄</span>
               </summary>
               <div className="grid sm:grid-cols-2 gap-3 pt-3">
                 {conLineas && (
