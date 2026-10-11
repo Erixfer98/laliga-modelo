@@ -408,3 +408,15 @@ def test_source_captured_before_but_registered_after_cutoff_excluded(setup):
     s.guardar(cap,'context',{'fixture_receipt_id':rec['receipt_id'],'fixture_version':rec['fixture']['version'],'component':'injuries','endpoint':'/injuries','params':{'fixture':7001}})
     assert Contexto(c).dataset(rec,cutoff)['facts']==[]
     assert len(Contexto(c).dataset(rec,ahora())['facts'])==1
+
+
+def test_cancel_weather_inflight_does_not_publish(setup):
+    c,f,d,s=setup; rec=discovered(setup); event=threading.Event()
+    s.guardar(capture({'errors':[], 'response':[{'id':5001,'latitude':10.,'longitude':20.}]},'/venues'),'request',{'endpoint':'/venues','params':{'id':5001},'validation_state':'ok'})
+    class Weather:
+        def obtener_pronostico(self,*args):
+            event.set(); return capture({'SYNTHETIC':'cancelled'},'/v1/forecast',provider='open-meteo')
+    report=Contexto(c,Weather()).capturar(rec,{},dry_run=False,cancel=event,weather_authorized=True)
+    assert report['components']['weather']['status']=='cancelled'
+    assert not any(r['kind']=='weather' for r in s.records())
+    assert s.control('weather_calls:'+ahora()[:10])==1

@@ -47,6 +47,8 @@ class Contexto:
             components[label] = result.publico()
             if result.status == 'cancelled': break
             if result.status != 'ok': continue
+            if cancel and cancel.is_set():
+                components[label] = {'status': 'cancelled', 'code': 'cancelled'}; break
             # Vincular bytes originales a versión de fixture; sin crear evidencia histórica retroactiva.
             r = self.store.guardar(result.capture, 'context', {'endpoint': endpoint, 'params': params,
                 'fixture_id': f['fixture_id'], 'fixture_receipt_id': fixture_receipt['receipt_id'],
@@ -60,7 +62,7 @@ class Contexto:
         components['rivalry'] = {'status': 'unknown', 'code': 'verified_pair_catalog_not_available'}
         components['weather'] = {'status': 'unknown', 'code': 'verified_coordinates_missing'}
         # Coordenadas solo de evidencia /venues archivada, exacta y previa; no de un parámetro libre.
-        if weather_authorized:
+        if weather_authorized and utc(ahora()) < utc(f['kickoff_utc']):
             venue_id = (f['venue'] or {}).get('provider_venue_id')
             candidates = [r for r in self.store.records() if r['kind'] == 'request' and
                           r['scope'].get('endpoint') == '/venues' and r['scope'].get('validation_state') == 'ok' and
@@ -74,7 +76,7 @@ class Contexto:
             if candidates:
                 cap, _ = self.store.captura(candidates[-1]['id'])
                 rows = cap.json().get('response', [])
-                matches = [v for v in rows if type(v.get('id')) is int and str(v['id']) == venue_id]
+                matches = [v for v in (rows if isinstance(rows, list) else []) if isinstance(v, dict) and type(v.get('id')) is int and str(v['id']) == venue_id]
                 if len(matches) == 1:
                     lat, lon = matches[0].get('latitude'), matches[0].get('longitude')
                     if all(type(v) in (float, int) and math.isfinite(v) and abs(v) <= lim
@@ -94,13 +96,15 @@ class Contexto:
                                         return {'status': 'experimental', 'components': components}
                                     self.store.control('weather_calls:' + day, count + 1)
                                     capture = self.weather.obtener_pronostico(lat, lon, f['kickoff_utc'])
-                                r = self.store.guardar(capture, 'weather', {'fixture_id': f['fixture_id'],
-                                    'fixture_version': f['version'], 'fixture_receipt_id': fixture_receipt['receipt_id'],
-                                    'venue_record_id': candidates[-1]['id'], 'latitude': lat, 'longitude': lon,
-                                    'kickoff_utc': f['kickoff_utc'], 'component': 'weather'})
+                                    if cancel and cancel.is_set(): raise Cancelada('Cancelada')
+                                    r = self.store.guardar(capture, 'weather', {'fixture_id': f['fixture_id'],
+                                        'fixture_version': f['version'], 'fixture_receipt_id': fixture_receipt['receipt_id'],
+                                        'venue_record_id': candidates[-1]['id'], 'latitude': lat, 'longitude': lon,
+                                        'kickoff_utc': f['kickoff_utc'], 'component': 'weather'})
                                 components['weather'] = {'status': 'ok', 'record_id': r['id'],
                                                          'eligible_prekick': utc(r['registered_at_utc']) < utc(f['kickoff_utc'])}
-                            except (NoDisponible, ValueError, Cancelada): components['weather'] = {'status': 'unknown', 'code': 'weather_unavailable'}
+                            except Cancelada: components['weather'] = {'status': 'cancelled', 'code': 'cancelled'}
+                            except (NoDisponible, ValueError): components['weather'] = {'status': 'unknown', 'code': 'weather_unavailable'}
         return {'status': 'experimental', 'components': components}
 
     def dataset(self, fixture_receipt, cutoff):
