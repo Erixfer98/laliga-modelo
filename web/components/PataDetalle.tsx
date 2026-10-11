@@ -84,7 +84,10 @@ function Cabecera({
   lado,
   right,
 }: {
-  v: VistaPartido;
+  v: Pick<
+    VistaPartido,
+    "liga" | "local" | "visitante" | "medias_liga" | "metrica"
+  >;
   lado: "l" | "v";
   right: React.ReactNode;
 }) {
@@ -106,7 +109,10 @@ export function HistorialEquipo({
   p,
   lado,
 }: {
-  v: VistaPartido;
+  v: Pick<
+    VistaPartido,
+    "liga" | "local" | "visitante" | "medias_liga" | "metrica"
+  >;
   p: Pata;
   lado: "l" | "v";
 }) {
@@ -191,7 +197,10 @@ export function ListaPartidos({
   p,
   lado,
 }: {
-  v: VistaPartido;
+  v: Pick<
+    VistaPartido,
+    "liga" | "local" | "visitante" | "medias_liga" | "metrica"
+  >;
   p: Pata;
   lado: "l" | "v";
 }) {
@@ -306,7 +315,16 @@ export function ListaPartidos({
 }
 
 /** "Qué dice el modelo": matriz (goles), diferencia (mayor número) o distribución (resto). */
-export function GraficoModelo({ v, p }: { v: VistaPartido; p: Pata }) {
+export function GraficoModelo({
+  v,
+  p,
+}: {
+  v: Pick<
+    VistaPartido,
+    "liga" | "local" | "visitante" | "medias_liga" | "metrica"
+  >;
+  p: Pata;
+}) {
   const g = p.grafico,
     et = METRICAS[v.metrica].toLowerCase();
   if (g.tipo === "matriz")
