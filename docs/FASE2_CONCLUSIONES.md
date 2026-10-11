@@ -122,7 +122,7 @@ la distribución de conteos ni crea una ventaja económica.
 
 ## Validación del software
 
-**95 pruebas Python** y **3 pruebas web** aprobadas localmente; TypeScript y build
+**105 pruebas Python** y **3 pruebas web** aprobadas localmente; TypeScript y build
 Next.js correctos. Las pruebas incluyen fuga por filas futuras, entrenamiento por
 fecha, equivalencia Fase 1, pushes, calibración temporal, scores estructurales,
 bootstrap, fronteras exactas de bins, caché íntegra y CLI/reportes/gráficas.
@@ -131,3 +131,7 @@ Persiste un aviso de deprecación Starlette/TestClient ajeno a esta implementaci
 Una ejecución completa de las seis ligas tardó aproximadamente 9 minutos en el
 entorno de esta revisión; regenerar análisis desde registros verificados tarda
 aproximadamente 1–2 minutos. Es una medición local, no un benchmark de producción.
+
+## Revisión final del PR #2
+
+Los contratos reforzados comprueban cohortes idénticas por mercado y por conteo, unicidad, objetivos y cortes temporales. Véase [revisión final](REVISION_FINAL_FASE2.md). La suite completa pasa con 105 pruebas Python y 3 web; TypeScript y build pasan. No se activa calibración ni se autoriza rentabilidad por el ranking.

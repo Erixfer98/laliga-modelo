@@ -2,6 +2,7 @@
 import numpy as np
 import pandas as pd
 import modelo as mo
+from .comparabilidad import cohorte
 
 EPS = 1e-15
 
@@ -22,9 +23,7 @@ def puntuar(pred):
 
 
 def muestra_comun(pred):
-    keys=['fixture_id','metrica','kind','lado','linea']
-    size=pred.groupby(keys,observed=True).modelo.transform('nunique')
-    return pred[size==4].copy()
+    return cohorte(pred)[0]
 
 
 def resumen(d, keys):
@@ -71,6 +70,8 @@ def calibracion(d, keys):
 
 
 def bootstrap_pareado(d, replicas=1000, seed=20261010, referencias=('sin_dc','liga','movil_10')):
+    d, _ = cohorte(d, modelos=('actual', *referencias))
+    if d.empty: return pd.DataFrame()
     # Igual peso para partidos, no para su número de líneas.
     per=d.groupby(['fixture_id','fecha','metrica','modelo'],observed=True).brier.mean().unstack('modelo').reset_index()
     rng=np.random.default_rng(seed); rows=[]
@@ -89,6 +90,7 @@ def bootstrap_pareado(d, replicas=1000, seed=20261010, referencias=('sin_dc','li
 
 
 def diagnostico_conteos(counts):
+    counts, _ = cohorte(counts, keys=['fixture_id','metrica'])
     rows=[]
     for (met,model,league),g in counts[counts.maduro].groupby(['metrica','modelo','liga'],observed=True):
         for side in ('local','visitante','total'):

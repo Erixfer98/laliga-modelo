@@ -8,6 +8,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+from .comparabilidad import cohorte
 from .metricas import resumen, calibracion, bootstrap_pareado, bootstrap_mercados
 
 
@@ -129,7 +130,10 @@ def generar(out,scored,counts,abst,inventory,manifest,calibrated,fits,skips):
     if not calibrated.empty:
         keys=['fixture_id','metrica','kind','lado','linea']
         base=scored[scored.modelo=='actual'].merge(calibrated[keys].drop_duplicates(),on=keys,how='inner')
-        experiments=pd.concat([base,puntuar(calibrated)],ignore_index=True)
+        experiments, experiment_audit = cohorte(
+            pd.concat([base,puntuar(calibrated)],ignore_index=True),
+            modelos=('actual','platt','isotonica'))
+        tables['comparabilidad_calibradores']=experiment_audit
         experiment=resumen(experiments,['metrica','modelo'])
         holdout=resumen(experiments[experiments.fecha>=pd.Timestamp(manifest['holdout_desde'])],['metrica','modelo'])
         tables['calibradores']=experiment;tables['calibradores_holdout']=holdout
@@ -182,6 +186,10 @@ Sus resultados son diagnósticos, sujetos a esa reserva. No se imputan faltantes
 - Corte por fecha de fuente, no por jornada estimada. Todos los encuentros del mismo día se excluyen del historial.
 - XI={manifest['parametros']['XI']}, rho={manifest['parametros']['RHO']}, K_ENCOGE={manifest['parametros']['K_ENCOGE']}, sin ajustes.
 - El modelo actual utiliza `modelo.fuerzas`, `modelo.lambdas` y `probabilidades.distribucion` de Fase 1.
+- Se validan nombres de modelos, unicidad, objetivos y metadatos comunes. Las cohortes incompletas
+  se excluyen para todos los modelos y se auditan en `comparabilidad_*.csv`, incluidos conteos y calibradores.
+- La selección sigue siendo condicional al historial disponible; excluir abstenciones no demuestra ausencia
+  de sesgo respecto a partidos sin historial. Los datos corruptos detienen la ejecución.
 - Las cuatro referencias comparten partidos y líneas; no se sustituyen equipos desconocidos dentro del modelo actual.
 - Liga: medias históricas con pesos XI; móvil: últimos diez encuentros del equipo en la condición, sin ajuste por rival.
 - Sin DC: mismas lambdas actuales, eliminando únicamente la corrección de las cuatro celdas de baja anotación.

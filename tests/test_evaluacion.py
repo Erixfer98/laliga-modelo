@@ -128,8 +128,8 @@ def test_bootstrap_pareado_reproducible_y_fixture_no_patas():
     rows=[]
     for i in range(30):
         for model,score in [('actual',.1),('liga',.2),('sin_dc',.1),('movil_10',.3)]:
-            for _ in range(3):rows.append({'fixture_id':str(i),'fecha':pd.Timestamp('2025-01-01')+pd.Timedelta(days=i),
-                'metrica':'goles','modelo':model,'brier':score})
+            for line in range(3):rows.append({'fixture_id':str(i),'fecha':pd.Timestamp('2025-01-01')+pd.Timedelta(days=i),
+                'metrica':'goles','kind':'ou','lado':'total','linea':line,'modelo':model,'brier':score})
     d=pd.DataFrame(rows);a=bootstrap_pareado(d,replicas=50);b=bootstrap_pareado(d,replicas=50)
     pd.testing.assert_frame_equal(a,b)
     assert (a.partidos==30).all()
@@ -198,3 +198,86 @@ def test_cli_no_duplica_ligas(tmp_path):
     path=dataset(tmp_path,n=2)
     with pytest.raises(ValueError,match='Ligas duplicadas'):
         main(['--datos',str(path),str(path),'--salida',str(tmp_path/'salida')])
+
+
+def comparison_rows():
+    return pd.DataFrame([dict(fixture_id=str(i),fecha=pd.Timestamp('2025-01-01')+pd.Timedelta(days=i),
+        metrica='goles',kind='ou',lado='total',linea=line,modelo=model,y=2,
+        brier=.1 if model=='actual' else .2)
+        for i in range(3) for line in (.5,1.5) for model in ('actual','sin_dc','liga','movil_10')])
+
+
+@pytest.mark.parametrize('failure',['duplicate','unknown','target','missing_key'])
+def test_comparabilidad_rechaza_contratos_invalidos(failure):
+    from evaluacion.comparabilidad import cohorte
+    d=comparison_rows()
+    if failure=='duplicate': d=pd.concat([d,d.iloc[:1]])
+    elif failure=='unknown': d.loc[d.modelo=='liga','modelo']='otro'
+    elif failure=='target': d.loc[0,'y']=0
+    else: d.loc[0,'linea']=np.nan
+    with pytest.raises(ValueError): cohorte(d)
+
+
+def test_abstencion_parcial_excluye_mismo_mercado_para_todos():
+    from evaluacion.comparabilidad import cohorte
+    d=comparison_rows().drop(index=1)
+    common,audit=cohorte(d)
+    assert len(common)==20
+    assert common.groupby('modelo').size().nunique()==1
+    assert audit.loc[~audit.completa,'filas'].sum()==3
+    b=bootstrap_pareado(d,replicas=20)
+    assert (b.partidos==3).all()
+    assert np.allclose(b.delta_brier,-.1)
+
+
+def test_bootstrap_empareja_lineas_antes_de_promediar():
+    d=comparison_rows()
+    d.loc[(d.fixture_id=='0')&(d.linea==1.5)&(d.modelo=='actual'),'brier']=1.
+    d=d.drop(d[(d.fixture_id=='0')&(d.linea==1.5)&(d.modelo=='liga')].index)
+    result=bootstrap_pareado(d,replicas=20)
+    assert np.allclose(result.delta_brier,-.1)
+
+
+def test_conteos_excluyen_fallos_parciales(tmp_path):
+    from evaluacion.comparabilidad import cohorte
+    path=dataset(tmp_path,n=7);_,counts,_=ejecutar_liga(path,('goles',))
+    incomplete=counts.drop(index=0)
+    paired,audit=cohorte(incomplete,keys=['fixture_id','metrica'])
+    assert len(paired)==len(counts)-4
+    assert paired.groupby('modelo').size().nunique()==1
+    assert audit.loc[~audit.completa,'filas'].sum()==3
+
+
+def test_corte_temporal_faltante_y_fuga_rechazados():
+    from evaluacion.comparabilidad import validar_temporal
+    for train in (pd.NaT,pd.Timestamp('2025-01-01'),pd.Timestamp('2025-01-02')):
+        with pytest.raises(ValueError): validar_temporal(pd.DataFrame({
+            'fecha':[pd.Timestamp('2025-01-01')],'train_max_fecha':[train]}))
+
+
+def test_calibracion_futuros_no_alteran_predicciones_anteriores(tmp_path):
+    path=dataset(tmp_path,n=65);pred,_,_=ejecutar_liga(path,('goles',))
+    a,_,_=temporal(pred,min_partidos=5,min_clase=1)
+    changed=pred.copy();mask=changed.fecha>=pd.Timestamp('2025-03-01')
+    changed.loc[mask,'y']=0
+    changed.loc[mask,['p0','p1','p2']]=[.9,0.,.1]
+    b,_,_=temporal(changed,min_partidos=5,min_clase=1)
+    pd.testing.assert_frame_equal(a[a.fecha<pd.Timestamp('2025-03-01')].reset_index(drop=True),
+                                 b[b.fecha<pd.Timestamp('2025-03-01')].reset_index(drop=True))
+
+
+def test_produccion_no_importa_evaluador_y_ranking_no_promete_rentabilidad():
+    import ast
+    from pathlib import Path
+    from evaluacion.reportes import ranking
+    from evaluacion.metricas import calibracion
+    for name in ('app.py','modelo.py','probabilidades.py','kuota.py'):
+        tree=ast.parse(Path(name).read_text())
+        for node in ast.walk(tree):
+            if isinstance(node,ast.Import): names=[x.name for x in node.names]
+            elif isinstance(node,ast.ImportFrom): names=[node.module or '']
+            else: continue
+            assert not any(n.startswith('evaluacion') for n in names)
+    d=comparison_rows();d['p0']=.2;d['p1']=0.;d['p2']=.8;d['cero_observado']=False
+    r=ranking(d,calibracion(d,['metrica','modelo','kind','lado']))
+    assert set(r.potencial_economico)=={'pendiente de cuotas verificables'}

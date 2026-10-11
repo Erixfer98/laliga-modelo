@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
 from scipy.special import expit, logit
+from .comparabilidad import validar_temporal
 
 
 def fit_platt(p,y,w=None):
@@ -41,6 +42,7 @@ def aplicar(method,model,p):
 
 
 def temporal(pred,min_partidos=100,min_clase=20):
+    validar_temporal(pred)
     d=pred[(pred.modelo=='actual')&pred.maduro&pred.fija&
            ((pred.kind=='btts')|((pred.kind=='ou')&(pred.linea%1==.5)))].copy()
     d['mes']=pd.to_datetime(d.fecha).dt.to_period('M')

@@ -43,6 +43,10 @@ Sus resultados son diagnósticos, sujetos a esa reserva. No se imputan faltantes
 - Corte por fecha de fuente, no por jornada estimada. Todos los encuentros del mismo día se excluyen del historial.
 - XI=0.005, rho=-0.05, K_ENCOGE=0, sin ajustes.
 - El modelo actual utiliza `modelo.fuerzas`, `modelo.lambdas` y `probabilidades.distribucion` de Fase 1.
+- Se validan nombres de modelos, unicidad, objetivos y metadatos comunes. Las cohortes incompletas
+  se excluyen para todos los modelos y se auditan en `comparabilidad_*.csv`, incluidos conteos y calibradores.
+- La selección sigue siendo condicional al historial disponible; excluir abstenciones no demuestra ausencia
+  de sesgo respecto a partidos sin historial. Los datos corruptos detienen la ejecución.
 - Las cuatro referencias comparten partidos y líneas; no se sustituyen equipos desconocidos dentro del modelo actual.
 - Liga: medias históricas con pesos XI; móvil: últimos diez encuentros del equipo en la condición, sin ajuste por rival.
 - Sin DC: mismas lambdas actuales, eliminando únicamente la corrección de las cuatro celdas de baja anotación.

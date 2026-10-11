@@ -18,6 +18,7 @@ from .temporal import ejecutar_liga
 from .metricas import puntuar, muestra_comun
 from .calibradores import temporal
 from .reportes import generar
+from .comparabilidad import cohorte, validar_temporal
 
 CORE = ('modelo.py','probabilidades.py','kuota.py','evaluacion/datos.py',
         'evaluacion/temporal.py','evaluacion/mercados.py')
@@ -89,7 +90,12 @@ def main(argv=None):
     abstentions.to_csv(out/'abstenciones.csv',index=False,float_format='%.10g')
     if args.guardar_predicciones or args.reusar_predicciones:
         artifacts={name:sha256(out/name) for name in ('predicciones.csv.gz','predicciones_conteos.csv.gz','abstenciones.csv')}
-    common=muestra_comun(pred)
+    validar_temporal(pred); validar_temporal(count)
+    common, audit = cohorte(pred)
+    count_common, count_audit = cohorte(count, keys=['fixture_id','metrica'])
+    audit.assign(tipo='mercados').to_csv(out/'comparabilidad_mercados.csv',index=False)
+    count_audit.assign(tipo='conteos').to_csv(out/'comparabilidad_conteos.csv',index=False)
+    count = count_common
     scored=puntuar(common)
     print(f'Muestra común: {len(scored):,} registros. Calibración mensual...',flush=True)
     calibrated,fits,skips=temporal(common)
@@ -99,6 +105,8 @@ def main(argv=None):
               'bootstrap_replicas':1000,'logloss_epsilon_diagnostico':1e-15,
               'platt_isotonica_min_partidos':100,'platt_isotonica_min_clase':20,'embargo_calibracion_dias':1,
               'datos':inventory,'filas_mercados':len(pred),'filas_comunes':len(common),'filas_conteos':len(count),
+              'filas_mercados_excluidas':len(pred)-len(common),
+              'comparabilidad_validada':True,
               'codigo_sha256':{str(p):sha256(p) for p in [Path('modelo.py'),Path('probabilidades.py'),Path('kuota.py'),*sorted(Path('evaluacion').glob('*.py'))]},
               'artefactos_sha256':artifacts,
               'entorno':{'python':platform.python_version(),'numpy':np.__version__,'pandas':pd.__version__,
