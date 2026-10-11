@@ -452,7 +452,7 @@ export default function Partido() {
         <Card titulo="03 · Cómo se distribuyen los resultados"
           desc="Cada escenario corresponde a la selección activa. El gráfico proviene del motor y distingue aciertos y devoluciones cuando corresponde.">
           {estadoDetalle.error ? (
-            <ErrorBox error={estadoDetalle.error} reintentar={estadoDetalle.reintentar} />
+            <p role="status" className="text-sm text-mut py-4">La distribución no está disponible hasta verificar nuevamente este mercado.</p>
           ) : !loading && detalle ? (
             <GraficoModelo v={v} p={detalle} />
           ) : (
