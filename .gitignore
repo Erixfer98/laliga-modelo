@@ -1,3 +1,6 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+
+# Artefactos históricos regenerables (tablas y figuras sí se versionan)
+docs/fase2/predicciones*.csv.gz
