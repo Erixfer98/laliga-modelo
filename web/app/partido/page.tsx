@@ -251,7 +251,7 @@ export default function Partido() {
         <a className="min-h-11 inline-flex items-center px-3 rounded-lg bg-card border border-line2" href="#seleccion">05 · Decidir</a>
       </nav>
       <div className="grid lg:grid-cols-[minmax(0,1.8fr)_minmax(275px,0.75fr)] gap-5 items-start">
-        <div id="mercados" className="min-w-0 scroll-mt-36">
+        <div id="mercados" className="min-w-0 scroll-mt-36 lg:col-start-1 lg:row-start-1">
           <Card
             titulo="02 · Explorá escenarios y líneas"
             desc="Elegí una categoría, línea y dirección. Las probabilidades siempre vienen del motor, no del historial."
@@ -447,7 +447,27 @@ export default function Partido() {
             </Nota>
           </Card>
         </div>
-        <aside id="seleccion" className="min-w-0 lg:sticky lg:top-[145px]">
+
+      <section id="distribucion" className="mt-4 min-w-0 scroll-mt-36 lg:col-start-1" aria-label="Distribución de probabilidades">
+        <Card titulo="03 · Cómo se distribuyen los resultados"
+          desc="Cada escenario corresponde a la selección activa. El gráfico proviene del motor y distingue aciertos y devoluciones cuando corresponde.">
+          {estadoDetalle.error ? (
+            <ErrorBox error={estadoDetalle.error} reintentar={estadoDetalle.reintentar} />
+          ) : !loading && detalle ? (
+            <GraficoModelo v={v} p={detalle} />
+          ) : (
+            <p role="status" className="text-sm text-mut py-4">Preparando la distribución de la selección…</p>
+          )}
+        </Card>
+      </section>
+      <div className="min-w-0 lg:col-start-1">
+      {loading ? (
+        <section id="evidencia" role="status" className="rounded-card bg-card border border-line2 p-5 mt-5 text-sm text-mut">Actualizando la evidencia de la nueva selección…</section>
+      ) : (
+        <EvidenceSummary v={v} p={p} n={n} filtro={filtro} />
+      )}
+      </div>
+        <aside id="seleccion" className="min-w-0 lg:col-start-2 lg:row-start-1 lg:row-span-3 lg:sticky lg:top-[145px] lg:self-start scroll-mt-36">
           <Card
             className="match-stripe"
             titulo="Tu selección"
@@ -600,23 +620,6 @@ export default function Partido() {
           </p>
         </aside>
       </div>
-      <section id="distribucion" className="mt-6 scroll-mt-36" aria-label="Distribución de probabilidades">
-        <Card titulo="03 · Cómo se distribuyen los resultados"
-          desc="Cada escenario corresponde a la selección activa. El gráfico proviene del motor y distingue aciertos y devoluciones cuando corresponde.">
-          {estadoDetalle.error ? (
-            <ErrorBox error={estadoDetalle.error} reintentar={estadoDetalle.reintentar} />
-          ) : !loading && detalle ? (
-            <GraficoModelo v={v} p={detalle} />
-          ) : (
-            <p role="status" className="text-sm text-mut py-4">Preparando la distribución de la selección…</p>
-          )}
-        </Card>
-      </section>
-      {loading ? (
-        <section id="evidencia" role="status" className="rounded-card bg-card border border-line2 p-5 mt-5 text-sm text-mut">Actualizando la evidencia de la nueva selección…</section>
-      ) : (
-        <EvidenceSummary v={v} p={p} n={n} filtro={filtro} />
-      )}
       <div className="w-full mt-5">
         {estadoDetalle.loading && (
           <p role="status" className="text-xs text-mut">
