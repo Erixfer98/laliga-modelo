@@ -19,7 +19,7 @@ jobs:
       - run: python -m pytest -q
   web:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: web
@@ -30,9 +30,16 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: web/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r ../requirements.txt
       - run: npm ci
       - run: npm test
       - run: npx tsc --noEmit --incremental false
       - run: npm run build
         env:
           NEXT_TELEMETRY_DISABLED: '1'
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e

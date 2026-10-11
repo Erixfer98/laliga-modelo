@@ -1,26 +1,43 @@
 "use client";
-// Hook para pedir una vista a la API: devuelve datos, error y si está cargando. Mantiene los datos anteriores mientras llega la nueva respuesta.
 import { useEffect, useState } from "react";
 import { api } from "./api";
-
 type Params = Record<string, string | number | boolean | null | undefined>;
-
+/** Une la respuesta a su contexto; nunca muestra datos de otra liga o filtro. */
 export function useApi<T>(path: string | null, params: Params = {}) {
-  const [data, setData] = useState<T | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(!!path);
-  const clave = JSON.stringify([path, params]);
-
+  const [revision, setRevision] = useState(0);
+  const key = JSON.stringify([
+    path,
+    Object.entries(params).sort(([a], [b]) => a.localeCompare(b)),
+    revision,
+  ]);
+  const [result, setResult] = useState<{
+    key: string;
+    data: T | null;
+    error: string | null;
+    pending: boolean;
+  }>({ key: "", data: null, error: null, pending: false });
   useEffect(() => {
     if (!path) return;
-    let vivo = true;
-    setLoading(true); setError(null);
-    api<T>(path, params)
-      .then((d) => { if (vivo) { setData(d); setLoading(false); } })
-      .catch((e: Error) => { if (vivo) { setError(e.message); setLoading(false); } });
-    return () => { vivo = false; };
+    const controller = new AbortController();
+    setResult({ key, data: null, error: null, pending: true });
+    api<T>(path, params, controller.signal)
+      .then((data) => {
+        if (!controller.signal.aborted)
+          setResult({ key, data, error: null, pending: false });
+      })
+      .catch((e: Error) => {
+        if (!controller.signal.aborted)
+          setResult({ key, data: null, error: e.message, pending: false });
+      });
+    return () => controller.abort();
+    // La clave incluye todos los parámetros y la revisión del reintento.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clave]);
-
-  return { data, error, loading };
+  }, [key]);
+  const active = path && result.key === key;
+  return {
+    data: active ? result.data : null,
+    error: active ? result.error : null,
+    loading: !!path && (!active || result.pending),
+    reintentar: () => setRevision((v) => v + 1),
+  };
 }
