@@ -25,6 +25,9 @@ import {
   Toggle,
 } from "@/components/ui";
 import { CabeceraPartido, usePartido } from "@/components/Selectores";
+import { LambdaSummary } from "@/components/LambdaSummary";
+import { LineSelector } from "@/components/LineSelector";
+import { EvidenceSummary } from "@/components/EvidenceSummary";
 import {
   Chip,
   GraficoModelo,
@@ -47,6 +50,7 @@ export default function Partido() {
   const [filtro, setFiltro] = useState<"Todos" | "Como jugarán">("Todos");
   const [solo, setSolo] = useState(false);
   const [ajustes, setAjustes] = useState(false);
+  const [listaExpandida, setListaExpandida] = useState(false);
   const [precio, setPrecio] = useState({ key: "", value: "" });
   const actual = useRef({ key: "", disponible: false });
   const registro = useRef<AbortController | null>(null);
@@ -239,11 +243,19 @@ export default function Partido() {
   return (
     <>
       {cabecera}
-      <div className="grid lg:grid-cols-[minmax(0,1.7fr)_minmax(300px,1fr)] gap-6 items-start">
-        <div className="min-w-0">
+      <LambdaSummary v={v} />
+      <nav aria-label="Secciones del análisis" className="flex flex-wrap gap-2 mb-5 text-xs font-bold">
+        <a className="min-h-11 inline-flex items-center px-3 rounded-lg bg-card border border-line2" href="#expectativa">01 · Lambdas</a>
+        <a className="min-h-11 inline-flex items-center px-3 rounded-lg bg-card border border-line2" href="#mercados">02 · Líneas</a>
+        <a className="min-h-11 inline-flex items-center px-3 rounded-lg bg-card border border-line2" href="#distribucion">03 · Distribución</a>
+        <a className="min-h-11 inline-flex items-center px-3 rounded-lg bg-card border border-line2" href="#evidencia">04 · Evidencia</a>
+        <a className="min-h-11 inline-flex items-center px-3 rounded-lg bg-card border border-line2" href="#seleccion">05 · Decidir</a>
+      </nav>
+      <div className="grid lg:grid-cols-[minmax(0,1.8fr)_minmax(275px,0.75fr)] gap-5 items-start">
+        <div id="mercados" className="min-w-0 scroll-mt-36 lg:col-start-1 lg:row-start-1">
           <Card
-            titulo="Mercados"
-            desc="Probabilidades del modelo para cada mercado. La calificación orientativa mezcla 60% probabilidad y 40% cumplimiento histórico; la volatilidad puede reducirla. No representa rentabilidad ni garantía de acierto."
+            titulo="02 · Explorá escenarios y líneas"
+            desc="Elegí una categoría, línea y dirección. Las probabilidades siempre vienen del motor, no del historial."
           >
             {loading && (
               <p role="status" className="text-xs text-mut">
@@ -257,13 +269,42 @@ export default function Partido() {
               onChange={cambiarGrupo}
               small
             />
+            <div className="mt-4">
+              <LineSelector
+                grupo={grupo}
+                mercados={v.mercados}
+                elegido={p.mercado}
+                loading={loading}
+                onSelect={(mercado) => setSel({ clave, cfg: s.cfg, grupo, pata: mercado })}
+                onExtend={(linea, over) => {
+                  const cfg = s.cfg ?? v.cfg;
+                  const [centro, rango] = cfg[grupo];
+                  const abajo = centro - rango, arriba = centro + rango;
+                  const nuevoCentro = linea > arriba ? centro + (linea - arriba)
+                    : linea < abajo ? centro - (abajo - linea) : centro;
+                  setSel({
+                    clave, grupo,
+                    cfg: { ...cfg, [grupo]: [nuevoCentro, rango] },
+                    pata: grupo + " " + (over ? "Over" : "Under") + " " + linea,
+                  });
+                }}
+              />
+            </div>
+            <div aria-live="polite" className="rounded-xl border border-line2 px-4 py-3 mb-4">
+              <div className="text-xs text-mut mb-1">Selección actual</div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-extrabold text-sm sm:text-base">{p.mercado}</span>
+                <span className="num text-2xl text-acc">{loading ? "…" : pct(p.prob, 1)}</span>
+              </div>
+              <p className="text-xs text-mut mt-2">Cuota justa {num(p.justa)} · Sensibilidad {pct(p.lo, 1)}–{pct(p.hi, 1)} · Devolución {pct(p.push, 1)}</p>
+            </div>
             <details
               className="mt-3 mb-4"
               open={ajustes}
               onToggle={(e) => setAjustes(e.currentTarget.open)}
             >
               <summary className="flex min-h-11 items-center justify-between text-xs font-semibold text-mut">
-                Ajustar líneas e historial <span aria-hidden="true">⌄</span>
+                Ajustar líneas e historial (avanzado) <span aria-hidden="true">⌄</span>
               </summary>
               <div className="grid sm:grid-cols-2 gap-3 pt-3">
                 {conLineas && (
@@ -340,6 +381,13 @@ export default function Partido() {
                 </div>
               </div>
             </details>
+            <details className="border-t border-line2 mt-4 pt-2"
+              open={listaExpandida} onToggle={(e) => setListaExpandida(e.currentTarget.open)}>
+              <summary className="min-h-12 flex items-center justify-between gap-3 text-sm font-semibold text-acc">
+                <span>Ver lista completa de mercados</span>
+                <span className="text-xs text-mut">{lista.length} opciones</span>
+              </summary>
+              <div className="pt-2">
             <div className="flex justify-between text-xs text-mut pb-2">
               <span>Mercado</span>
               <span>Probabilidad del modelo</span>
@@ -405,9 +453,31 @@ export default function Partido() {
               * Sensibilidad heurística del modelo. No es un intervalo de
               confianza validado.
             </Nota>
+              </div>
+            </details>
           </Card>
         </div>
-        <aside id="seleccion" className="min-w-0 lg:sticky lg:top-[145px]">
+
+      <section id="distribucion" className="mt-4 min-w-0 scroll-mt-36 lg:col-start-1" aria-label="Distribución de probabilidades">
+        <Card titulo="03 · Cómo se distribuyen los resultados"
+          desc="Cada escenario corresponde a la selección activa. El gráfico proviene del motor y distingue aciertos y devoluciones cuando corresponde.">
+          {estadoDetalle.error ? (
+            <p role="status" className="text-sm text-mut py-4">La distribución no está disponible hasta verificar nuevamente este mercado.</p>
+          ) : !loading && detalle ? (
+            <GraficoModelo v={v} p={detalle} />
+          ) : (
+            <p role="status" className="text-sm text-mut py-4">Preparando la distribución de la selección…</p>
+          )}
+        </Card>
+      </section>
+      <div className="min-w-0 lg:col-start-1">
+      {loading ? (
+        <section id="evidencia" role="status" className="rounded-card bg-card border border-line2 p-5 mt-5 text-sm text-mut">Actualizando la evidencia de la nueva selección…</section>
+      ) : (
+        <EvidenceSummary v={v} p={p} n={n} filtro={filtro} />
+      )}
+      </div>
+        <aside id="seleccion" className="min-w-0 lg:col-start-2 lg:row-start-1 lg:row-span-3 lg:sticky lg:top-[145px] lg:self-start scroll-mt-36">
           <Card
             className="match-stripe"
             titulo="Tu selección"
@@ -560,7 +630,7 @@ export default function Partido() {
           </p>
         </aside>
       </div>
-      <div className="lg:max-w-[calc(63%_-_12px)] mt-6">
+      <div className="w-full mt-5">
         {estadoDetalle.loading && (
           <p role="status" className="text-xs text-mut">
             Actualizando detalle histórico…
@@ -594,12 +664,6 @@ export default function Partido() {
           <div className="disclosure-body">
             {detalle && <ListaPartidos v={v} p={detalle} lado="l" />}
             {detalle && <ListaPartidos v={v} p={detalle} lado="v" />}
-          </div>
-        </details>
-        <details className="disclosure">
-          <summary>Distribución de resultados</summary>
-          <div className="disclosure-body">
-            {detalle && <GraficoModelo v={v} p={detalle} />}
           </div>
         </details>
         <details className="disclosure">
@@ -655,22 +719,7 @@ export default function Partido() {
           </div>
         </details>
       </div>
-      <div className="lg:hidden fixed inset-x-0 bottom-[calc(64px_+_env(safe-area-inset-bottom))] z-30 bg-card border-t border-line2 px-4">
-        <a
-          href="#seleccion"
-          className="flex items-center gap-3 min-h-[60px]"
-          aria-label={`Ver selección: ${p.mercado}, ${loading ? "…" : pct(p.prob, 1)}`}
-        >
-          <div className="flex-1 min-w-0">
-            <div className="text-[.65rem] text-mut">Tu selección</div>
-            <div className="font-bold text-xs truncate mt-1">{p.mercado}</div>
-          </div>
-          <div className="num text-xl text-acc">
-            {loading ? "…" : pct(p.prob, 1)}
-          </div>
-          <span className="text-xs text-mut">Ver →</span>
-        </a>
-      </div>
+
       <p className="text-xs text-mut mt-6">
         Datos: football-data.co.uk y ESPN · Tiempo reglamentario.
       </p>
