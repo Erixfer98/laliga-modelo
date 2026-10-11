@@ -605,14 +605,18 @@ export default function Partido() {
           desc="Cada escenario corresponde a la selección activa. El gráfico proviene del motor y distingue aciertos y devoluciones cuando corresponde.">
           {estadoDetalle.error ? (
             <ErrorBox error={estadoDetalle.error} reintentar={estadoDetalle.reintentar} />
-          ) : detalle ? (
+          ) : !loading && detalle ? (
             <GraficoModelo v={v} p={detalle} />
           ) : (
             <p role="status" className="text-sm text-mut py-4">Preparando la distribución de la selección…</p>
           )}
         </Card>
       </section>
-      <EvidenceSummary v={v} p={p} n={n} filtro={filtro} />
+      {loading ? (
+        <section id="evidencia" role="status" className="rounded-card bg-card border border-line2 p-5 mt-5 text-sm text-mut">Actualizando la evidencia de la nueva selección…</section>
+      ) : (
+        <EvidenceSummary v={v} p={p} n={n} filtro={filtro} />
+      )}
       <div className="w-full mt-5">
         {estadoDetalle.loading && (
           <p role="status" className="text-xs text-mut">
