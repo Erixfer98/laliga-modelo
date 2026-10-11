@@ -1,0 +1,73 @@
+metrica,mes_externo,cutoff_exclusivo,inicio_validacion,partidos_internos,meses_internos,candidato,score_validacion,train_max_fecha,pearson_interno,observaciones_positivas,nb_habilitada,alpha,razon_nb
+amarillas,2025-12,2025-11-30,2025-09-01,118,2,componentes_k20_x0.005_w0_r0,0.2147019983,2025-11-29,0.8450232425,209,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+amarillas,2026-01,2025-12-31,2025-10-01,309,3,componentes_k20_x0.005_w0_r0,0.2118111881,2025-12-30,0.8896100216,540,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+amarillas,2026-02,2026-01-31,2025-11-01,510,3,componentes_k20_x0.01_w0_r0,0.2100107446,2026-01-30,0.8577780093,883,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+amarillas,2026-03,2026-02-28,2025-12-01,566,3,componentes_k20_x0.005_w0_r0,0.2096775775,2026-02-27,0.8767198658,991,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+amarillas,2026-04,2026-03-31,2026-01-01,595,3,componentes_k20_x0.01_w0_r0,0.2106424432,2026-03-22,0.878112396,1039,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+amarillas,2026-05,2026-04-30,2026-02-01,599,3,componentes_k20_x0_w0_r0,0.2063463491,2026-04-27,0.8981460842,1047,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+amarillas,2026-07,2026-06-30,2026-04-01,428,2,componentes_k20_x0_w0_r0,0.2036758149,2026-05-24,0.9042490004,733,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+amarillas,2026-08,2026-07-31,2026-05-01,217,2,componentes_k20_x0.01_w180_r0,0.2035880732,2026-07-26,0.8916988318,369,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+amarillas,2026-09,2026-08-31,2026-06-01,114,2,componentes_k10_x0.01_w180_r0,0.2015422141,2026-08-30,0.9178338781,190,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+corners,2025-12,2025-11-30,2025-09-01,118,2,componentes_k20_x0.01_w0_r0,0.1945065941,2025-11-29,1.580372794,232,True,0.119536595,dispersión interna >1.2 y >=30 positivos
+corners,2026-01,2025-12-31,2025-10-01,309,3,componentes_k20_x0.01_w0_r0,0.2011315052,2025-12-30,1.575604602,598,True,0.1220263675,dispersión interna >1.2 y >=30 positivos
+corners,2026-02,2026-01-31,2025-11-01,510,3,componentes_k20_x0.01_w0_r0,0.2031952212,2026-01-30,1.495884199,995,True,0.1062025944,dispersión interna >1.2 y >=30 positivos
+corners,2026-03,2026-02-28,2025-12-01,566,3,componentes_k20_x0.005_w0_r0,0.2031933634,2026-02-27,1.431159533,1108,True,0.09045622974,dispersión interna >1.2 y >=30 positivos
+corners,2026-04,2026-03-31,2026-01-01,595,3,componentes_k20_x0.01_w0_r0,0.1988515257,2026-03-22,1.419364559,1178,True,0.0877339599,dispersión interna >1.2 y >=30 positivos
+corners,2026-05,2026-04-30,2026-02-01,599,3,componentes_k20_x0.01_w0_r0,0.2043944146,2026-04-27,1.487957102,1178,True,0.09518893404,dispersión interna >1.2 y >=30 positivos
+corners,2026-07,2026-06-30,2026-04-01,428,2,componentes_k20_x0.005_w0_r0,0.2084292525,2026-05-24,1.642097513,836,True,0.1172818593,dispersión interna >1.2 y >=30 positivos
+corners,2026-08,2026-07-31,2026-05-01,217,2,componentes_k20_x0_w180_r0,0.2082964824,2026-07-26,1.814363896,427,True,0.1468315272,dispersión interna >1.2 y >=30 positivos
+corners,2026-09,2026-08-31,2026-06-01,114,2,componentes_k20_x0_w0_r0,0.2067297505,2026-08-30,1.771496681,222,True,0.1381924739,dispersión interna >1.2 y >=30 positivos
+goles,2025-12,2025-11-30,2025-09-01,118,2,componentes_k20_x0.01_w0_r0,0.2144625393,2025-11-29,1.101124799,164,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+goles,2026-01,2025-12-31,2025-10-01,309,3,componentes_k20_x0.005_w0_r0,0.2107818049,2025-12-30,1.066048173,434,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+goles,2026-02,2026-01-31,2025-11-01,510,3,componentes_k20_x0.005_w0_r-0.05,0.2067899081,2026-01-30,1.07851475,736,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+goles,2026-03,2026-02-28,2025-12-01,566,3,componentes_k20_x0.01_w180_r-0.05,0.2029331687,2026-02-27,1.025827136,831,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+goles,2026-04,2026-03-31,2026-01-01,595,3,componentes_k20_x0.005_w180_r-0.05,0.203829216,2026-03-22,0.9715672363,887,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+goles,2026-05,2026-04-30,2026-02-01,599,3,componentes_k20_x0.005_w0_r-0.05,0.2054061041,2026-04-27,0.9207362238,892,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+goles,2026-07,2026-06-30,2026-04-01,428,2,componentes_k20_x0.005_w0_r-0.05,0.1989102271,2026-05-24,0.9259376665,649,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+goles,2026-08,2026-07-31,2026-05-01,217,2,componentes_k20_x0_w180_r0,0.1964550389,2026-07-26,0.8908264146,331,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+goles,2026-09,2026-08-31,2026-06-01,114,2,componentes_k10_x0_w0_r-0.05,0.184094065,2026-08-30,1.019805581,170,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+goles_1t,2025-12,2025-11-30,2025-09-01,118,2,componentes_k10_x0.01_w0_r0,0.2214570426,2025-11-29,1.07487198,100,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+goles_1t,2026-01,2025-12-31,2025-10-01,309,3,componentes_k20_x0_w0_r-0.05,0.2209539234,2025-12-30,1.009348738,257,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+goles_1t,2026-02,2026-01-31,2025-11-01,510,3,componentes_k20_x0.005_w0_r0,0.2187057086,2026-01-30,1.01579662,430,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+goles_1t,2026-03,2026-02-28,2025-12-01,566,3,componentes_k20_x0.005_w0_r0,0.2216595197,2026-02-27,1.014475298,491,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+goles_1t,2026-04,2026-03-31,2026-01-01,595,3,componentes_k20_x0.01_w0_r0,0.2185425488,2026-03-22,1.0206811,520,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+goles_1t,2026-05,2026-04-30,2026-02-01,599,3,componentes_k20_x0.01_w0_r-0.05,0.2269159087,2026-04-27,1.017348778,545,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+goles_1t,2026-07,2026-06-30,2026-04-01,428,2,componentes_k20_x0.005_w0_r-0.05,0.2289417409,2026-05-24,1.013689135,405,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+goles_1t,2026-08,2026-07-31,2026-05-01,217,2,componentes_k20_x0_w0_r-0.05,0.2234045447,2026-07-26,0.9696867907,198,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+goles_1t,2026-09,2026-08-31,2026-06-01,114,2,componentes_k20_x0_w180_r0,0.2143271685,2026-08-30,1.005941551,106,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+goles_2t,2025-12,2025-11-30,2025-09-01,118,2,componentes_k20_x0.01_w0_r0,0.245744006,2025-11-29,1.082491821,121,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+goles_2t,2026-01,2025-12-31,2025-10-01,309,3,componentes_k20_x0.01_w0_r0,0.2390102058,2025-12-30,1.016660527,326,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+goles_2t,2026-02,2026-01-31,2025-11-01,510,3,componentes_k20_x0.01_w0_r0,0.2399737894,2026-01-30,1.059019156,558,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+goles_2t,2026-03,2026-02-28,2025-12-01,566,3,componentes_k20_x0.01_w180_r0,0.2396335031,2026-02-27,0.9951602187,632,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+goles_2t,2026-04,2026-03-31,2026-01-01,595,3,componentes_k20_x0.01_w0_r0,0.2407720952,2026-03-22,0.9903081883,664,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+goles_2t,2026-05,2026-04-30,2026-02-01,599,3,componentes_k20_x0.01_w0_r0,0.240037654,2026-04-27,0.9577017674,637,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+goles_2t,2026-07,2026-06-30,2026-04-01,428,2,componentes_k20_x0.005_w0_r0,0.2346531408,2026-05-24,0.9281603871,472,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+goles_2t,2026-08,2026-07-31,2026-05-01,217,2,componentes_k20_x0_w180_r0,0.2324252229,2026-07-26,0.875789867,257,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+goles_2t,2026-09,2026-08-31,2026-06-01,114,2,componentes_k20_x0_w0_r0,0.2416303025,2026-08-30,1.061348664,129,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+rojas,2025-12,2025-11-30,2025-09-01,118,2,directa_k10_x0.005_w0_r0,0.1054244426,2025-11-29,1.187946076,25,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+rojas,2026-01,2025-12-31,2025-10-01,309,3,componentes_k20_x0_w0_r0,0.1146799038,2025-12-30,1.393736528,62,True,0.8942596222,dispersión interna >1.2 y >=30 positivos
+rojas,2026-02,2026-01-31,2025-11-01,510,3,componentes_k10_x0_w0_r0,0.101104758,2026-01-30,1.748389887,89,True,1.622085438,dispersión interna >1.2 y >=30 positivos
+rojas,2026-03,2026-02-28,2025-12-01,566,3,componentes_k20_x0_w0_r0,0.09944057094,2026-02-27,1.419894855,95,True,1.923167528,dispersión interna >1.2 y >=30 positivos
+rojas,2026-04,2026-03-31,2026-01-01,595,3,componentes_k20_x0.01_w0_r0,0.1219034881,2026-03-22,1.219522147,109,True,0.7701747231,dispersión interna >1.2 y >=30 positivos
+rojas,2026-05,2026-04-30,2026-02-01,599,3,componentes_k20_x0.01_w180_r0,0.1237958106,2026-04-27,1.14356404,134,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+rojas,2026-07,2026-06-30,2026-04-01,428,2,componentes_k20_x0.01_w180_r0,0.1129796523,2026-05-24,1.138324273,92,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+rojas,2026-08,2026-07-31,2026-05-01,217,2,componentes_k20_x0.01_w180_r0,0.1178044423,2026-07-26,1.292509732,47,True,0.8755253537,dispersión interna >1.2 y >=30 positivos
+rojas,2026-09,2026-08-31,2026-06-01,114,2,componentes_k20_x0.01_w0_r0,0.1020628432,2026-08-30,0.8599858141,40,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+tiros,2025-12,2025-11-30,2025-09-01,118,2,componentes_k3_x0_w0_r0,0.1608601141,2025-11-29,1.537353543,236,True,0.0440385388,dispersión interna >1.2 y >=30 positivos
+tiros,2026-01,2025-12-31,2025-10-01,309,3,directa_k3_x0.005_w0_r0,0.1619172068,2025-12-30,1.613421726,618,True,0.05024686594,dispersión interna >1.2 y >=30 positivos
+tiros,2026-02,2026-01-31,2025-11-01,510,3,componentes_k3_x0.005_w0_r0,0.1553151493,2026-01-30,1.649449285,1020,True,0.04962760883,dispersión interna >1.2 y >=30 positivos
+tiros,2026-03,2026-02-28,2025-12-01,566,3,componentes_k3_x0.01_w0_r0,0.1558963243,2026-02-27,1.740197052,1132,True,0.05571316243,dispersión interna >1.2 y >=30 positivos
+tiros,2026-04,2026-03-31,2026-01-01,595,3,componentes_k3_x0.005_w0_r0,0.1577504711,2026-03-22,1.711193035,1190,True,0.05142157195,dispersión interna >1.2 y >=30 positivos
+tiros,2026-05,2026-04-30,2026-02-01,599,3,componentes_k3_x0.005_w0_r0,0.1565582409,2026-04-27,1.755656881,1198,True,0.05550125479,dispersión interna >1.2 y >=30 positivos
+tiros,2026-07,2026-06-30,2026-04-01,428,2,componentes_k10_x0_w0_r0,0.1598681634,2026-05-24,1.872619805,855,True,0.0622808518,dispersión interna >1.2 y >=30 positivos
+tiros,2026-08,2026-07-31,2026-05-01,217,2,componentes_k10_x0_w0_r0,0.1567248567,2026-07-26,1.852842589,433,True,0.05851251942,dispersión interna >1.2 y >=30 positivos
+tiros,2026-09,2026-08-31,2026-06-01,114,2,componentes_k10_x0_w180_r0,0.1434627157,2026-08-30,2.01573996,228,True,0.0571759114,dispersión interna >1.2 y >=30 positivos
+tiros_a_puerta,2025-12,2025-11-30,2025-09-01,118,2,componentes_k10_x0.01_w0_r0,0.1628142664,2025-11-29,1.182439089,235,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+tiros_a_puerta,2026-01,2025-12-31,2025-10-01,309,3,directa_k10_x0.005_w0_r0,0.1736638658,2025-12-30,1.22062395,607,True,0.04175787197,dispersión interna >1.2 y >=30 positivos
+tiros_a_puerta,2026-02,2026-01-31,2025-11-01,510,3,componentes_k20_x0.005_w0_r0,0.1700142898,2026-01-30,1.260179604,998,True,0.05202384356,dispersión interna >1.2 y >=30 positivos
+tiros_a_puerta,2026-03,2026-02-28,2025-12-01,566,3,componentes_k20_x0.01_w180_r0,0.1697890428,2026-02-27,1.21524873,1103,True,0.04834220729,dispersión interna >1.2 y >=30 positivos
+tiros_a_puerta,2026-04,2026-03-31,2026-01-01,595,3,componentes_k20_x0.01_w0_r0,0.1710698481,2026-03-22,1.173308363,1158,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+tiros_a_puerta,2026-05,2026-04-30,2026-02-01,599,3,componentes_k20_x0.01_w0_r0,0.1696005321,2026-04-27,1.161124621,1164,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
+tiros_a_puerta,2026-07,2026-06-30,2026-04-01,428,2,componentes_k20_x0_w180_r0,0.1653037565,2026-05-24,1.221383728,834,True,0.04393917986,dispersión interna >1.2 y >=30 positivos
+tiros_a_puerta,2026-08,2026-07-31,2026-05-01,217,2,componentes_k20_x0_w180_r0,0.1639853608,2026-07-26,1.282044631,424,True,0.04707858128,dispersión interna >1.2 y >=30 positivos
+tiros_a_puerta,2026-09,2026-08-31,2026-06-01,114,2,componentes_k10_x0_w180_r0,0.1497310031,2026-08-30,1.094159782,222,False,0,Poisson: diagnóstico interno insuficiente o sin exceso
