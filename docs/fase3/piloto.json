@@ -1,0 +1,27 @@
+{
+  "tipo": "piloto_rendimiento; sin inferencia predictiva",
+  "segundos": 1.3737865639996016,
+  "filas_banco": 4560,
+  "partidos": 60,
+  "segundos_probabilidades": 0.8961834839992662,
+  "predicciones_conteo_piloto": 120,
+  "filas_estimadas_completo": 395520,
+  "estimacion_segundos_serial": 119.15790828796544,
+  "estimacion_probabilidades_poisson_serial": 184.61379770384883,
+  "codigo_banco": {
+    "experimentos/lambdas.py": "778c44411c64632089a98fac45716a71c06692e6bc844bcaf94e702592039d87",
+    "experimentos/distribuciones.py": "a8aac4dcd695def958f6fcf2b39d7cb3fb9e6da2235cc404d9fc0dd472f0fcb6",
+    "experimentos/temporal.py": "5f61d85ab40d4384182053e17a26bcfe1802d9b0b988ae2b6a19389d807e96f8"
+  },
+  "datos": {
+    "datos/bbdd_bundesliga.csv": "75e0ea3df527f766b8a4026e943a6c6a72e8609c707c09b9c296d472271e085b",
+    "datos/bbdd_laliga.csv": "ad8ba593db49088cbcc40d50d391d86d5ee90ea8953d30af07e53ca79ec4348d",
+    "datos/bbdd_ligamx.csv": "fa2d3456be0df72acb2405c717488614fc7937bbb69d998d98a5d1389c132920",
+    "datos/bbdd_ligue1.csv": "fad465efa75e6b5d32c28d7881b93715c12550a49bf3cd471e0aae4d4c8f5c19",
+    "datos/bbdd_premier.csv": "5bbc5ac236fd26dd5815aa16dd6dfc36bb940c9d6380291a7dedaf64547e97b7",
+    "datos/bbdd_seriea.csv": "d242ce61e3ca33ba83540c65e2fcbf0ce2065feb23cf964dc6e302aeb1cc9f8c"
+  },
+  "memoria_banco_muestra_bytes": 688332,
+  "procesos_completo": 2,
+  "nb_evaluada": false
+}
