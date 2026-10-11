@@ -9,6 +9,7 @@ test.beforeEach(async ({ page }) => {
 async function analizar(page: Page) {
   await page.goto("/partido");
   await expect(page.getByTestId("probabilidad-seleccionada")).toBeVisible();
+  await page.getByText("Ver lista completa de mercados", { exact: true }).click();
 }
 async function agregar(page: Page) {
   await page.getByLabel("Tu cuota decimal").fill("1.90");
