@@ -50,6 +50,7 @@ export default function Partido() {
   const [filtro, setFiltro] = useState<"Todos" | "Como jugarán">("Todos");
   const [solo, setSolo] = useState(false);
   const [ajustes, setAjustes] = useState(false);
+  const [listaExpandida, setListaExpandida] = useState(false);
   const [precio, setPrecio] = useState({ key: "", value: "" });
   const actual = useRef({ key: "", disponible: false });
   const registro = useRef<AbortController | null>(null);
@@ -380,6 +381,13 @@ export default function Partido() {
                 </div>
               </div>
             </details>
+            <details className="border-t border-line2 mt-4 pt-2"
+              open={listaExpandida} onToggle={(e) => setListaExpandida(e.currentTarget.open)}>
+              <summary className="min-h-12 flex items-center justify-between gap-3 text-sm font-semibold text-acc">
+                <span>Ver lista completa de mercados</span>
+                <span className="text-xs text-mut">{lista.length} opciones</span>
+              </summary>
+              <div className="pt-2">
             <div className="flex justify-between text-xs text-mut pb-2">
               <span>Mercado</span>
               <span>Probabilidad del modelo</span>
@@ -445,6 +453,8 @@ export default function Partido() {
               * Sensibilidad heurística del modelo. No es un intervalo de
               confianza validado.
             </Nota>
+              </div>
+            </details>
           </Card>
         </div>
 
@@ -709,16 +719,7 @@ export default function Partido() {
           </div>
         </details>
       </div>
-      <div className="lg:hidden fixed inset-x-0 bottom-[calc(64px_+_env(safe-area-inset-bottom))] z-30 bg-card border-t border-line2 px-4">
-        <a
-          href="#seleccion"
-          className="flex items-center gap-3 min-h-[60px]"
-          aria-label={`Ver selección: ${p.mercado}, ${loading ? "…" : pct(p.prob, 1)}`}
-        >
-          <div className="flex-1 min-w-0">
-            <div className="text-[.65rem] text-mut">Tu selección</div>
-            <div className="font-bold text-xs truncate mt-1">{p.mercado}</div>
-          </div>
+
           <div className="num text-xl text-acc">
             {loading ? "…" : pct(p.prob, 1)}
           </div>
