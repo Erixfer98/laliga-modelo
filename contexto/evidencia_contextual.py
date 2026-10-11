@@ -183,7 +183,10 @@ class Contexto:
                 # Respuesta vacía permanece unknown, no significa ausencia de lesionados.
                 if staged:
                     if component.startswith('squads_'): covered_squads.add(component)
-                    elif component == 'confirmed_lineups': covered_lineups.update(x['value']['team_id'] for x in staged)
+                    elif component == 'confirmed_lineups':
+                        for team in (f['home']['provider_team_id'], f['away']['provider_team_id']):
+                            players = [x['subject_id'] for x in staged if x['value']['team_id'] == team]
+                            if len(players) == 11 and len(set(players)) == 11: covered_lineups.add(team)
                     else: unknown.discard(component)
             except (ValueError, KeyError, TypeError):
                 problems.append({'component': component, 'code': 'context_identity_or_contract_invalid', 'record_id': r['id']})

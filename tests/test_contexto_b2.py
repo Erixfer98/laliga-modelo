@@ -432,3 +432,14 @@ def test_ai_dataset_contains_verified_fixture_and_rejects_foreign_facts(setup):
     with pytest.raises(ValueError): validar_dataset(bad)
     bad=copy.deepcopy(ds); bad['fixture_registered_at_utc']=KICK
     with pytest.raises(ValueError): validar_dataset(bad)
+
+
+def test_partial_both_lineups_do_not_imply_complete_starting_elevens(setup):
+    c,f,d,s=setup; rec=discovered(setup)
+    rows=[{'team':{'id':90011},'startXI':[{'player':{'id':1}}]}, {'team':{'id':90012},'startXI':[{'player':{'id':2}}]}]
+    add_context(s,rec,rows,'confirmed_lineups','/fixtures/lineups',{'fixture':7001})
+    ds=Contexto(c).dataset(rec,ahora())
+    assert 'confirmed_lineups' in ds['unknown_fields'] and len(ds['facts'])==2
+    rows=[{'team':{'id':90011},'startXI':[{'player':{'id':i+1}} for i in range(11)]}, {'team':{'id':90012},'startXI':[{'player':{'id':i+21}} for i in range(11)]}]
+    add_context(s,rec,rows,'confirmed_lineups','/fixtures/lineups',{'fixture':7001})
+    assert 'confirmed_lineups' not in Contexto(c).dataset(rec,ahora())['unknown_fields']

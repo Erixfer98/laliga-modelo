@@ -197,9 +197,12 @@ real, fijar retención de bytes de manera que preserve auditoría y diseñar ver
 incremental/anclajes o backend transaccional equivalente. No se hizo backtesting ni
 se afirmó escalabilidad a producción.
 
-Validación B2 final: **66 casos sintéticos aprobados**, además de 52 casos B1
+Validación B2 final: **67 casos sintéticos aprobados**, además de 52 casos B1
 aprobados durante la revisión de compatibilidad. Ocho unitarias web, TypeScript y
-build pasan. Las regresiones completas Python/Playwright y CI se documentan en el
-cierre de la entrega, sin presentar resultados pendientes como aprobados.
+build pasan. La suite local completa inicial pasó 271 casos (657,81 s, ejecutada concurrentemente
+con E2E); después se agregaron seis casos específicos, incluidos en la validación B2
+final. [PR #6](https://github.com/Erixfer98/laliga-modelo/pull/6) publica el recuento
+completo y los enlaces CI por commit del cierre de entrega. Un aviso preexistente de
+Starlette/TestClient no afecta los resultados.
 Las optimizaciones del PR #5 se conservan: `cache_analisis.py`, API, motor estadístico,
 liquidación, EV, Kelly, registro Fase 3 y archivos web no se modifican en B2.
