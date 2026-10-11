@@ -720,12 +720,6 @@ export default function Partido() {
         </details>
       </div>
 
-          <div className="num text-xl text-acc">
-            {loading ? "…" : pct(p.prob, 1)}
-          </div>
-          <span className="text-xs text-mut">Ver →</span>
-        </a>
-      </div>
       <p className="text-xs text-mut mt-6">
         Datos: football-data.co.uk y ESPN · Tiempo reglamentario.
       </p>
