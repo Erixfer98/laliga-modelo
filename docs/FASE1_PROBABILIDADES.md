@@ -117,7 +117,8 @@ antiguas sin identidad deben volver a agregarse.
 | Mismo partido y misma métrica | Intersección en la matriz compartida | Mínimo de escenarios calculados |
 | Mismo partido y distintas métricas | `null`: falta distribución conjunta | `null`, sin opciones |
 | Duplicados canónicos | `null`: boleto inválido | `null`, sin opciones |
-| Selecciones incompatibles con matriz válida | Probabilidad de acierto conjunto 0 y EV de liquidación | Deshabilitado |
+| Selecciones sin ningún retorno beneficioso posible | Probabilidad de acierto conjunto 0 y EV de liquidación | Deshabilitado |
+| Sin acierto total posible, pero con pagos por pushes | Probabilidad de acierto conjunto 0 y EV de liquidación | Calculado sobre retornos parciales |
 | Partidos distintos | Producto **entre grupos de partidos**, con hipótesis explícita de independencia | Escenarios de sensibilidad |
 | Selección antigua o sin identidad | `null`, se solicita volver a agregarla | Deshabilitado |
 
@@ -151,7 +152,10 @@ EV = Σr P(R=r) (r-1)
 Kelly = argmax[0 <= f < 1] Σr P(R=r) log(1+f(r-1))
 ```
 
-Se resuelve la derivada por búsqueda de raíz; si el EV no es positivo, Kelly es 0.
+Si el EV no es positivo, Kelly es 0. Para retornos generales se resuelve la
+derivada con tolerancia relativa de precisión máquina, sin tolerancia absoluta
+que borre fracciones positivas pequeñas. Para una sola cuota ganadora y
+retornos 0/1 se usa directamente la solución cerrada, limitada a [0,1−10⁻¹⁰].
 Para una apuesta con push la expresión analítica de comprobación es
 `f = (b·p_acierto - p_fallo)/(b·(p_acierto+p_fallo))`, con `b=cuota-1`.
 Se devuelve el menor Kelly de los escenarios de sensibilidad evaluados.
@@ -250,7 +254,7 @@ Las advertencias y límites matemáticos no sustituyen ese trabajo.
 
 ### Resultado local final
 
-- **43 pruebas Python aprobadas**, incluidas FastAPI y 3 smoke tests de Streamlit.
+- **76 pruebas Python aprobadas**, incluidas FastAPI y 3 smoke tests de Streamlit.
 - **3 pruebas de contratos web aprobadas**.
 - TypeScript sin errores y build Next.js de producción completado (11 páginas).
 - Comparación anterior/posterior reproducida contra el commit base.

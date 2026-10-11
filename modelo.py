@@ -145,11 +145,11 @@ def mercados(m: np.ndarray, lineas: list) -> dict:
 
 
 def cuota_justa(prob: float, push: float = 0.0):
-    if not math.isfinite(prob) or not math.isfinite(push) or not 0 <= prob <= 1 + 1e-14 or not 0 <= push <= 1 + 1e-14:
+    if not math.isfinite(prob) or not math.isfinite(push) or not 0 <= prob <= 1 + 1e-14 or not 0 <= push <= 1 + 1e-14 or prob + push > 1 + 1e-14:
         raise ValueError("probabilidad o devolución inválida")
     if prob <= 0:
         return None
-    cuota = (1 - push) / prob
+    cuota = max(prob, 1 - push) / prob
     return round(cuota, 2) if math.isfinite(cuota) else None
 
 

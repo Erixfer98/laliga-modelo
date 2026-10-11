@@ -471,7 +471,7 @@ def resumen_boleto(legs: list) -> dict:
     if len(games) > 1:
         rb["advertencias"].append("Se asume independencia entre partidos distintos; no está validada empíricamente.")
     central, candidates, probs, lows, highs = [], [], [], [], []
-    incompatible = False
+    max_retornos = []
     for key, sels in groups.items():
         liga, local, vis, met = key
         ruta = f"{CARPETA_DATOS}/bbdd_{liga}.csv"
@@ -483,11 +483,10 @@ def resumen_boleto(legs: list) -> dict:
                               "rango_local": r["rango"]["lam_l"], "rango_visitante": r["rango"]["lam_v"]})
         reglas, odds = zip(*sels)
         dist, prob = pr.retornos(r["matriz"], reglas, odds)
-        # Incompatibilidad lógica: ninguna celda permite beneficio o acierto conjunto.
-        # No se infiere incompatibilidad de una probabilidad cero observada.
-        wins = [pr.liquidacion(regla, max(101, r["matriz"].shape[0]-1))[0] for regla in reglas]
-        if len(sels) > 1 and not np.logical_and.reduce(wins).any():
-            incompatible = True
+        acierto_posible, max_retorno = pr.compatibilidad(reglas, odds)
+        max_retornos.append(max_retorno)
+        if not acierto_posible and max_retorno > 0:
+            rb["advertencias"].append("Sin acierto total posible en un grupo; se conservan los retornos parciales por devoluciones.")
         cs = [pr.retornos(m, reglas, odds) for m in r["rango"]["esquinas"].values()]
         central.append(dist); candidates.append([d for d, _ in cs]); probs.append(prob)
         lows.append(min(p for _, p in cs)); highs.append(max(p for _, p in cs))
@@ -511,9 +510,9 @@ def resumen_boleto(legs: list) -> dict:
             rb["advertencias"].append("Cuota justa única no disponible para un boleto con retornos parciales por devoluciones.")
     else:
         rb["advertencias"].append("Kelly y extremos de EV no disponibles: demasiados escenarios de devolución.")
-    if incompatible:
+    if len(legs) > 1 and math.prod(max_retornos) <= 1:
         rb.update(estado="incompatible", kelly=None)
-        rb["advertencias"].append("Selecciones incompatibles: probabilidad de acierto conjunto cero; stake deshabilitado.")
+        rb["advertencias"].append("Selecciones incompatibles: ningún retorno con beneficio es posible; stake deshabilitado.")
     rb["advertencias"].append("Rangos y Kelly de sensibilidad son heurísticos; no garantizan cobertura ni rentabilidad.")
     return rb
 
