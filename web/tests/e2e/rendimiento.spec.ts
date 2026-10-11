@@ -7,6 +7,7 @@ test.beforeEach(async ({ page }) => {
 async function iniciar(page: import("@playwright/test").Page) {
   await page.goto("/partido");
   await expect(page.getByTestId("probabilidad-seleccionada")).toBeVisible();
+  await page.getByText("Ver lista completa de mercados", { exact: true }).click();
 }
 test("mercados y grupos actualizan sin solicitar de nuevo el análisis base", async ({
   page,
