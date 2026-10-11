@@ -21,7 +21,7 @@ test("lambdas visibles antes de líneas y lectura ligada a la métrica", async (
   const nombre = info.project.name === "iphone" ? "ux-movil" : "ux-desktop";
   await page.screenshot({ path: "test-results/" + nombre + ".png", fullPage: true });
   // Un parámetro distinto puede coincidir por redondeo; se valida el contexto y los datos disponibles.
-  expect(antes).toMatch(/\\d/);
+  expect(antes).toMatch(/[0-9]/);
 });
 
 test("líneas directas y Más/Menos en un toque", async ({ page }) => {
