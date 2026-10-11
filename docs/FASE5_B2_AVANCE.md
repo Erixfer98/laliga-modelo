@@ -1,5 +1,8 @@
 # Fase 5 B2 — Automatización experimental, sin activación
 
+El worker persistente y el respaldo externo preparado posteriormente se documentan en
+[FASE5_B2_WORKER_RENDER](FASE5_B2_WORKER_RENDER.md): código optativo, no desplegado ni conectado.
+
 ## Dictamen y disponibilidad
 
 Continúa el PR borrador #6, rama `feature/fase-5-inteligencia-contextual` hacia `main`.

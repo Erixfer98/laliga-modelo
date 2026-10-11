@@ -2,6 +2,9 @@
 
 B2 añade descubrimiento automático optativo, cliente consciente del plan, evidencia
 prospectiva y CLI privado. **No conectado ni activado en producción.**
+Preparación del worker Render/R2 independiente y deshabilitado:
+[FASE5_B2_WORKER_RENDER](../docs/FASE5_B2_WORKER_RENDER.md).
+
 Guía vigente y matriz de disponibilidad: [FASE5_B2_AVANCE](../docs/FASE5_B2_AVANCE.md).
 
 ```bash
