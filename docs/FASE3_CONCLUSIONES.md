@@ -54,7 +54,9 @@ muy por debajo del presupuesto de 30 minutos para la inferencia masiva. Son medi
 Regenerar análisis desde inferencia verificada tarda unos 70 segundos.
 
 Se implementó registro opt-in SQLite append-only de predicciones, configuración, commit, lambdas,
-probabilidades originales, UTC y procedencia con hashes de archivos suministrados. Rechaza datos
+probabilidades originales, UTC y procedencia con hashes y bytes originales archivados.
+El recibo distingue generación declarada de registro efectivo del servidor; la elegibilidad
+requiere registro anterior al kickoff y evidencia archivada íntegra. Rechaza datos
 posteriores a la generación y registro tras el kickoff; normaliza UTC, serializa inserciones,
 hace idempotentes reintentos y detecta alteraciones ordinarias mediante cadena SHA256.
 No añade endpoints, pantallas, cron ni cambios de funcionamiento en producción.
@@ -69,7 +71,7 @@ en Fase 2: no constituye un holdout inédito. No se calculan ROI, CLV ni rentabi
 
 ## Validación y reproducción
 
-**126 pruebas Python**, incluyendo 21 casos de Fase 3, y **3 pruebas web** aprobadas. TypeScript y
+**135 pruebas Python**, incluyendo 30 casos de Fase 3, y **3 pruebas web** aprobadas. TypeScript y
 build Next.js correctos. Incluyen oráculos Poisson/DC/NB, causalidad, selección anidada, gates de NB,
 cohortes, Holm, infinitos, CLI/caché, registro inmutable, UTC, inserción tardía e importaciones de producción.
 Un aviso preexistente Starlette/TestClient, sin fallos.
@@ -118,3 +120,6 @@ Tiros del local por liga, sobre idénticos partidos:
 | ligue1 | 0.172090 | 0.173801 | 0.174845 | 0.162581 | 0.160537 |
 | premier | 0.160175 | 0.162995 | 0.164932 | 0.151149 | 0.151958 |
 | seriea | 0.158177 | 0.182194 | 0.165417 | 0.155273 | 0.153191 |
+
+Revisión final: [dictamen y pruebas de perturbación](REVISION_FINAL_FASE3.md). Las selecciones
+y conclusiones estadísticas permanecen iguales tras revisar los 72 cortes temporales.

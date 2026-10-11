@@ -77,7 +77,7 @@ CLI opt-in:
 
 ```bash
 python -m experimentos.registro --db work/prospectivo.sqlite \
-  --entrada work/prediccion.json --snapshot work/datos-capturados.csv
+  --entrada work/prediccion.json --snapshot work/datos-capturados.csv --recibo
 ```
 
 Contrato JSON de predicción:
@@ -94,11 +94,27 @@ Contrato JSON de predicción:
 | alcance, experimental | `regulation`, `true`; no activar modelos de producción |
 | datos | Lista de snapshots, fuente, SHA256, captured_at_utc, available_at_utc, as_of_utc |
 
-Los hashes se comparan con los archivos suministrados; disponibilidad/captura deben ser anteriores
+Los bytes de los snapshots se archivan en SQLite, en la misma transacción que la predicción,
+y sus SHA256 se contrastan al insertar y al consultar. Disponibilidad/captura deben ser anteriores
 a la generación. La hora efectiva de registro se obtiene del sistema y se comprueba dentro de la
 transacción, antes del kickoff. Una transacción `BEGIN IMMEDIATE` serializa inserciones concurrentes.
 Las tablas rechazan UPDATE/DELETE mediante triggers. El ID de contenido hace idempotentes los reintentos.
-Una cadena SHA256 enlaza los registros; `Registro.verificar()` detecta alteraciones ordinarias.
+Una cadena SHA256 enlaza los registros; `Registro.verificar()` comprueba integridad, cronología
+y bytes archivados. `Registro.consultar(prediction_id)` y `--recibo` exponen por separado
+`generated_at_utc` (declarado por el generador) y `registered_at_utc` (asignado por el servidor).
+La elegibilidad prospectiva requiere `generated_at_utc <= registered_at_utc < kickoff_utc`,
+la cadena íntegra y todos los snapshots verificables. El usuario no puede suministrar ni
+sobrescribir `registered_at_utc`. La hora se toma después del lock y del archivo de evidencia.
+Un reintento idéntico después del kickoff devuelve el ID y la hora originales; una predicción
+nueva se rechaza incluso si declara una generación antigua. El rechazo revierte también el archivo
+de nuevos snapshots. La idempotencia se basa en el payload normalizado completo, no solo en el partido.
+
+Registros antiguos sin bytes archivados fallan cerrados: no se les atribuye retrospectivamente
+evidencia que no conservaron. Modificar o borrar el archivo de entrada no altera los bytes archivados.
+La validez indicada por el recibo acredita el registro local y su evidencia, bajo confianza en el reloj
+y la base del registrador; no certifica identidad del proveedor ni publicación histórica externa.
+`disponibilidad_proveedor_certificada=false` explicita esa limitación. El kickoff declarado debe
+contrastarse con el calendario oficial antes de una evaluación independiente.
 
 Esta cadena no es una firma de un tercero y el administrador de la base puede modificar su esquema.
 Los timestamps del proveedor son declaraciones conservadas, no prueba externa de disponibilidad.

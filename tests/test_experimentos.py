@@ -261,3 +261,137 @@ def test_cli_piloto_y_cache_rechazan_datos_o_artefactos_alterados(tmp_path):
     with pytest.raises(ValueError,match='Conteos Fase 2 alterados'):main(args)
     path.write_text(path.read_text()+'\n')
     with pytest.raises(ValueError,match='Histórico distinto'):main(args)
+
+
+@pytest.mark.parametrize('month',['2025-03','2025-04'])
+def test_anidacion_perturbacion_desde_embargo_y_prefijo(month):
+    bank=bank_sintetico()
+    fits,_=seleccionar(bank,min_partidos=10,min_meses=2)
+    expected=next(f for f in dispersion_nb(bank,fits) if f['mes_externo']==month)
+    cutoff=pd.Period(month,'M').start_time-pd.Timedelta(days=1)
+    changed=bank.copy();future=changed.fecha>=cutoff
+    # Incluye el día de embargo, mes externo y todos los meses posteriores.
+    changed.loc[future,['real_local','real_visitante']]=[500.,0.]
+    changed.loc[future,['lambda_local','lambda_visitante']]=[.001,900.]
+    changed.loc[future,'brier_interno']=np.arange(future.sum())%26
+    perturbed,_=seleccionar(changed,min_partidos=10,min_meses=2)
+    actual=next(f for f in dispersion_nb(changed,perturbed) if f['mes_externo']==month)
+    assert actual==expected  # candidato, κ/ξ/ventana/ρ, Pearson, gate y α NB.
+    # La fila del mes externo solo enumera el corte; sus valores no lo ajustan.
+    prefix=bank[(bank.fecha<cutoff)|(bank.fecha==pd.Period(month,'M').start_time)]
+    partial,_=seleccionar(prefix,min_partidos=10,min_meses=2)
+    assert next(f for f in dispersion_nb(prefix,partial) if f['mes_externo']==month)==expected
+
+
+def test_registro_recibo_evidencia_archivada_y_reintento_post_kickoff(tmp_path,monkeypatch):
+    import experimentos.registro as module
+    snapshot=tmp_path/'datos';snapshot.write_bytes(b'original evidence')
+    p=payload(snapshot);now=datetime.now(timezone.utc)
+    class Clock(datetime):
+        @classmethod
+        def now(cls,tz=None): return now.astimezone(tz)
+    monkeypatch.setattr(module,'datetime',Clock)
+    db=Registro(tmp_path/'registro.sqlite');ident=db.agregar(p,[snapshot])
+    receipt=db.consultar(ident)
+    assert receipt['generated_at_utc']!=receipt['registered_at_utc']
+    assert receipt['registered_at_utc']==now.isoformat()
+    assert receipt['valida_para_evaluacion_prospectiva'] and receipt['snapshots_verificados']
+    assert receipt['disponibilidad_proveedor_certificada'] is False
+    now=datetime.fromisoformat(p['kickoff_utc'])
+    assert db.agregar(p,[snapshot])==ident  # El reintento no crea evidencia nueva.
+    assert db.consultar(ident)==receipt and db.verificar()==1
+    q=copy.deepcopy(p);q['lambdas'][0]=2.
+    with pytest.raises(ValueError,match='después del kickoff'): db.agregar(q,[snapshot])
+    now+=timedelta(seconds=1)
+    with pytest.raises(ValueError,match='después del kickoff'): db.agregar(q,[snapshot])
+    snapshot.unlink()
+    assert db.consultar(ident)==receipt  # La prueba conserva los bytes originales.
+    forged=copy.deepcopy(p);forged['registered_at_utc']=p['generated_at_utc']
+    with pytest.raises(ValueError,match='campos desconocidos'): validar(forged)
+
+
+@pytest.mark.parametrize('failure',['missing','tampered'])
+def test_registro_no_valida_procedencia_ausente_o_alterada(tmp_path,failure):
+    snapshot=tmp_path/'datos';snapshot.write_text('original')
+    db=Registro(tmp_path/'registro.sqlite');ident=db.agregar(payload(snapshot),[snapshot])
+    with sqlite3.connect(db.path) as connection:
+        with pytest.raises(sqlite3.IntegrityError,match='inmutable'):
+            connection.execute('UPDATE snapshots SET contenido=?',(b'fake',))
+        connection.execute('DROP TRIGGER snapshots_sin_update')
+        connection.execute('DROP TRIGGER snapshots_sin_delete')
+        if failure=='missing': connection.execute('DELETE FROM snapshots')
+        else: connection.execute('UPDATE snapshots SET contenido=?',(b'fake',))
+    with pytest.raises(ValueError,match='Procedencia archivada'): db.consultar(ident)
+    with pytest.raises(ValueError,match='Procedencia archivada'): db.verificar()
+
+
+def test_registro_rechazo_tardio_revierte_archivo_e_idempotencia_concurrente(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+    snapshot=tmp_path/'datos';snapshot.write_text('original')
+    db=Registro(tmp_path/'registro.sqlite');p=payload(snapshot)
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        identifiers=list(pool.map(lambda _:db.agregar(p,[snapshot]),range(8)))
+    assert len(set(identifiers))==1 and db.verificar()==1
+    snapshot.write_text('different evidence');late=payload(snapshot)
+    for key in ('kickoff_utc','generated_at_utc'):
+        late[key]=(datetime.fromisoformat(late[key])-timedelta(days=3)).isoformat()
+    for source in late['datos']:
+        for key in ('captured_at_utc','available_at_utc','as_of_utc'):
+            source[key]=(datetime.fromisoformat(source[key])-timedelta(days=3)).isoformat()
+    with pytest.raises(ValueError,match='después del kickoff'): db.agregar(late,[snapshot])
+    with sqlite3.connect(db.path) as connection:
+        assert connection.execute('SELECT COUNT(*) FROM snapshots').fetchone()[0]==1
+    assert db.verificar()==1
+
+
+def test_pipeline_crudo_hasta_nb_y_predicciones_no_cambia_por_datos_futuros(tmp_path):
+    from test_evaluacion import dataset
+    from evaluacion.temporal import ejecutar_liga
+    from experimentos.temporal import banco_liga,evaluar_seleccion
+    path=dataset(tmp_path,n=95);cut=pd.Timestamp('2025-03-15')
+    def run():
+        _,counts,_=ejecutar_liga(path,('tiros',))
+        bank=banco_liga(cargar(path),counts,('tiros',))
+        fits,_=seleccionar(bank,min_partidos=10,min_meses=1)
+        fits=dispersion_nb(bank,fits)
+        pred,diag=evaluar_seleccion(bank,counts,fits,incluir_nb=True)
+        return bank,fits,pred,diag
+    bank,fits,pred,diag=run()
+    raw=pd.read_csv(path);future=pd.to_datetime(raw.fecha_dt,dayfirst=True)>=cut
+    raw.loc[future,['tiros_local_val','tiros_visitante_val']]=[1000,500]
+    raw.to_csv(path,index=False)
+    later,changed,ps,ds=run()
+    for before,after in ((bank,later),(pred,ps),(diag,ds)):
+        early=before[before.fecha<cut].reset_index(drop=True)
+        assert not early.empty
+        pd.testing.assert_frame_equal(early,after[after.fecha<cut].reset_index(drop=True))
+    month=str(cut.to_period('M'))
+    assert [f for f in fits if f['mes_externo']<=month]==[f for f in changed if f['mes_externo']<=month]
+
+
+def test_hora_de_registro_se_toma_despues_del_lock_y_archivo(tmp_path,monkeypatch):
+    import experimentos.registro as module
+    snapshot=tmp_path/'datos';snapshot.write_text('original')
+    p=payload(snapshot);times=iter([datetime.now(timezone.utc),datetime.fromisoformat(p['kickoff_utc'])])
+    class Clock(datetime):
+        @classmethod
+        def now(cls,tz=None): return next(times).astimezone(tz)
+    monkeypatch.setattr(module,'datetime',Clock)
+    db=Registro(tmp_path/'registro.sqlite')
+    with pytest.raises(ValueError,match='después del kickoff'): db.agregar(p,[snapshot])
+    with sqlite3.connect(db.path) as connection:
+        assert connection.execute('SELECT COUNT(*) FROM predicciones').fetchone()[0]==0
+        assert connection.execute('SELECT COUNT(*) FROM snapshots').fetchone()[0]==0
+
+
+def test_cli_registro_expone_recibo_con_hora_efectiva(tmp_path,monkeypatch,capsys):
+    import sys
+    from experimentos.registro import main
+    snapshot=tmp_path/'datos';snapshot.write_text('original')
+    p=payload(snapshot);entrada=tmp_path/'prediccion.json';entrada.write_text(json.dumps(p))
+    monkeypatch.setattr(sys,'argv',['registro','--db',str(tmp_path/'registro.sqlite'),
+        '--entrada',str(entrada),'--snapshot',str(snapshot),'--recibo'])
+    main();receipt=json.loads(capsys.readouterr().out)
+    assert receipt['generated_at_utc']==p['generated_at_utc']
+    assert datetime.fromisoformat(receipt['generated_at_utc'])<datetime.fromisoformat(receipt['registered_at_utc'])<datetime.fromisoformat(receipt['kickoff_utc'])
+    assert receipt['snapshots_verificados'] is True

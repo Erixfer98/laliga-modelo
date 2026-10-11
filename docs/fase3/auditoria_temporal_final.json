@@ -1,0 +1,524 @@
+{
+  "cortes": 72,
+  "nb_habilitada": 28,
+  "perturbacion_futuro_embargo_invariante": true,
+  "prefijo_causal_invariante": true,
+  "seleccion_persistida_identica": true,
+  "detalle": [
+    {
+      "metrica": "amarillas",
+      "mes_externo": "2025-12",
+      "cutoff_exclusivo": "2025-11-30",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "amarillas",
+      "mes_externo": "2026-01",
+      "cutoff_exclusivo": "2025-12-31",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "amarillas",
+      "mes_externo": "2026-02",
+      "cutoff_exclusivo": "2026-01-31",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "amarillas",
+      "mes_externo": "2026-03",
+      "cutoff_exclusivo": "2026-02-28",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "amarillas",
+      "mes_externo": "2026-04",
+      "cutoff_exclusivo": "2026-03-31",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "amarillas",
+      "mes_externo": "2026-05",
+      "cutoff_exclusivo": "2026-04-30",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "amarillas",
+      "mes_externo": "2026-07",
+      "cutoff_exclusivo": "2026-06-30",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "amarillas",
+      "mes_externo": "2026-08",
+      "cutoff_exclusivo": "2026-07-31",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "amarillas",
+      "mes_externo": "2026-09",
+      "cutoff_exclusivo": "2026-08-31",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "corners",
+      "mes_externo": "2025-12",
+      "cutoff_exclusivo": "2025-11-30",
+      "alpha": 0.11953659498289992,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "corners",
+      "mes_externo": "2026-01",
+      "cutoff_exclusivo": "2025-12-31",
+      "alpha": 0.1220263674770573,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "corners",
+      "mes_externo": "2026-02",
+      "cutoff_exclusivo": "2026-01-31",
+      "alpha": 0.10620259435696337,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "corners",
+      "mes_externo": "2026-03",
+      "cutoff_exclusivo": "2026-02-28",
+      "alpha": 0.09045622973920574,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "corners",
+      "mes_externo": "2026-04",
+      "cutoff_exclusivo": "2026-03-31",
+      "alpha": 0.08773395989540315,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "corners",
+      "mes_externo": "2026-05",
+      "cutoff_exclusivo": "2026-04-30",
+      "alpha": 0.09518893403647308,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "corners",
+      "mes_externo": "2026-07",
+      "cutoff_exclusivo": "2026-06-30",
+      "alpha": 0.11728185927024154,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "corners",
+      "mes_externo": "2026-08",
+      "cutoff_exclusivo": "2026-07-31",
+      "alpha": 0.14683152724380732,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "corners",
+      "mes_externo": "2026-09",
+      "cutoff_exclusivo": "2026-08-31",
+      "alpha": 0.13819247392361245,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "goles",
+      "mes_externo": "2025-12",
+      "cutoff_exclusivo": "2025-11-30",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "goles",
+      "mes_externo": "2026-01",
+      "cutoff_exclusivo": "2025-12-31",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "goles",
+      "mes_externo": "2026-02",
+      "cutoff_exclusivo": "2026-01-31",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "goles",
+      "mes_externo": "2026-03",
+      "cutoff_exclusivo": "2026-02-28",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "goles",
+      "mes_externo": "2026-04",
+      "cutoff_exclusivo": "2026-03-31",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "goles",
+      "mes_externo": "2026-05",
+      "cutoff_exclusivo": "2026-04-30",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "goles",
+      "mes_externo": "2026-07",
+      "cutoff_exclusivo": "2026-06-30",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "goles",
+      "mes_externo": "2026-08",
+      "cutoff_exclusivo": "2026-07-31",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "goles",
+      "mes_externo": "2026-09",
+      "cutoff_exclusivo": "2026-08-31",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "goles_1t",
+      "mes_externo": "2025-12",
+      "cutoff_exclusivo": "2025-11-30",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "goles_1t",
+      "mes_externo": "2026-01",
+      "cutoff_exclusivo": "2025-12-31",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "goles_1t",
+      "mes_externo": "2026-02",
+      "cutoff_exclusivo": "2026-01-31",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "goles_1t",
+      "mes_externo": "2026-03",
+      "cutoff_exclusivo": "2026-02-28",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "goles_1t",
+      "mes_externo": "2026-04",
+      "cutoff_exclusivo": "2026-03-31",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "goles_1t",
+      "mes_externo": "2026-05",
+      "cutoff_exclusivo": "2026-04-30",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "goles_1t",
+      "mes_externo": "2026-07",
+      "cutoff_exclusivo": "2026-06-30",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "goles_1t",
+      "mes_externo": "2026-08",
+      "cutoff_exclusivo": "2026-07-31",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "goles_1t",
+      "mes_externo": "2026-09",
+      "cutoff_exclusivo": "2026-08-31",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "goles_2t",
+      "mes_externo": "2025-12",
+      "cutoff_exclusivo": "2025-11-30",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "goles_2t",
+      "mes_externo": "2026-01",
+      "cutoff_exclusivo": "2025-12-31",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "goles_2t",
+      "mes_externo": "2026-02",
+      "cutoff_exclusivo": "2026-01-31",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "goles_2t",
+      "mes_externo": "2026-03",
+      "cutoff_exclusivo": "2026-02-28",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "goles_2t",
+      "mes_externo": "2026-04",
+      "cutoff_exclusivo": "2026-03-31",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "goles_2t",
+      "mes_externo": "2026-05",
+      "cutoff_exclusivo": "2026-04-30",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "goles_2t",
+      "mes_externo": "2026-07",
+      "cutoff_exclusivo": "2026-06-30",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "goles_2t",
+      "mes_externo": "2026-08",
+      "cutoff_exclusivo": "2026-07-31",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "goles_2t",
+      "mes_externo": "2026-09",
+      "cutoff_exclusivo": "2026-08-31",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "rojas",
+      "mes_externo": "2025-12",
+      "cutoff_exclusivo": "2025-11-30",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "rojas",
+      "mes_externo": "2026-01",
+      "cutoff_exclusivo": "2025-12-31",
+      "alpha": 0.8942596222031988,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "rojas",
+      "mes_externo": "2026-02",
+      "cutoff_exclusivo": "2026-01-31",
+      "alpha": 1.6220854378541654,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "rojas",
+      "mes_externo": "2026-03",
+      "cutoff_exclusivo": "2026-02-28",
+      "alpha": 1.9231675275020332,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "rojas",
+      "mes_externo": "2026-04",
+      "cutoff_exclusivo": "2026-03-31",
+      "alpha": 0.7701747231162414,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "rojas",
+      "mes_externo": "2026-05",
+      "cutoff_exclusivo": "2026-04-30",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "rojas",
+      "mes_externo": "2026-07",
+      "cutoff_exclusivo": "2026-06-30",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "rojas",
+      "mes_externo": "2026-08",
+      "cutoff_exclusivo": "2026-07-31",
+      "alpha": 0.875525353669302,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "rojas",
+      "mes_externo": "2026-09",
+      "cutoff_exclusivo": "2026-08-31",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "tiros",
+      "mes_externo": "2025-12",
+      "cutoff_exclusivo": "2025-11-30",
+      "alpha": 0.044038538796808864,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "tiros",
+      "mes_externo": "2026-01",
+      "cutoff_exclusivo": "2025-12-31",
+      "alpha": 0.05024686593510745,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "tiros",
+      "mes_externo": "2026-02",
+      "cutoff_exclusivo": "2026-01-31",
+      "alpha": 0.049627608830657234,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "tiros",
+      "mes_externo": "2026-03",
+      "cutoff_exclusivo": "2026-02-28",
+      "alpha": 0.05571316243372665,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "tiros",
+      "mes_externo": "2026-04",
+      "cutoff_exclusivo": "2026-03-31",
+      "alpha": 0.05142157195154564,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "tiros",
+      "mes_externo": "2026-05",
+      "cutoff_exclusivo": "2026-04-30",
+      "alpha": 0.05550125479155808,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "tiros",
+      "mes_externo": "2026-07",
+      "cutoff_exclusivo": "2026-06-30",
+      "alpha": 0.06228085180027997,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "tiros",
+      "mes_externo": "2026-08",
+      "cutoff_exclusivo": "2026-07-31",
+      "alpha": 0.058512519415286866,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "tiros",
+      "mes_externo": "2026-09",
+      "cutoff_exclusivo": "2026-08-31",
+      "alpha": 0.05717591139996302,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "tiros_a_puerta",
+      "mes_externo": "2025-12",
+      "cutoff_exclusivo": "2025-11-30",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "tiros_a_puerta",
+      "mes_externo": "2026-01",
+      "cutoff_exclusivo": "2025-12-31",
+      "alpha": 0.0417578719659678,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "tiros_a_puerta",
+      "mes_externo": "2026-02",
+      "cutoff_exclusivo": "2026-01-31",
+      "alpha": 0.05202384356072864,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "tiros_a_puerta",
+      "mes_externo": "2026-03",
+      "cutoff_exclusivo": "2026-02-28",
+      "alpha": 0.04834220728939065,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "tiros_a_puerta",
+      "mes_externo": "2026-04",
+      "cutoff_exclusivo": "2026-03-31",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "tiros_a_puerta",
+      "mes_externo": "2026-05",
+      "cutoff_exclusivo": "2026-04-30",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    },
+    {
+      "metrica": "tiros_a_puerta",
+      "mes_externo": "2026-07",
+      "cutoff_exclusivo": "2026-06-30",
+      "alpha": 0.04393917985746186,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "tiros_a_puerta",
+      "mes_externo": "2026-08",
+      "cutoff_exclusivo": "2026-07-31",
+      "alpha": 0.04707858127578784,
+      "nb_habilitada": true
+    },
+    {
+      "metrica": "tiros_a_puerta",
+      "mes_externo": "2026-09",
+      "cutoff_exclusivo": "2026-08-31",
+      "alpha": 0.0,
+      "nb_habilitada": false
+    }
+  ],
+  "entradas_sha256": {
+    "banco.csv.gz": "ebee11d5bce143c06e733a65494a1c48d03e226f9caa875b79d8bbb5bd1bd8ea",
+    "seleccion_nb.json": "2b572cd2789b4389c24639ea75073e9ae584534fc642121d004e7386e4e175ac",
+    "protocolo.json": "edd0327b848a7830b7c81843a1571a5651e0c470e60449ce19fcc64900c83d5a"
+  },
+  "codigo_sha256": {
+    "experimentos/auditoria.py": "32e4d029cce5c2a435d498190649c89a8b7bf19d5aea2148f457b75ccee7dfe0",
+    "experimentos/temporal.py": "5f61d85ab40d4384182053e17a26bcfe1802d9b0b988ae2b6a19389d807e96f8",
+    "experimentos/lambdas.py": "778c44411c64632089a98fac45716a71c06692e6bc844bcaf94e702592039d87",
+    "experimentos/distribuciones.py": "a8aac4dcd695def958f6fcf2b39d7cb3fb9e6da2235cc404d9fc0dd472f0fcb6"
+  }
+}

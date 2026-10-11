@@ -104,9 +104,10 @@
   "codigo": {
     "experimentos/__init__.py": "5c6ceaa11cad314d42b90f3e6218fda4d430723e1c37481f4a4182f619beb3f5",
     "experimentos/__main__.py": "933b09eeabad136dd01bd15c57a0203e3684f4ab59bb21b92214753f4ea09bc8",
+    "experimentos/auditoria.py": "32e4d029cce5c2a435d498190649c89a8b7bf19d5aea2148f457b75ccee7dfe0",
     "experimentos/distribuciones.py": "a8aac4dcd695def958f6fcf2b39d7cb3fb9e6da2235cc404d9fc0dd472f0fcb6",
     "experimentos/lambdas.py": "778c44411c64632089a98fac45716a71c06692e6bc844bcaf94e702592039d87",
-    "experimentos/registro.py": "8f8d7b0ee838a151296e31f318ef71fec01c4098cba043a86271f9f60596d520",
+    "experimentos/registro.py": "963a100d7aff2e0debde1f3f2d1e79f7ea5c355b137ad3c63ff77b43f411bb03",
     "experimentos/reportes.py": "5a1d971095b35a93412d5609356fec5f0b0fbc1cdc7c2fa2a122609e6b2aa6e4",
     "experimentos/temporal.py": "5f61d85ab40d4384182053e17a26bcfe1802d9b0b988ae2b6a19389d807e96f8"
   },
@@ -148,6 +149,6 @@
   "selecciones": 72,
   "nb_habilitada_cortes": 28,
   "familia_holm": 42,
-  "segundos_total": 70.43064661400058,
+  "segundos_total": 61.24929591699947,
   "segundos_evaluacion_original": 294.35267155400106
 }
