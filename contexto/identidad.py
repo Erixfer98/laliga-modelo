@@ -23,14 +23,20 @@ def pid(value):
     return identificador(str(value))
 
 
-def normalizar(capture, requested_id, mappings):
+def normalizar(capture, requested_id, mappings, identity_cutoff=None, deduplicate=False):
+    if type(deduplicate) is not bool: raise ValueError('Deduplicación inválida')
     e = capture.verificar(); provider = e['provider']; body = capture.json()
     identificador(requested_id)
     try:
         if provider == 'api-football':
-            if body.get('errors') or len(body['response']) != 1:
+            if body.get('errors') or not isinstance(body['response'], list):
                 raise ValueError('Fixture ausente, duplicado o error del proveedor')
-            row = body['response'][0]; f = row['fixture']; league = row['league']
+            selected_rows = [r for r in body['response'] if isinstance(r, dict) and isinstance(r.get('fixture'), dict) and r['fixture'].get('id') == int(requested_id)]
+            if deduplicate:
+                selected_rows = list({canonico(r): r for r in selected_rows}.values())
+            if len(selected_rows) != 1:
+                raise ValueError('Fixture ausente, duplicado o error del proveedor')
+            row = selected_rows[0]; f = row['fixture']; league = row['league']
             fid, lid, sid = pid(f['id']), pid(league['id']), pid(league['season'])
             hid, aid = pid(row['teams']['home']['id']), pid(row['teams']['away']['id'])
             kickoff = iso(f['date'])
@@ -70,8 +76,11 @@ def normalizar(capture, requested_id, mappings):
             raise ValueError('Proveedor sin contrato de fixture')
         if fid != requested_id:
             raise ValueError('El proveedor devolvió otro fixture')
-        mh = resolver(mappings, provider, lid, sid, hid, kickoff, e['captured_at_utc'])
-        ma = resolver(mappings, provider, lid, sid, aid, kickoff, e['captured_at_utc'])
+        mapping_cutoff = identity_cutoff or e['captured_at_utc']
+        if utc(mapping_cutoff) < utc(e['captured_at_utc']):
+            raise ValueError('Revisión de identidad anterior a captura')
+        mh = resolver(mappings, provider, lid, sid, hid, kickoff, mapping_cutoff)
+        ma = resolver(mappings, provider, lid, sid, aid, kickoff, mapping_cutoff)
         if mh['internal_league'] != ma['internal_league']:
             raise ValueError('Mapeos de ligas distintas')
         result = {'schema_version': SCHEMA, 'provider': provider, 'fixture_id': fid,

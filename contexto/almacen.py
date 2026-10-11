@@ -65,7 +65,11 @@ class Archivo:
             if not archived or sha256(archived[0]).hexdigest() != e['sha256']:
                 raise ValueError('Snapshot ausente o alterado')
             from .conectores import Captura
-            checked, _ = normalizar(Captura(archived[0], e), f['fixture_id'], payload['mappings'])
+            identity_cutoff = payload.get('identity_cutoff_utc')
+            if identity_cutoff and utc(identity_cutoff) > utc(registered):
+                raise ValueError('Revisión de identidad posterior al registro')
+            checked, _ = normalizar(Captura(archived[0], e), f['fixture_id'], payload['mappings'], identity_cutoff,
+                                    payload.get('deduplicate', False))
             if checked != f:
                 raise ValueError('Fixture no corresponde a evidencia')
             for mapping in payload['mappings']:
@@ -79,14 +83,19 @@ class Archivo:
             previous = record
         return result
 
-    def agregar_fixture(self, capture, requested_id, mappings, mapping_proofs):
+    def agregar_fixture(self, capture, requested_id, mappings, mapping_proofs, identity_cutoff=None, deduplicate=False):
         """No acepta fixture del cliente: deriva identidad nuevamente de bytes del feed."""
-        f, selected = normalizar(capture, requested_id, mappings)
+        f, selected = normalizar(capture, requested_id, mappings, identity_cutoff, deduplicate)
         e = capture.verificar()
         proofs = {sha256(x).hexdigest(): x for x in mapping_proofs}
         if set(proofs) != {m['evidence_sha256'] for m in selected}:
             raise ValueError('Se requieren bytes de evidencias de mapeo')
         payload = {'evidence': e, 'fixture': f, 'mappings': selected}
+        if identity_cutoff:
+            from .contratos import iso
+            payload['identity_cutoff_utc'] = iso(identity_cutoff)
+        if deduplicate:
+            payload['deduplicate'] = True
         body = canonico(payload); identifier = sha256(body.encode()).hexdigest()
         with self._db() as db:
             db.execute('BEGIN IMMEDIATE')
@@ -102,6 +111,8 @@ class Archivo:
             registered = ahora()  # servidor, tras lock y archivo
             if utc(e['captured_at_utc']) > utc(registered):
                 raise ValueError('Captura futura')
+            if identity_cutoff and utc(identity_cutoff) > utc(registered):
+                raise ValueError('Revisión de identidad futura')
             previous = db.execute('SELECT record_hash FROM receipts ORDER BY sequence DESC LIMIT 1').fetchone()
             previous = previous[0] if previous else '0' * 64
             record = sha256((previous + '|' + registered + '|' + body).encode()).hexdigest()
