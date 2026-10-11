@@ -9,18 +9,22 @@ import { Btn, Card, Kpi, Nota, T, Tag } from "@/components/ui";
 
 export default function Boleto() {
   const { boleto, removeLeg, vaciar, banca, setBanca, listo } = useStore();
-  const [res, setRes] = useState<{ resumen: ResumenBoleto; stake: Stake } | null>(null);
+  const [res, setRes] = useState<{ resumen: ResumenBoleto; stake: Stake; clave: string } | null>(null);
   const [error, setError] = useState("");
+
+  const clave = JSON.stringify({ patas: boleto, banca });
 
   useEffect(() => {
     if (!listo) return;
     if (!boleto.length) { setRes(null); return; }
+    setRes(null);
+    setError("");
     let vivo = true;
     apiPost<{ resumen: ResumenBoleto; stake: Stake }>("/boleto", { patas: boleto, banca })
-      .then((r) => { if (vivo) { setRes(r); setError(""); } })
+      .then((r) => { if (vivo) { setRes({ ...r, clave }); setError(""); } })
       .catch((e: Error) => { if (vivo) setError(e.message); });
     return () => { vivo = false; };
-  }, [boleto, banca, listo]);
+  }, [boleto, banca, listo, clave]);
 
   if (!listo) return null;
   if (!boleto.length) {
@@ -32,7 +36,8 @@ export default function Boleto() {
       </section>
     );
   }
-  const rb = res?.resumen, stk = res?.stake;
+  const actual = res?.clave === clave ? res : null;
+  const rb = actual?.resumen, stk = actual?.stake;
 
   return (
     <>
@@ -41,23 +46,23 @@ export default function Boleto() {
           <div>
             <T>Boleto · {boleto.length} pata{boleto.length > 1 ? "s" : ""}</T>
             <div className="num text-[2.6rem] mt-1">{rb ? num(rb.cuota) : "…"}</div>
-            <div className="text-[0.76rem] text-mut mt-1">cuota total · justa {rb ? num(rb.justa) : "…"} · prob. {rb ? pct(rb.prob) : "…"}</div>
+            <div className="text-[0.76rem] text-mut mt-1">cuota total · justa {rb ? num(rb.justa) : "…"} · todas aciertan {rb ? pct(rb.prob) : "…"}</div>
           </div>
           <div className="text-right">
             <T>EV</T>
-            <div className={`num text-[2.6rem] mt-1 ${rb && rb.ev > 0 ? "text-ok" : "text-bad"}`}>{rb ? signed(rb.ev) : "…"}</div>
+            <div className={`num text-[2.6rem] mt-1 ${rb && (rb.ev ?? 0) > 0 ? "text-ok" : "text-bad"}`}>{rb ? signed(rb.ev) : "…"}</div>
             <div className="text-[0.76rem] text-mut mt-1">pesimista {rb ? signed(rb.ev_lo) : "…"} · optimista {rb ? signed(rb.ev_hi) : "…"}</div>
           </div>
         </div>
-        {rb?.mismo_partido && <Nota>Patas del mismo partido no son independientes; la probabilidad combinada real difiere.</Nota>}
+        {rb?.advertencias.map((a) => <Nota key={a}>{a}</Nota>)}
       </section>
 
-      <Card titulo="Cuánto apostar" desc="Kelly calculado con la probabilidad pesimista del boleto: si con esa todavía hay valor, la apuesta aguanta un modelo demasiado optimista. Para parlays usa ¼ o ⅛ de Kelly.">
+      <Card titulo="Cuánto apostar" desc="Kelly usa la distribución de liquidaciones y el mínimo de los escenarios de sensibilidad. No garantiza rentabilidad; sin modelo conjunto válido no está disponible.">
         <label className="block mb-3"><T>Banca (Q)</T>
           <input className="ctl mt-1 text-[1.1rem] font-extrabold" type="number" inputMode="numeric" min="1" step="50" value={banca} onChange={(e) => setBanca(Math.max(1, Number(e.target.value) || 1))} /></label>
         {error && <div className="text-bad text-[0.82rem]">{error}</div>}
-        {stk && (stk.sin_valor
-          ? <div className="rounded-2xl bg-card2 px-4 py-3"><T>Con la probabilidad pesimista ({rb ? pct(rb.lo) : ""})</T><div className="font-extrabold text-bad mt-1">Sin valor: Kelly dice no apostar</div></div>
+        {stk && (!stk.disponible ? <Nota>{stk.advertencia}</Nota> : stk.sin_valor
+          ? <div className="rounded-2xl bg-card2 px-4 py-3"><T>En los escenarios de sensibilidad</T><div className="font-extrabold text-bad mt-1">Sin valor: Kelly dice no apostar</div></div>
           : <Kpi items={stk.opciones.map((o) => ({ label: o.nombre, valor: q(o.monto), sub: pct(o.fraccion, 1) }))} />)}
       </Card>
 
@@ -67,7 +72,7 @@ export default function Boleto() {
             <div className="flex-1 min-w-0">
               <div className="font-extrabold text-[0.98rem] leading-tight">{l.mercado}</div>
               <div className="text-[0.76rem] text-mut mt-0.5">{l.partido} · {l.metrica}</div>
-              <div className="text-[0.76rem] text-mut2 mt-0.5">modelo {pct(l.prob)} ({pct(l.lo)}–{pct(l.hi)}) · justa {justa(l.prob)}</div>
+              <div className="text-[0.76rem] text-mut2 mt-0.5">al agregar {pct(l.prob)} ({pct(l.lo)}–{pct(l.hi)}) · justa {num(l.justa)}</div>
             </div>
             <div className="text-right shrink-0">
               <div className="num text-[1.3rem]">{num(l.cuota)}</div>

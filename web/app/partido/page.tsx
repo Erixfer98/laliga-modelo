@@ -39,14 +39,14 @@ export default function Partido() {
   const conLineas = !["Resultado", "Mayor número"].includes(grupo);
   const [centro, rango] = v.cfg[grupo] ?? [0.5, 1];
   const cuotaN = Number(cuota) || 0;
-  const ev = p.prob * cuotaN - 1, evLo = p.lo * cuotaN - 1;
+  const ev = p.prob * cuotaN + p.push - 1, evLo = Math.min(...p.escenarios.map((e) => e.prob * cuotaN + e.push - 1));
   const nombreMet = METRICAS[met].toLowerCase();
 
   const cambiarGrupo = (g: string) => setSel({ clave, cfg: s.cfg, grupo: g, pata: undefined });          // la pata pasa a la primera del grupo
   const cambiarLineas = (c: number, r: number) => setSel({ clave, cfg: { ...v.cfg, [grupo]: [c, r] }, grupo, pata: undefined });
   const agregar = () => {
-    if (cuotaN < 1.01) return;
-    addLeg({ partido: v.partido, metrica: METRICAS[met], mercado: p.mercado, prob: p.prob, cuota: cuotaN, cal: p.tag, cls: p.cls, lo: p.lo, hi: p.hi });
+    if (!Number.isFinite(cuotaN) || cuotaN < 1.01 || cuotaN > 10000 || loading) return;
+    addLeg({ partido: v.partido, metrica: METRICAS[met], mercado: p.mercado, prob: p.prob, cuota: cuotaN, cal: p.tag, cls: p.cls, lo: p.lo, hi: p.hi, push: p.push, justa: p.justa, seleccion: p.seleccion });
     setAviso(`${p.mercado} agregada al boleto`); setTimeout(() => setAviso(""), 2500);
   };
   const filaModelo = (nombre: string, lado: "l" | "v" | null, lam: number, [lo, hi]: [number, number], ref: number, chip: React.ReactNode) => (
@@ -69,7 +69,7 @@ export default function Partido() {
       {pillsMet}
 
       <Card titulo={`Esperado por el modelo · ${nombreMet}`}
-        desc={`Cuántos ${nombreMet} espera el modelo para este partido (λ, el número grande) y su rango de confianza del 80%. Cuanto más angosto el rango, más seguro el número. liga = media de la liga en esa condición · el verde/rojo es λ menos esa media · el punto es qué tan variable es el equipo frente a la liga (verde estable, ámbar normal, rojo volátil, gris pocos datos) y las veces que varía.`}>
+        desc={`Cuántos ${nombreMet} espera el modelo para este partido (λ, el número grande) y su rango heurístico de sensibilidad, cuya cobertura no está validada. liga = media de la liga en esa condición · el verde/rojo es λ menos esa media · el punto es qué tan variable es el equipo frente a la liga (verde estable, ámbar normal, rojo volátil, gris pocos datos) y las veces que varía.`}>
         {filaModelo(v.local, "l", v.lambda_local, v.rango.local, v.medias_liga.local, <Chip {...v.var.local} />)}
         {filaModelo(v.visitante, "v", v.lambda_visitante, v.rango.visitante, v.medias_liga.visitante, <Chip {...v.var.visitante} />)}
         {filaModelo("Total del partido", null, v.lambda_local + v.lambda_visitante, v.rango.total, v.medias_liga.total, null)}
@@ -105,7 +105,7 @@ export default function Partido() {
               <div className="flex items-center gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="font-extrabold text-[0.98rem] leading-tight">{m.mercado}</div>
-                  <div className="text-[0.76rem] text-mut mt-0.5">justa <span className="text-txt font-bold">{justa(m.prob)}</span> · {m.hl}/{m.nl} · {m.hv}/{m.nv}</div>
+                  <div className="text-[0.76rem] text-mut mt-0.5">justa <span className="text-txt font-bold">{num(m.justa)}</span> · {m.hl}/{m.nl} · {m.hv}/{m.nv}</div>
                 </div>
                 <div className="w-[72px] text-right shrink-0 pl-1">
                   <div className="num text-[1.6rem]">{pct(m.prob)}</div>
@@ -125,27 +125,28 @@ export default function Partido() {
         desc={`Probabilidad de la pata según el modelo y en cuántos de los últimos ${n} partidos de los dos equipos se cumplió. Calificación = 60% probabilidad Poisson + 40% cumplimiento histórico; ↕ equipo volátil la baja un nivel. Los escenarios repiten el cálculo con la λ pesimista y la optimista de cada equipo.`}>
         <div className="text-[0.78rem] text-mut -mt-2 mb-1">{METRICAS[met]} · {v.partido}</div>
         <Trio items={[
-          { valor: pct(p.prob), label: "Modelo", sub: `justa ${justa(p.prob)}` },
+          { valor: pct(p.prob), label: "Modelo", sub: `justa ${num(p.justa)}` },
           { valor: pct(p.tasa), label: "Histórico", sub: `${p.hl + p.hv} de ${p.nl + p.nv} partidos` },
         ]} />
+        <Nota>Acierto {pct(p.prob)} · devolución {pct(p.push)} · fallo {pct(p.loss)}. Las devoluciones no cuentan como aciertos.</Nota>
         <Bar valor={p.prob} marca={p.tasa} max={1} color="var(--acc)" />
         <div className="mt-3">
           <Kpi flat items={[
-            { label: "Pesimista", valor: pct(p.lo), sub: `justa ${justa(p.lo)}` },
-            { label: "Modelo", valor: pct(p.prob), sub: `justa ${justa(p.prob)}` },
-            { label: "Optimista", valor: pct(p.hi), sub: `justa ${justa(p.hi)}` },
+            { label: "Pesimista", valor: pct(p.lo), sub: "sensibilidad heurística" },
+            { label: "Modelo", valor: pct(p.prob), sub: `justa ${num(p.justa)}` },
+            { label: "Optimista", valor: pct(p.hi), sub: "sensibilidad heurística" },
           ]} />
         </div>
       </Card>
 
-      <Card titulo="Agregar al boleto" desc="Escribe la cuota que paga la casa y revisa el EV antes de agregar. EV = probabilidad × cuota − 1. El EV pesimista usa la probabilidad pesimista: si sigue positivo, la pata aguanta un modelo optimista.">
+      <Card titulo="Agregar al boleto" desc="Escribe la cuota que paga la casa y revisa el EV antes de agregar. EV = acierto × cuota + devolución − 1. El EV pesimista es el mínimo de los escenarios heurísticos evaluados.">
         <div className="flex items-end gap-2 mb-2.5">
           <label className="flex-1"><T>Cuota casa</T>
             <input className="ctl mt-1 text-[1.1rem] font-extrabold" type="number" inputMode="decimal" step="0.01" min="1.01" max="50" value={cuota} onChange={(e) => setCuota(e.target.value)} /></label>
           <Btn primary onClick={agregar}>Agregar</Btn>
         </div>
         <Kpi items={[
-          { label: "EV modelo", valor: signed(ev), sub: `prob. ${pct(p.prob)} · justa ${justa(p.prob)}`, cls: ev > 0 ? "text-ok" : "text-bad" },
+          { label: "EV modelo", valor: signed(ev), sub: `prob. ${pct(p.prob)} · justa ${num(p.justa)}`, cls: ev > 0 ? "text-ok" : "text-bad" },
           { label: "EV pesimista", valor: signed(evLo), sub: `prob. ${pct(p.lo)}`, cls: evLo > 0 ? "text-ok" : "text-bad" },
         ]} />
         {aviso && <div className="text-[0.84rem] text-ok font-bold mt-2">✓ {aviso}</div>}

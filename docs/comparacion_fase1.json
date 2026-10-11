@@ -1,0 +1,109 @@
+[
+  {
+    "caso": "Hoffenheim–Elversberg: Empate (goles)",
+    "lambda_local": 3.155570976034046,
+    "lambda_visitante": 3.7572906590287856,
+    "prob_antes": 0.15255378843379352,
+    "prob_despues": 0.15221677655206794,
+    "rango_antes": [
+      0.021785618734208638,
+      0.08353123190595665
+    ],
+    "rango_despues": [
+      5.8243480732180725e-05,
+      1.0
+    ],
+    "masa_excluida_antes": 0.0022120344654128488,
+    "masa_excluida_despues": 3.1184498458095886e-27,
+    "k_despues": 39
+  },
+  {
+    "caso": "Barcelona–Racing Santander: Barcelona Over 18.5 (corners)",
+    "lambda_local": 19.371780317168874,
+    "lambda_visitante": 3.58411836961541,
+    "prob_antes": 0.5640262938085977,
+    "prob_despues": 0.5640262938085977,
+    "rango_antes": [
+      0.2494339424562083,
+      0.8169376490996053
+    ],
+    "rango_despues": [
+      2.7459718885214018e-05,
+      0.9995253853613503
+    ],
+    "masa_excluida_antes": 0.3852852412059593,
+    "masa_excluida_despues": 1.0770805714597879e-30,
+    "k_despues": 88,
+    "prob_matriz_antes": 0.2907707195402475
+  },
+  {
+    "caso": "Bayern Munich–Elversberg: Total Over 46.5 (tiros)",
+    "lambda_local": 35.621911854632856,
+    "lambda_visitante": 10.918774583502076,
+    "prob_antes": 0.15468387680002937,
+    "prob_despues": 0.4926074923256659,
+    "rango_antes": [
+      0.0,
+      0.8954225140051566
+    ],
+    "rango_despues": [
+      0.0,
+      0.999999999085876
+    ],
+    "masa_excluida_antes": 0.4969697406842958,
+    "masa_excluida_despues": 7.843461071543537e-45,
+    "k_despues": 147
+  },
+  {
+    "caso": "Coventry–Ipswich: Total Over 0.5 (rojas)",
+    "lambda_local": 5.019228952454882,
+    "lambda_visitante": 0.0,
+    "prob_antes": 0.9848793598494489,
+    "prob_despues": 0.9933903789228318,
+    "rango_antes": [
+      0.0,
+      0.9984689209256715
+    ],
+    "rango_despues": [
+      0.0,
+      1.0
+    ],
+    "masa_excluida_antes": 0.5628742558940361,
+    "masa_excluida_despues": 1.2641444855522012e-51,
+    "k_despues": 67
+  },
+  {
+    "caso": "Barcelona–Real Madrid: Barcelona Over 0.5 (rojas)",
+    "lambda_local": 0.0,
+    "lambda_visitante": 0.004051611253643221,
+    "prob_antes": 0.0,
+    "prob_despues": 0.0,
+    "rango_antes": [
+      0.0,
+      0.0
+    ],
+    "rango_despues": [
+      0.0,
+      0.1343647959150191
+    ],
+    "masa_excluida_antes": 9.103828801926284e-15,
+    "masa_excluida_despues": 8.07798945393348e-28,
+    "k_despues": 8,
+    "lambda_rango_antes": [
+      0.0,
+      0.0
+    ],
+    "lambda_rango_despues": [
+      0.0,
+      0.14429170156336524
+    ]
+  },
+  {
+    "caso": "Real Madrid–Barcelona: Under 3.0",
+    "prob_antes": 0.44798066132536996,
+    "prob_despues": 0.24908307124791526,
+    "push_despues": 0.1988912832884428,
+    "ev_cuota3_antes": 0.34394198397611,
+    "ev_cuota3_despues": -0.0538595029678115
+  }
+]

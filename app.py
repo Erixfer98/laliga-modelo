@@ -416,12 +416,12 @@ def corto(nombre, n=12):
 
 
 def tabla_modelos(an):
-    """Esperado por el modelo en una tabla con columnas alineadas: λ · rango 80% · liga · Δ · var. Una fila por equipo y el total.
+    """Esperado por el modelo en una tabla con columnas alineadas: λ · rango heurístico · liga · Δ · var. Una fila por equipo y el total.
     an = kuota.analizar_partido(...)."""
     local, visitante, ml, lam_l, lam_v = an["local"], an["visitante"], an["medias_liga"], an["lambda_local"], an["lambda_visitante"]
     (ll, lh), (vl, vh), (tl, th) = an["rango"]["local"], an["rango"]["visitante"], an["rango"]["total"]
     h = '<table class="st"><tr><th>Equipo</th><th>λ</th><th>rango</th><th>liga</th><th>Δ</th><th>var.</th></tr>'
-    h += '<tr class="grp"><td colspan="6">Poisson · rango de confianza 80%</td></tr>'
+    h += '<tr class="grp"><td colspan="6">Poisson · rango heurístico</td></tr>'
     for nm, lam, lo, hi, ref, chip in ((eq(local, "l", 13), lam_l, ll, lh, ml["local"], chip_var(an["var"]["local"])),
                                        (eq(visitante, "v", 13), lam_v, vl, vh, ml["visitante"], chip_var(an["var"]["visitante"])),
                                        ("Total", lam_l + lam_v, tl, th, ml["total"], "")):
@@ -432,7 +432,7 @@ def tabla_modelos(an):
 
 def escenarios_html(mk):
     """Cuadricula pesimista · Poisson · optimista: probabilidad y cuota justa de cada escenario."""
-    tiles = [(nm, mk[k], f"justa {mo.cuota_justa(mk[k]):.2f}") for nm, k in (("Pesimista", "lo"), ("Poisson", "prob"), ("Optimista", "hi"))]
+    tiles = [(nm, mk[k], "sensibilidad heurística") for nm, k in (("Pesimista", "lo"), ("Poisson", "prob"), ("Optimista", "hi"))]
     return '<div class="kpi esc">' + "".join(f'<div><div class="t">{nm}</div><div class="pct">{p:.0%}</div><div class="rg">{s}</div></div>'
                                              for nm, p, s in tiles) + "</div>"
 
@@ -511,12 +511,13 @@ def lista_partidos(equipo, h, mk, lado, met):
         gf, gc = (gl, gv) if casa else (gv, gl)
         res = "g" if gf > gc else ("p" if gf < gc else "e")
         forma.append(res)
+        push = mk["regla"]["tipo"] == "ou" and g[col] == mk["linea"]
         home, away = (equipo, g.rival) if casa else (g.rival, equipo)
         if col in ("a_favor", "en_contra", "total"):
             det = f"{int(g.a_favor)}·{int(g.en_contra)}" if col == "total" else ("a favor" if col == "a_favor" else "en contra")
             if met == "goles" and col != "total":
                 det = ""
-            val = f'<b>{int(g[col])}</b><div class="small">{det}</div>'
+            val = f'<b>{int(g[col])}{" ↩" if push else ""}</b><div class="small">{det}</div>'
         else:
             val = f'<b>{"✓" if ok else "✗"}</b>'
         filas += (f'<div class="pl"><div class="dt">{g.fecha}<br>{"Casa" if casa else "Fuera"}</div>'
@@ -529,7 +530,7 @@ def lista_partidos(equipo, h, mk, lado, met):
             f'<div class="small">{G}G {E}E {Pp}P</div></div>'
             f'<div class="row" style="margin:4px 0 6px 0"><div class="forma">{dots}</div>'
             f'<div class="small">{NOM[met].lower()} {que} · <span class="w">{int(serie.sum())}/{len(h)}</span> cumplió</div></div>'
-            f'{filas}' + nota("Racha: antiguo → reciente. Marcador verde = ganó, rojo = perdió, gris = empate. Valor en verde = en ese partido se cumplió la pata.") + '</div>')
+            f'{filas}' + nota("Racha: antiguo → reciente. Marcador verde = ganó, rojo = perdió, gris = empate. Valor en verde = acierto. ↩ = devolución; no cuenta como acierto.") + '</div>')
 
 
 def matriz_html(g, local, visitante):
@@ -541,9 +542,9 @@ def matriz_html(g, local, visitante):
         for c in g["celdas"][x]:
             p = c["p"]; a = 0.15 + 0.85 * (p / mx)
             col = f"rgba(46,158,91,{a:.2f})" if c["gana"] else (f"rgba(90,98,112,{a * 0.7:.2f})" if TEMA == "dark" else f"rgba(156,163,175,{a * 0.8:.2f})")
-            h += f'<td style="background:{col}">{p * 100:.0f}</td>'
+            h += f'<td style="background:{col}">{p * 100:.0f}{" ↩" if c["push"] else ""}</td>'
         h += "</tr>"
-    return h + "</table>" + nota(f"Filas = {local} · columnas = {visitante}. Cada celda es el % de ese marcador exacto según Poisson. Verde = marcadores con los que gana la pata; más intenso = más probable.")
+    return h + "</table>" + nota(f"Filas = {local} · columnas = {visitante}. Cada celda es el % de ese marcador exacto según Poisson. Verde = marcadores con los que gana la pata; más intenso = más probable. ↩ = devolución. Masa visible {g['masa_visible']:.1%}; celdas sin renormalizar.")
 
 
 def distribucion_html(valores, etiqueta):
@@ -551,7 +552,7 @@ def distribucion_html(valores, etiqueta):
     mx = max(v["p"] for v in valores)
     bars = "".join(f'<div style="height:{max(v["p"] / mx * 100, 2):.0f}%;background:{"#2e9e5b" if v["gana"] else P["miss"]}">'
                    f'<span class="v">{v["p"]:.0%}</span><span class="x">{v["x"]}</span></div>' for v in valores)
-    return f'<div class="chart"><div class="bars">{bars}</div></div>' + nota(f"Probabilidad de cada cantidad de {etiqueta} según Poisson. Verde = cantidades con las que gana la pata.")
+    return f'<div class="chart"><div class="bars">{bars}</div></div>' + nota(f"Probabilidad de cada cantidad de {etiqueta} según Poisson. Verde = cantidades con las que gana la pata; igualdad en línea entera devuelve la apuesta. Masa visible {sum(v['p'] for v in valores):.1%}, sin renormalizar.")
 
 
 def diferencia_html(valores, local, visitante, etiqueta):
@@ -591,6 +592,10 @@ def html_tabla(t, resaltar=(), compacta=False):
 
 
 # ================================================================== boleto (se usa en la barra superior y en Inicio)
+def fmt_seguro(valor, formato=".2f"):
+    return "No disponible" if valor is None else format(valor, formato)
+
+
 def slip_html(detalle=False):
     """Resumen del boleto en una fila: patas y cuota a la izquierda, probabilidad y EV a la derecha.
     detalle=True agrega la linea pesimista / optimista."""
@@ -598,11 +603,11 @@ def slip_html(detalle=False):
     if not rb:
         return ""
     h = (f'<div class="slip"><div class="row"><div class="c1"><div class="t">Boleto · {rb["n"]} pata{"s" if rb["n"] > 1 else ""}</div>'
-         f'<div class="mid">cuota {rb["cuota"]:.2f}</div><div class="rg">justa {rb["justa"]}</div></div>'
-         f'<div class="evb"><div class="t">EV · {rb["prob"]:.0%}</div><div class="pct {"up" if rb["ev"] > 0 else "down"}">{rb["ev"]:+.2f}</div></div></div>')
+         f'<div class="mid">cuota {fmt_seguro(rb["cuota"], ".2f")} </div><div class="rg">justa {rb["justa"]}</div></div>'
+         f'<div class="evb"><div class="t">EV · {fmt_seguro(rb["prob"], ".0%")} </div><div class="pct {"up" if (rb["ev"] or 0) > 0 else "down"}">{fmt_seguro(rb["ev"], "+.2f")} </div></div></div>')
     if detalle:
-        h += f'<div class="small" style="margin-top:6px">pesimista {rb["lo"]:.0%} (EV {rb["ev_lo"]:+.2f}) · optimista {rb["hi"]:.0%} (EV {rb["ev_hi"]:+.2f})</div>'
-    return h + "</div>"
+        h += f'<div class="small" style="margin-top:6px">pesimista {fmt_seguro(rb["lo"], ".0%")}  (EV {fmt_seguro(rb["ev_lo"], "+.2f")} ) · optimista {fmt_seguro(rb["hi"], ".0%")}  (EV {fmt_seguro(rb["ev_hi"], "+.2f")} )</div>'
+    return h + "<div class=small>" + " ".join(rb["advertencias"]) + "</div></div>"
 
 
 # ================================================================== navegacion (barra superior fija)
@@ -826,8 +831,8 @@ else:
     cfg = ss.setdefault(key_cfg, an["cfg"])
     lst, grupos, vol, ml = an["mercados"], an["grupos"], an["vol"], an["medias_liga"]
     tabla_esp = tabla_modelos(an)
-    desc_esp = (f"Cuántos {NOM[met].lower()} espera el modelo para este partido (λ) y su rango de confianza del 80%. "
-                f"Cuanto más angosto el rango, más seguro el número.")
+    desc_esp = (f"Cuántos {NOM[met].lower()} espera el modelo para este partido (λ) y su rango heurístico de sensibilidad, sin cobertura validada. "
+                f"Su amplitud refleja los escenarios evaluados, sin garantía de cobertura.")
 
     def selector_lineas(grp, key):
         if grp in ("Resultado", "Mayor número"):
@@ -841,7 +846,7 @@ else:
     def ev_html(mk, e, cuota):
         """Tarjeta de EV para una pata con la cuota de la casa: EV Poisson y EV pesimista + calificacion."""
         evp = kuota.ev_pata(mk, cuota)
-        tiles = [("EV Poisson", evp["ev"], f'prob. {mk["prob"]:.0%} · justa {evp["justa"]}'),
+        tiles = [("EV Poisson", evp["ev"], f'acierto {mk["prob"]:.0%} · devolución {mk["push"]:.0%} · justa {evp["justa"]}'),
                  ("EV pesimista", evp["ev_lo"], f'prob. {mk["lo"]:.0%}')]
         kpi = "".join(f'<div><div class="t">{nm}</div><div class="pct {"up" if v > 0 else "down"}">{v:+.2f}</div><div class="rg">{s}</div></div>' for nm, v, s in tiles)
         return (f'<div class="card flat" style="margin:4px 0"><div class="row" style="margin-bottom:8px"><div class="mid">{mk["mercado"]}</div>'
@@ -851,27 +856,28 @@ else:
     if pagina == "Armar":
         if ss.parlay:
             legs = ss.parlay
-            sec("Stake sugerido", "Kelly calculado con la probabilidad pesimista del boleto: si con esa todavía hay valor, la apuesta aguanta un modelo "
-                "demasiado optimista. Para parlays usa ¼ o ⅛ de Kelly.")
+            sec("Stake sugerido", "Kelly usa las liquidaciones conjuntas y el mínimo de los escenarios heurísticos. Sin modelo conjunto válido no está disponible.")
             a, b = st.columns([1, 1])
             ss.banca = a.number_input("Banca (Q)", 1.0, 1e9, float(ss.banca), 50.0, format="%.0f", help="Tu banca total en Q")
             stk = kuota.stake(legs, ss.banca); rb = stk["boleto"]
-            b.markdown(f'<div class="card flat" style="margin:28px 0 0 0;padding:8px 12px"><div class="t">Boleto</div><div class="mid">cuota {rb["cuota"]:.2f}</div><div class="rg">prob. pesimista {rb["lo"]:.0%}</div></div>', unsafe_allow_html=True)
-            if stk["sin_valor"]:
-                st.markdown('<div class="card flat"><div class="t">Con la probabilidad pesimista</div><div class="mid down">Sin valor: Kelly dice no apostar</div></div>', unsafe_allow_html=True)
+            b.markdown(f'<div class="card flat" style="margin:28px 0 0 0;padding:8px 12px"><div class="t">Boleto</div><div class="mid">cuota {fmt_seguro(rb["cuota"], ".2f")} </div><div class="rg">prob. pesimista {fmt_seguro(rb["lo"], ".0%")} </div></div>', unsafe_allow_html=True)
+            if not stk["disponible"]:
+                st.warning(stk["advertencia"])
+            elif stk["sin_valor"]:
+                st.markdown('<div class="card flat"><div class="t">En los escenarios de sensibilidad</div><div class="mid down">Sin valor: Kelly dice no apostar</div></div>', unsafe_allow_html=True)
             else:
                 chips = "".join(f'<div><div class="t">{o["nombre"]}</div><div class="pct">Q{o["monto"]:,.0f}</div><div class="rg">{o["fraccion"]:.1%}</div></div>' for o in stk["opciones"])
                 st.markdown(f'<div class="kpi esc">{chips}</div>', unsafe_allow_html=True)
-            with st.expander(f"Patas del boleto · {rb['n']} · pesimista {rb['lo']:.0%} (EV {rb['ev_lo']:+.2f}) · optimista {rb['hi']:.0%} (EV {rb['ev_hi']:+.2f})"):
+            with st.expander(f"Patas del boleto · {rb['n']} · pesimista {fmt_seguro(rb["lo"], ".0%")}  (EV {fmt_seguro(rb["ev_lo"], "+.2f")} ) · optimista {fmt_seguro(rb["hi"], ".0%")}  (EV {fmt_seguro(rb["ev_hi"], "+.2f")} )"):
                 for i, l in enumerate(legs):
                     a, b = st.columns([6, 1])
                     a.markdown(f'<div class="row" style="padding:4px 0"><div class="c1"><div class="mid">{l["mercado"]}</div>'
-                               f'<div class="small">{l["partido"]} · {l["metrica"]} · Poisson {l["prob"]:.0%}' + (f' ({l["lo"]:.0%}–{l["hi"]:.0%})' if "lo" in l else '') + f' · justa {mo.cuota_justa(l["prob"])} · casa {l["cuota"]:.2f}</div></div>'
+                               f'<div class="small">{l["partido"]} · {l["metrica"]} · al agregar {l["prob"]:.0%}' + (f' ({l["lo"]:.0%}–{l["hi"]:.0%})' if "lo" in l else '') + f' · justa {l.get("justa", "No disponible")} · casa {l["cuota"]:.2f}</div></div>'
                                f'<span class="tag {l["cls"]}">{l["cal"]}</span></div>', unsafe_allow_html=True)
                     if b.button("✕", key=f"del{i}"):
                         legs.pop(i); st.rerun()
                 if rb["mismo_partido"]:
-                    st.caption("Patas del mismo partido no son independientes; la probabilidad combinada real difiere.")
+                    st.caption("Patas de la misma métrica y partido usan la matriz conjunta; otras dependencias bloquean los cálculos.")
                 if st.button("Vaciar boleto"):
                     ss.parlay = []; st.rerun()
 
@@ -897,7 +903,7 @@ else:
         for mk, e in evaluados:
             if solo and e["cls"] not in ("exc", "bue"): continue
             filas_n += 1
-            html += (f'<div class="mk"><div class="lg-r"><div class="c1"><div class="mid">{mk["mercado"]}</div><div class="small">justa <span class="w">{mo.cuota_justa(mk["prob"]):.2f}</span></div></div>'
+            html += (f'<div class="mk"><div class="lg-r"><div class="c1"><div class="mid">{mk["mercado"]}</div><div class="small">justa <span class="w">{fmt_seguro(mk["justa"])}</span></div></div>'
                      f'<div class="cn"><div class="pct">{mk["prob"]:.0%}</div><div class="rg">{mk["lo"]:.0%}–{mk["hi"]:.0%}</div></div>'
                      f'<div class="cq"><span class="tag {e["cls"]}">{e["tag"]}</span><div class="rg" style="margin-top:3px">{e["hl"]}/{e["nl"]} · {e["hv"]}/{e["nv"]}</div></div></div>'
                      f'{barra(mk["prob"], e["tasa"], 1, P["ok"] if mk["prob"] >= 0.6 else P["warn"])}</div>')
@@ -909,7 +915,7 @@ else:
         ss.ctx_titulo = f"Armar · {partido} · {NOM[met]} · {grp}"
         ss.ctx_ia = kuota.contexto_armar(LIGA, partido, an, n, grp, evaluados, ss.parlay)
 
-        sec("Agregar al boleto", "Elige el mercado, escribe la cuota que paga la casa y revisa el EV antes de agregar. EV = probabilidad × cuota − 1.")
+        sec("Agregar al boleto", "Elige el mercado, escribe la cuota que paga la casa y revisa el EV antes de agregar. EV = acierto × cuota + devolución − 1.")
         nombres = [x["mercado"] for x in lst if x["grupo"] == grp]
         a, b = st.columns([3, 2])
         sel = a.selectbox("Mercado", nombres, key=f"sel_{met}_{grp}", label_visibility="collapsed")
@@ -947,16 +953,17 @@ else:
         # tarjeta de veredicto: Poisson · histórico en grande, luego escenarios Poisson y esperado por modelo
         sec("Veredicto", f"Probabilidad de la pata según el modelo y en cuántos de los últimos {n} partidos de los dos equipos se cumplió. "
             "Calificación = 60% probabilidad Poisson + 40% cumplimiento histórico; ↕ equipo volátil la baja un nivel.")
-        trio = (f'<div><div class="big">{mk["prob"]:.0%}</div><div class="t">Poisson</div><div class="rg">justa {mo.cuota_justa(mk["prob"]):.2f}</div></div>'
+        trio = (f'<div><div class="big">{mk["prob"]:.0%}</div><div class="t">Poisson</div><div class="rg">justa {fmt_seguro(mk["justa"])}</div></div>'
                 f'<div><div class="big">{e["tasa"]:.0%}</div><div class="t">Histórico</div><div class="rg">{e["hl"] + e["hv"]} de {e["nl"] + e["nv"]} partidos</div></div>')
         st.markdown(f'<div class="card"><div class="row"><div class="c1"><div class="mid">{sel}</div><div class="small">{NOM[met]} · {partido}</div></div><span class="tag {e["cls"]}">{e["tag"]}</span></div>'
                     f'<div class="trio">{trio}</div>{barra(mk["prob"], e["tasa"], 1, P["acc"])}'
-                    f'<div class="rg" style="margin-bottom:4px">barra = probabilidad Poisson · marca vertical = % histórico</div>'
+                    f'<div class="rg" style="margin-bottom:4px">acierto {mk["prob"]:.0%} · devolución {mk["push"]:.0%} · fallo {mk["loss"]:.0%}. Barra = probabilidad; marca = % histórico</div>'
                     f'<div class="sec"><div class="t">Escenarios Poisson · la misma pata con la λ pesimista y la optimista de cada equipo</div>{escenarios_html(mk)}</div>'
                     f'<div class="sec"><div class="t">Esperado por modelo · {NOM[met].lower()}</div>{tabla_esp}</div></div>',
                     unsafe_allow_html=True)
 
         def bloque(nombre, h, hits_, lado, color):
+            pushes = e["push_l"] if lado == "l" else e["push_v"]
             col = mk["col_l"] if lado == "l" else mk["col_v"]
             ref_f, ref_c = (ml["local"], ml["visitante"]) if lado == "l" else (ml["visitante"], ml["local"])
             que = {"a_favor": "a favor", "en_contra": "en contra", "total": "total"}.get(col, sel)
@@ -968,7 +975,7 @@ else:
                 chart = chart_barras(h, "total", ml["total"], ml["total"], True, color)
                 sub = f"{NOM[met].lower()} total por partido · barra de color = sobre la media de la liga"
             return (f'<div class="card"><div class="row"><div class="mid">{eq(nombre, lado)}</div>'
-                    f'<div><span class="pct">{hits_}/{len(h)}</span> <span class="small">cumplió</span></div></div>'
+                    f'<div><span class="pct">{hits_}/{len(h)}</span> <span class="small">cumplió · {pushes} devoluciones</span></div></div>'
                     f'{chart}<div class="rg">{sub} · antiguo → reciente · C casa / F fuera</div>'
                     f'<div style="margin-top:10px">{tabla_stats(kuota.stats_historial(h, mk["linea"], mk["over"]), mk["linea"], mk["over"], ref_f, ref_c, ml["total"])}</div></div>')
 

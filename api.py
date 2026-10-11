@@ -19,9 +19,11 @@ Pendiente (necesitan claves): login de usuarios, registro de uso y el analista I
 """
 
 import json
+import math
 import os
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 import kuota
@@ -29,10 +31,17 @@ import kuota
 app = FastAPI(title="Kuota API", description="Poisson + Dixon-Coles para las 5 grandes ligas y Liga MX")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
+@app.exception_handler(ValueError)
+async def valor_invalido(request, exc):
+    return JSONResponse(status_code=422, content={"detail": str(exc)})
+
+
 _cache = {}   # liga -> {"mtime", "df", "inc": {metrica: incertidumbre}}; se recarga solo si cambia el CSV (el Action lo actualiza a diario)
 
 
 def datos(liga: str) -> dict:
+    if liga not in kuota.LIGAS:
+        raise HTTPException(404, "liga desconocida")
     ruta = f"{kuota.CARPETA_DATOS}/bbdd_{liga}.csv"
     if not os.path.exists(ruta):
         raise HTTPException(404, f"liga desconocida: {liga}")
@@ -84,15 +93,28 @@ def partido(liga: str, local: str, visitante: str, met: str = "goles", n: int = 
     validar_equipos(liga, local, visitante)
     if met not in kuota.NOM:
         raise HTTPException(404, f"metrica desconocida: {met}")
+    if local == visitante or not 1 <= n <= 80 or filtro not in ("Todos", "Como jugarán"):
+        raise ValueError("equipos, n o filtro inválidos")
     cfg_d = json.loads(cfg) if cfg else None
+    if cfg_d is not None and not isinstance(cfg_d, dict):
+        raise ValueError("cfg debe ser un objeto")
     v = kuota.vista_partido(datos(liga)["df"], liga, local, visitante, met, incert(liga, met), cfg_d, n, filtro, pata, grupo=grupo)
     return kuota.a_json(v)
 
 
 @app.post("/boleto")
 def boleto(body: dict):
-    patas, banca = body.get("patas", []), float(body.get("banca", 1000))
-    return kuota.a_json({"resumen": kuota.resumen_boleto(patas), "stake": kuota.stake(patas, banca)})
+    patas = body.get("patas", [])
+    if not isinstance(patas, list) or any(not isinstance(p, dict) or "cuota" not in p for p in patas):
+        raise ValueError("patas debe ser una lista de selecciones con cuota")
+    try:
+        banca = float(body.get("banca", 1000))
+    except (TypeError, ValueError) as exc:
+        raise ValueError("banca inválida") from exc
+    if not math.isfinite(banca) or banca <= 0:
+        raise ValueError("banca debe ser finita y positiva")
+    resumen = kuota.resumen_boleto(patas)
+    return kuota.a_json({"resumen": resumen, "stake": kuota.stake_desde_resumen(resumen, banca)})
 
 
 @app.get("/diccionario")

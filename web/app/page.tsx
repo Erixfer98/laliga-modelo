@@ -56,12 +56,12 @@ export default function Inicio() {
               <div>
                 <T>{rb.n} pata{rb.n > 1 ? "s" : ""}</T>
                 <div className="num text-[1.5rem] mt-1">cuota {num(rb.cuota)}</div>
-                <div className="text-[0.74rem] text-mut mt-1">justa {num(1 / rb.prob)} · prob. {pct(rb.prob)}</div>
+                <div className="text-[0.74rem] text-mut mt-1">Probabilidad y EV: ver cálculo en Boleto</div>
               </div>
               <div className="text-right">
                 <T>EV</T>
-                <div className={`num text-[2rem] mt-1 ${rb.ev > 0 ? "text-ok" : "text-bad"}`}>{signed(rb.ev)}</div>
-                <div className="text-[0.74rem] text-mut mt-1">pesimista {signed(rb.ev_lo)} · optimista {signed(rb.ev_hi)}</div>
+                <div className={`num text-[2rem] mt-1 ${(rb.ev ?? 0) > 0 ? "text-ok" : "text-bad"}`}>{signed(rb.ev)}</div>
+                <div className="text-[0.74rem] text-mut mt-1">El motor valida las dependencias</div>
               </div>
             </div>
           </Card>

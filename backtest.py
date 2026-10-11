@@ -146,20 +146,20 @@ def predecir_liga(args) -> pd.DataFrame:
                 for ln, et in lt:
                     po = m[tot > ln].sum()
                     add("Total", f"Total Over {et}", ln, "Over", po, hl.total > ln, hv.total > ln, xl + xv > ln)
-                    add("Total", f"Total Under {et}", ln, "Under", 1 - po, hl.total < ln, hv.total < ln, xl + xv < ln)
+                    add("Total", f"Total Under {et}", ln, "Under", m[tot < ln].sum(), hl.total < ln, hv.total < ln, xl + xv < ln)
                 if met == "goles":
                     pb = m[1:, 1:].sum()
                     bl, bv = (hl.a_favor > 0) & (hl.en_contra > 0), (hv.a_favor > 0) & (hv.en_contra > 0)
                     add("Ambos anotan", "Ambos anotan: Sí", 0.5, "Over", pb, bl, bv, xl > 0 and xv > 0)
                     add("Ambos anotan", "Ambos anotan: No", 0.5, "Under", 1 - pb, ~bl, ~bv, xl == 0 or xv == 0)
                 for ln, et in ll:
-                    po = mo.prob_over(lam_l, ln)
+                    po = m[np.arange(k) > ln, :].sum()
                     add("Local", f"Local Over {et}", ln, "Over", po, hl.a_favor > ln, hv.en_contra > ln, xl > ln)
-                    add("Local", f"Local Under {et}", ln, "Under", 1 - po, hl.a_favor < ln, hv.en_contra < ln, xl < ln)
+                    add("Local", f"Local Under {et}", ln, "Under", m[np.arange(k) < ln, :].sum(), hl.a_favor < ln, hv.en_contra < ln, xl < ln)
                 for ln, et in lv:
-                    po = mo.prob_over(lam_v, ln)
+                    po = m[:, np.arange(k) > ln].sum()
                     add("Visitante", f"Visitante Over {et}", ln, "Over", po, hl.en_contra > ln, hv.a_favor > ln, xv > ln)
-                    add("Visitante", f"Visitante Under {et}", ln, "Under", 1 - po, hl.en_contra < ln, hv.a_favor < ln, xv < ln)
+                    add("Visitante", f"Visitante Under {et}", ln, "Under", m[:, np.arange(k) < ln].sum(), hl.en_contra < ln, hv.a_favor < ln, xv < ln)
                 if met in MAYOR_NUMERO:
                     p1, px, p2 = np.tril(m, -1).sum(), np.trace(m), np.triu(m, 1).sum()
                     gl, gv = hl.a_favor > hl.en_contra, hv.a_favor > hv.en_contra
