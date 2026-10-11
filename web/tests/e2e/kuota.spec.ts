@@ -68,11 +68,11 @@ test("navegación y rutas existentes, menú móvil y teclado", async ({
       .getByRole("dialog")
       .getByRole("link", { name: "Tabla de posiciones" })
       .click();
-  } else
-    await page
-      .getByRole("navigation", { name: "Navegación principal" })
-      .getByRole("link", { name: "Tabla", exact: true })
-      .click();
+  } else {
+    const nav = page.getByRole("navigation", { name: "Navegación principal" });
+    await nav.getByText("Más análisis", { exact: false }).click();
+    await nav.getByRole("link", { name: "Tabla de posiciones" }).click();
+  }
   await expect(page).toHaveURL(/\/tabla$/);
   await expect(
     page.getByRole("heading", { name: "Tabla de posiciones." }),
