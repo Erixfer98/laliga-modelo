@@ -81,7 +81,8 @@ postergados, desconocidos, iniciados y finalizados no entran en futuras predicci
 Una versión obsoleta no puede generar contexto actual. Fixture histórico observado
 ahora no se convierte en evidencia disponible entonces.
 
-El dataset exige captura **y registro** antes del corte y registro antes del kickoff.
+El dataset incluye identidad de fixture, equipos, sede, kickoff y registro efectivo,
+validados contra su versión; exige captura **y registro** antes del corte y registro antes del kickoff.
 Los timestamps publicados pueden permanecer nulos. Las fuentes no se declaran
 certificadas por el proveedor/organizador. Ausencia reportada frente a titularidad del
 mismo jugador genera contradicción explícita; no se decide automáticamente quién tiene
@@ -196,7 +197,7 @@ real, fijar retención de bytes de manera que preserve auditoría y diseñar ver
 incremental/anclajes o backend transaccional equivalente. No se hizo backtesting ni
 se afirmó escalabilidad a producción.
 
-Validación B2 final: **65 casos sintéticos aprobados**, además de 52 casos B1
+Validación B2 final: **66 casos sintéticos aprobados**, además de 52 casos B1
 aprobados durante la revisión de compatibilidad. Ocho unitarias web, TypeScript y
 build pasan. Las regresiones completas Python/Playwright y CI se documentan en el
 cierre de la entrega, sin presentar resultados pendientes como aprobados.

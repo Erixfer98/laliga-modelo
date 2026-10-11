@@ -420,3 +420,15 @@ def test_cancel_weather_inflight_does_not_publish(setup):
     assert report['components']['weather']['status']=='cancelled'
     assert not any(r['kind']=='weather' for r in s.records())
     assert s.control('weather_calls:'+ahora()[:10])==1
+
+
+def test_ai_dataset_contains_verified_fixture_and_rejects_foreign_facts(setup):
+    c,f,d,s=setup; rec=discovered(setup)
+    add_context(s,rec,[{'fixture':{'id':7001},'team':{'id':90011},'player':{'id':123,'type':'Missing Fixture','reason':'SYNTHETIC'}}],'injuries','/injuries',{'fixture':7001})
+    ds=Contexto(c).dataset(rec,ahora())
+    assert ds['fixture']['home']['internal_team']=='A' and ds['fixture']['fixture_id']=='7001'
+    assert ds['fixture_registered_at_utc']==rec['registered_at_utc']
+    bad=copy.deepcopy(ds); bad['facts'][0]['value']['team_id']='999999'
+    with pytest.raises(ValueError): validar_dataset(bad)
+    bad=copy.deepcopy(ds); bad['fixture_registered_at_utc']=KICK
+    with pytest.raises(ValueError): validar_dataset(bad)
