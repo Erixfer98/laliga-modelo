@@ -14,7 +14,10 @@ from .contratos import ahora, canonico
 
 
 def configuracion(path):
-    obj = json.loads(Path(path).read_text())
+    return validar_configuracion(json.loads(Path(path).read_text()))
+
+
+def validar_configuracion(obj):
     from .contratos import campos
     campos(obj, ('policy', 'seasons', 'live_authorized', 'credential_rotated', 'network_authorized', 'restore_verified', 'weather_authorized'))
     for k in ('live_authorized', 'credential_rotated', 'network_authorized', 'restore_verified', 'weather_authorized'):
@@ -64,26 +67,10 @@ def main(argv=None):
         elif args.command == 'catalogo':
             leagues, states = discovery.catalogo(dry_run=False); result = {'leagues': leagues, 'states': states}
         elif args.command in ('descubrir', 'ciclo'):
-            result = discovery.descubrir(args.desde, args.hasta, config['seasons'], dry_run=False)
             if args.command == 'ciclo':
-                # Reutiliza catálogo archivado; no repite seis consultas para obtener cobertura.
-                leagues = {}
-                for record in store.records():
-                    if record['scope'].get('endpoint') != '/leagues' or record['scope'].get('validation_state') != 'ok': continue
-                    cap, _ = store.captura(record['id'])
-                    for row in cap.json()['response']:
-                        if isinstance(row, dict) and 'league' in row: leagues[str(row['league']['id'])] = row
-                by_id = {r['receipt_id']: r for r in store.archivo.verificar()}; result['context'] = []
-                for selected in result['accepted']:
-                    if not selected['eligible_future']: continue
-                    receipt = by_id[selected['receipt_id']]; f = receipt['fixture']
-                    seasons = leagues.get(f['league_id'], {}).get('seasons', [])
-                    coverage = next((s.get('coverage', {}) for s in seasons if str(s['year']) == f['season_id']), {})
-                    captured = context.capturar(receipt, coverage, dry_run=False, weather_authorized=config['weather_authorized'])
-                    captured['fixture_receipt_id'] = receipt['receipt_id']
-                    try: captured['dataset'] = context.dataset(receipt, ahora())
-                    except ValueError: captured['dataset_status'] = 'abstained'
-                    result['context'].append(captured)
+                from .servicio import ciclo
+                result = ciclo(client, args.desde, args.hasta, config['seasons'], config['weather_authorized'])
+            else: result = discovery.descubrir(args.desde, args.hasta, config['seasons'], dry_run=False)
         elif args.command == 'inventario': result = discovery.inventario(args.cutoff or ahora(), args.page, args.page_size, not args.all_statuses)
         elif args.command == 'consumo': result = {'calls': store.consumo(), 'weather_calls_today': store.control('weather_calls:' + ahora()[:10]) or 0}
         elif args.command == 'verificar': result = store.verificar()

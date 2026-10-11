@@ -19,8 +19,8 @@ class AlmacenConfigurado:
             if any(resolved == p or p in resolved.parents for p in map(Path, ('/tmp', '/workspace', '/dev/shm'))):
                 raise ValueError('Ruta de ejecución efímera no admite operación prospectiva')
         a, b = self.root.resolve(), self.backup_root.resolve()
-        if a == b or a in b.parents or b in a.parents:
-            raise ValueError('Backup requiere ubicación separada')
+        if a == b or a in b.parents or b in a.parents or a.stat().st_dev == b.stat().st_dev:
+            raise ValueError('Backup local requiere otro sistema de archivos; staging del mismo disco no es respaldo independiente')
         if not self.durability_evidence.strip():
             raise ValueError('Sin referencia verificable de provisión durable')
         # Referencia operativa, no prueba automática de durabilidad física ni certificación.
