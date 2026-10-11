@@ -9,7 +9,7 @@ export function LambdaSummary({ v }: { v: Pick<VistaPartido,
   const total = v.lambda_local + v.lambda_visitante;
   const diferencia = Math.abs(v.lambda_local - v.lambda_visitante);
   const lectura = diferencia < 0.01
-    ? "El modelo estima una producción similar para ambos equipos."
+    ? "El modelo estima una producción similar de " + unidad + " para ambos equipos."
     : "El modelo espera " + num(diferencia, 2) + " " + unidad +
       " más de " + (v.lambda_local > v.lambda_visitante ? v.local : v.visitante) +
       " que de su rival.";
