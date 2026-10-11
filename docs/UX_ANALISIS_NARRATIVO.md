@@ -21,11 +21,14 @@ No es wizard. Los enlaces a secciones permiten saltar sin perder el partido.
 - Los mercados sin líneas usan opciones explícitas.
 - Los controles antiguos de centro y rango se conservan como **opción avanzada temporal** para compatibilidad con los flujos existentes. No son necesarios para los cambios cotidianos.
 - Distribución visible vinculada a la selección y resumen histórico sin acordeón.
-- Los mercados exhaustivos y métodos históricos siguen accesibles, sin borrar funcionalidades.
+- El inventario exhaustivo de mercados queda en «Ver lista completa de mercados» (cerrado por defecto); la elección habitual se hace con categoría, línea y Más/Menos. Se mantienen opciones avanzadas.
+- En móvil se elimina la barra flotante de probabilidad que tapaba la lectura; la decisión aparece después de la distribución y la evidencia.
+- Navegación principal simplificada a Analizar / Explorar / Boleto. Tabla, cara a cara y glosario continúan disponibles mediante «Más análisis» en escritorio y «Más» en móvil.
 
 ## Límites conocidos y decisiones pendientes de aceptación visual
 - El servicio actual no ofrece calendario actual verificado; la selección del enfrentamiento sigue siendo manual.
-- La navegación global mantiene las rutas actuales en esta primera iteración para no romper deep links ni pruebas existentes. Se propone evaluar después una navegación primaria Analizar / Explorar / Boleto con los enlaces auxiliares conservados.
+- Las rutas y deep links originales se conservan, pero sus enlaces se reagrupan en la navegación simplificada. «Explorar» es información histórica, **no** un calendario en tiempo real.
+- La lista completa se conserva en un bloque plegable para investigación avanzada; no es el recorrido inicial.
 - Algunos mercados usan matrices grandes, que requieren verificar el espacio móvil real antes de aprobar el merge.
 - El gráfico de barras muestra probabilidades de acierto/fallo; la liquidación/push la conserva el backend. Cualquier nueva codificación de push debe utilizar el contrato del motor.
 - Una coincidencia histórica no es probabilidad futura y una λ es parámetro esperado, no marcador.
@@ -36,6 +39,7 @@ No es wizard. Los enlaces a secciones permiten saltar sin perder el partido.
 2. Elegir una línea ya calculada en un clic; Más/Menos en un clic.
 3. Si se necesita otra línea, petición explícita `cfg` al backend, nunca probabilidad inventada.
 4. Los cambios conservan partido, liga y métrica y nunca permiten añadir al boleto mientras el detalle es obsoleto.
+5. Pantallas reales generadas por Playwright (390 y 1440 px) disponibles en artefactos del workflow; auditoría también a 375 y 768 px.
 5. Mobile sin overflow horizontal; controles con accesibilidad de teclado y toque.
 6. CI Python, TS, build, unitarias web y E2E. Capturas visuales de Playwright para revisión, no equivalentes a test de usabilidad humana.
 
