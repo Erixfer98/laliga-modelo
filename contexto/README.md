@@ -1,4 +1,21 @@
-# Contexto experimental — B1
+# Contexto experimental — B1 y B2
+
+B2 añade descubrimiento automático optativo, cliente consciente del plan, evidencia
+prospectiva y CLI privado. **No conectado ni activado en producción.**
+Guía vigente y matriz de disponibilidad: [FASE5_B2_AVANCE](../docs/FASE5_B2_AVANCE.md).
+
+```bash
+python -m contexto.cli_b2 estado
+python -m contexto.cli_b2 --db /ruta/absoluta/contexto.sqlite --dry-run catalogo
+python -m pytest -q tests/test_contexto_b1.py tests/test_contexto_cliente.py tests/test_contexto_b2.py
+```
+
+Los comandos B2 `verificar` y `backup` comprueban fixtures y capturas contextuales.
+El CLI B1 siguiente conserva compatibilidad y solo audita los recibos de fixtures.
+La clave expuesta previamente debe rotarse antes de operar; no enviarla al chat.
+Todos los ejemplos y pruebas de esta entrega son sintéticos o planes sin ejecución.
+
+## Referencia B1 (alcance original)
 
 Infraestructura opt-in. **No está conectada a producción ni captura al importar.**
 No contiene analista IA, predicciones alternativas, entrenamiento ni interfaz.
