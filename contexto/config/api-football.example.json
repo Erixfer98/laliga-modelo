@@ -1,0 +1,21 @@
+{
+  "policy": {
+    "daily_limit": 100,
+    "reserve": 10,
+    "cache_seconds": 300,
+    "max_retries": 1,
+    "max_window_days": 3,
+    "max_global_results": 100,
+    "max_results": 200,
+    "strategy": "league_range",
+    "endpoints": [],
+    "league_seasons": {},
+    "global_dates": {}
+  },
+  "seasons": {},
+  "live_authorized": false,
+  "credential_rotated": false,
+  "network_authorized": false,
+  "restore_verified": false,
+  "weather_authorized": false
+}
