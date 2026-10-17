@@ -26,7 +26,8 @@ jobs:
       - run: pip install pandas openpyxl requests
       - run: python generar_bbdd.py
       - run: python validar_bbdd.py
-      - run: python logos.py || echo "logos: sin cambios (ESPN no respondio)"
+      - run: |
+          python logos.py || echo "logos: sin cambios (ESPN no respondio)"
       - name: Publicar datos validados
         run: |
           git config user.name "github-actions"
