@@ -34,11 +34,15 @@ la web muestra las iniciales del equipo en un círculo de color.
 | Carpeta / archivo | Qué es |
 |---|---|
 | `app/globals.css` | **La paleta y la forma de toda la app** (colores, radio de las tarjetas, tipografía Plus Jakarta Sans). Cambia aquí y cambia todo |
-| `components/Nav.tsx` | Marca, selector de ligas con logo y la barra de pestañas de abajo (celular) |
+| `components/Nav.tsx` | Marca, selector de ligas con logo y las 3 pestañas: Partido · Boleto · Más |
 | `components/Crest.tsx` | Escudo de equipo (o iniciales) y logo de liga |
 | `components/Selectores.tsx` | Cabecera de partido: escudos grandes, toca un equipo para cambiarlo |
-| `app/page.tsx` | Inicio |
-| `app/partido/page.tsx` | Partido = Armar + Analizar en una sola pantalla |
+| `app/page.tsx` | **Partido** (pantalla principal): equipos, métricas, λ, tabla de mercados (prob, cuota justa, X/N) y cara a cara |
+| `components/Partido.tsx` | Piezas de esa pantalla, incluida la hoja de un mercado (cuota de la casa, EV, agregar al boleto) |
+| `lib/partido.ts` | Pide la métrica que estás viendo y después las otras 8 en segundo plano (`modo=compacto`) |
+| `app/mas/page.tsx` | Más: resumen de la liga, tabla, cara a cara completo, glosario, apariencia y salir |
+| `app/liga/page.tsx` | Resumen de la liga (el Inicio de antes) |
+| `app/partido/page.tsx` | Redirige a `/` (enlaces viejos) |
 | `app/boleto/page.tsx` | Boleto y stake (Kelly) |
 | `app/cara/`, `app/tabla/`, `app/diccionario/` | Cara a cara, tabla de posiciones, diccionario |
 | `components/` | Piezas: barra superior, tarjetas, pills, gráficos, tabla, detalle de la pata |
@@ -52,6 +56,7 @@ la web muestra las iniciales del equipo en un círculo de color.
    New → Blueprint → elegir el repo `laliga-modelo` → Render lee `render.yaml` y crea el servicio `kuota-api` (plan gratis).
    Al terminar te da una URL tipo `https://kuota-api.onrender.com`. Probá `https://kuota-api.onrender.com/ligas`.
    El plan gratis se duerme tras 15 min sin uso y la primera visita tarda ~1 min en despertar; el plan de US$7/mes está siempre despierto.
+   El Action `Mantener despierta la API` (`.github/workflows/despertar.yml`) la visita cada 5 min para que no se duerma.
 
 **2. La web en Vercel** — https://vercel.com, entrar con GitHub.
    Add New → Project → importar `laliga-modelo` → **Root Directory: `web`** → Environment Variables:

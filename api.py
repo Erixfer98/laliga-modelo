@@ -12,6 +12,7 @@ Rutas:
   GET  /liga/{liga}/cara                        Cara a cara                                  ?local=..&visitante=..&solo_casa=false
   GET  /liga/{liga}/partido                     Armar + Analizar: mercados evaluados + detalle de una pata
                                                 ?local=..&visitante=..&met=goles&n=5&filtro=Todos&grupo=Total&pata=Total Over 2.5&cfg={json}
+                                                modo=compacto: solo lo que usa la pantalla de partido (λ, prob, cuota justa, X/N)
   POST /boleto   {"patas": [...], "banca": 1000} resumen del boleto + stake Kelly
   GET  /diccionario                             terminos                                     (?q=kelly)
   GET  /logos                                   escudos y logos de ligas (datos/logos.json, lo genera logos.py)
@@ -31,14 +32,37 @@ from pathlib import Path
 
 _CODIGO_ANALISIS = hashlib.sha256(b"".join(Path(__file__).with_name(p).read_bytes() for p in ("modelo.py", "probabilidades.py", "kuota.py"))).hexdigest()
 
+from contextlib import asynccontextmanager
+from threading import Thread
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 
 import kuota
 
-app = FastAPI(title="Kuota API", description="Poisson + Dixon-Coles para las 5 grandes ligas, Liga MX y Champions League")
+
+def _precargar():
+    """Al arrancar deja en memoria las ligas y la incertidumbre de sus 9 métricas, para que el primer partido
+    no pague esa espera. Corre en segundo plano y no cambia ningún cálculo. KUOTA_PRECARGA=0 la apaga."""
+    for liga in kuota.ligas_disponibles():
+        for met in kuota.NOM:
+            try:
+                incert(liga, met)
+            except Exception:
+                pass
+
+
+@asynccontextmanager
+async def _vida(app):
+    if os.environ.get("KUOTA_PRECARGA", "1") != "0":
+        Thread(target=_precargar, daemon=True).start()
+    yield
+
+
+app = FastAPI(title="Kuota API", description="Poisson + Dixon-Coles para las 5 grandes ligas, Liga MX y Champions League", lifespan=_vida)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 @app.exception_handler(ValueError)
 async def valor_invalido(request, exc):
@@ -141,7 +165,7 @@ def _partido_calculado(liga: str, local: str, visitante: str, met: str = "goles"
     cfg_d = json.loads(cfg) if cfg else None
     if cfg_d is not None and not isinstance(cfg_d, dict):
         raise ValueError("cfg debe ser un objeto")
-    if modo not in ("completo", "resumen", "detalle", "version"):
+    if modo not in ("completo", "resumen", "compacto", "detalle", "version"):
         raise ValueError("modo inválido")
     inicio_t = perf_counter()
     c = datos(liga)
