@@ -1,0 +1,16 @@
+name: Mantener despierta la API
+# Render (plan gratis) apaga la API tras 15 min sin visitas y tarda ~1 min en volver.
+# Este Action la visita cada 5 min para que no se duerma. Gratis: el repo es público.
+# GitHub a veces atrasa los horarios unos minutos; por eso cada 5 y no cada 14.
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+permissions: {}
+jobs:
+  visitar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Visitar la API
+        run: curl -fsS --retry 3 --retry-delay 10 --max-time 120 https://kuota-api.onrender.com/ligas -o /dev/null

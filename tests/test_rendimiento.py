@@ -131,3 +131,17 @@ def test_verificacion_antes_del_boleto_no_recalcula(monkeypatch):
     version=response.json()['data_version']
     assert client.get('/liga/laliga/partido',params={**params,'data_version':version}).status_code==200
     assert client.get('/liga/laliga/partido',params={**params,'data_version':'obsoleta'}).status_code==409
+
+
+@pytest.mark.parametrize("met", list(kuota.NOM))
+def test_compacto_trae_los_mismos_numeros_que_resumen(met):
+    """La pantalla de partido usa modo=compacto: mismos λ, probabilidades, cuotas justas y X/N que el resumen completo."""
+    params = {"local": "Real Madrid", "visitante": "Barcelona", "met": met, "n": 10, "filtro": "Como jugarán"}
+    resumen = client.get("/liga/laliga/partido", params={**params, "modo": "resumen"}).json()
+    compacto = client.get("/liga/laliga/partido", params={**params, "modo": "compacto"}).json()
+    for k in ("lambda_local", "lambda_visitante", "medias_liga", "cfg", "grupos", "n", "filtro", "data_version"):
+        comparar(resumen[k], compacto[k], k)
+    assert len(compacto["mercados"]) == len(resumen["mercados"])
+    for completo, corto in zip(resumen["mercados"], compacto["mercados"]):
+        assert set(corto) == set(kuota.COMPACTO)
+        comparar({k: completo[k] for k in kuota.COMPACTO}, corto)

@@ -26,7 +26,7 @@ try {
           form: { clave: process.env.CAPTURAS_CLAVE },
         });
       const page = await context.newPage();
-      await page.goto(baseURL);
+      await page.goto(`${baseURL}/liga`);
       await page
         .getByText("Último partido registrado:", { exact: false })
         .waitFor();
@@ -42,16 +42,17 @@ try {
           fullPage: true,
         });
       }
-      await page.goto(`${baseURL}/partido`);
-      await page.getByTestId("probabilidad-seleccionada").waitFor();
+      await page.goto(baseURL);
+      await page.getByTestId("fila-mercado").first().waitFor();
       await page.screenshot({
         path: `${output}/despues-analisis-${viewport.width}-${colorScheme}.png`,
         fullPage: true,
       });
+      await page.getByTestId("fila-mercado").first().click();
       // Entrada manual de prueba: no es una cuota de una casa de apuestas.
-      await page.getByLabel("Tu cuota decimal").fill("1.90");
+      await page.getByLabel("Cuota de la casa").fill("1.90");
       await page
-        .getByRole("button", { name: "Añadir al boleto", exact: true })
+        .getByRole("button", { name: "Agregar al boleto", exact: true })
         .click();
       await page.goto(`${baseURL}/boleto`);
       await page.getByTestId("probabilidad-conjunta").waitFor();

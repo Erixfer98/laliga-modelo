@@ -39,7 +39,7 @@ Para reproducir:
 ```bash
 python scripts/benchmark_rendimiento.py --reference c31f6cf --output work/rendimiento/servidor.json
 # API local en :8000 y build de producción web en :3103, sin otras cargas de benchmark
-PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium BENCHMARK_URL=http://127.0.0.1:3103 node web/scripts/benchmark-rendimiento.cjs work/rendimiento/usuario.json
+(Script retirado el 20/10/2026 con la pantalla única de partido: ahora las 9 métricas se piden una vez por partido, en modo=compacto.)
 ```
 
 El script de referencia requiere que el commit base esté disponible localmente. No se impone un umbral temporal frágil en CI compartida; las pruebas sí verifican ausencia de peticiones redundantes del análisis base y resultados correctos bajo demoras deliberadas.

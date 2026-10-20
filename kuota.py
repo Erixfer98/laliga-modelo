@@ -579,6 +579,10 @@ def vista_cara(df: pd.DataFrame, liga: str, local: str, visitante: str, solo_cas
     return {"liga": liga, "nombre": LIGAS.get(liga, liga), **cc, "contexto_ia": contexto_cara(LIGAS.get(liga, liga), cc, legs or [])}
 
 
+# Lo que la pantalla de partido necesita por mercado (sin escenarios ni series): ~40 veces menos datos que "resumen".
+COMPACTO = ("mercado", "grupo", "prob", "push", "justa", "lo", "hi", "hl", "nl", "hv", "nv", "cal", "cls", "tag", "ventaja", "seleccion")
+
+
 def preparar_partido(df, local, visitante, met, inc, cfg=None, n=5, filtro="Todos", _modelo=None, _memo=None):
     """Estado reutilizable. Los consumidores no deben mutar los objetos compartidos."""
     inc = incertidumbre(df, met) if inc is None else inc
@@ -600,6 +604,11 @@ def vista_partido(df: pd.DataFrame, liga: str, local: str, visitante: str, met: 
     if modo == "resumen":
         return {"liga": liga, "nombre_liga": nombre_liga, "partido": partido, **base,
                 "n": n, "filtro": filtro, "mercados": evaluados}
+    if modo == "compacto":
+        return {"liga": liga, "nombre_liga": nombre_liga, "partido": partido, "metrica": met, "local": local, "visitante": visitante,
+                "lambda_local": an["lambda_local"], "lambda_visitante": an["lambda_visitante"], "medias_liga": an["medias_liga"],
+                "cfg": an["cfg"], "grupos": an["grupos"], "n": n, "filtro": filtro,
+                "mercados": [{k: x[k] for k in COMPACTO} for x in evaluados]}
     nombres = [x["mercado"] for x in evaluados]
     if sel not in nombres:
         del_grupo = [x["mercado"] for x in evaluados if x["grupo"] == grupo]

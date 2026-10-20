@@ -6,7 +6,7 @@ import { Puerta } from "@/components/Puerta";
 import { autorizado } from "@/lib/gate";
 
 export const metadata: Metadata = {
-  title: "Kuota · El fútbol, con perspectiva",
+  title: "Kuota · Parlays con datos",
   description: "Poisson + Dixon-Coles para las 5 grandes ligas, Liga MX y Champions League",
 };
 export const viewport: Viewport = {
@@ -38,10 +38,10 @@ export default async function RootLayout({
             <a href="#contenido" className="skip-link">
               Saltar al contenido
             </a>
-            <Header conClave={!!process.env.KUOTA_CLAVE} />
+            <Header />
             <main
               id="contenido"
-              className="max-w-[1200px] w-full mx-auto px-4 lg:px-6 pb-40 lg:pb-12 pt-6"
+              className="max-w-[1200px] w-full mx-auto px-4 lg:px-6 pb-28 lg:pb-12 pt-4"
             >
               {children}
             </main>

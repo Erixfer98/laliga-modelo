@@ -57,7 +57,7 @@ export default function Boleto() {
         </div>
         {boleto.length > 0 && (
           <Link
-            href="/partido"
+            href="/"
             className="hidden sm:flex items-center min-h-11 text-sm font-semibold text-acc"
           >
             Añadir selección →
@@ -75,7 +75,7 @@ export default function Boleto() {
             Aquí podrás revisar cómo se comportan tus selecciones juntas.
           </p>
           <Link
-            href="/partido"
+            href="/"
             className="primary rounded-xl inline-flex min-h-12 items-center px-5 text-sm font-bold mt-6"
           >
             Explorar mercados →
@@ -152,7 +152,7 @@ export default function Boleto() {
             ))}
             <div className="flex flex-wrap items-center gap-3 mt-4">
               <Link
-                href="/partido"
+                href="/"
                 className="flex-1 min-w-[180px] rounded-xl border border-line min-h-12 flex justify-center items-center text-sm font-semibold"
               >
                 + Añadir selección
