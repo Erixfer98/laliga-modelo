@@ -1,5 +1,5 @@
 {
- "fecha": "20/10/2026 16:23 UTC",
+ "fecha": "20/10/2026 16:28 UTC",
  "ligas": {
   "bundesliga": {
    "partidos": 360,
@@ -9,6 +9,20 @@
     "2026-27": 54
    },
    "equipos": 21,
+   "vacias": 0,
+   "duplicados": 0,
+   "errores": [],
+   "avisos": [],
+   "ok": true
+  },
+  "champions": {
+   "partidos": 222,
+   "ultimo": "14/10/2026",
+   "temporadas": {
+    "2025-26": 186,
+    "2026-27": 36
+   },
+   "equipos": 54,
    "vacias": 0,
    "duplicados": 0,
    "errores": [],
