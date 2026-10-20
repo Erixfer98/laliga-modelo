@@ -30,6 +30,13 @@ LIGAS = {"laliga": "La Liga", "premier": "Premier League", "seriea": "Serie A", 
 GOL = ("goles", "goles_1t", "goles_2t")
 MAYOR_NUMERO = ("tiros", "tiros_a_puerta", "corners", "faltas", "amarillas")   # metricas con mercado "quien hace mas"
 NOM = mo.NOMBRES
+# Prueba walk-forward del Modelo B (docs/MODELO_B.md, 2,014 partidos de 6 ligas): mercados Over/Under donde el modelo
+# NO eligió el lado (Over/Under) mejor que apostar siempre al lado más común de la liga; la diferencia puede ser suerte.
+SIN_VENTAJA = {("goles", "total"), ("goles", "visitante"), ("goles_1t", "total"), ("goles_1t", "visitante"),
+               ("goles_2t", "total"), ("goles_2t", "local"), ("corners", "total"), ("tiros_a_puerta", "total"),
+               ("amarillas", "total"), ("amarillas", "local"), ("amarillas", "visitante"),
+               ("rojas", "total"), ("rojas", "local"), ("rojas", "visitante")}
+LIGAS_PROBADAS = ("laliga", "premier", "seriea", "bundesliga", "ligue1", "ligamx")
 NOM_CORTO = {"goles": "Goles", "goles_1t": "Goles 1T", "goles_2t": "Goles 2T", "tiros": "Tiros", "tiros_a_puerta": "Tiros a puerta",
              "corners": "Corners", "faltas": "Faltas", "amarillas": "Amarillas", "rojas": "Rojas"}
 NIVELES = [("Excelente", "exc"), ("Buena", "bue"), ("Regular", "reg"), ("Mala", "mal"), ("Pésima", "pes")]
@@ -153,6 +160,18 @@ def cumple(h: pd.DataFrame, mk: dict, lado: str) -> pd.Series:
     """Serie True/False: en que partidos del historial se habria cumplido la pata (lado "l" = local, "v" = visitante)."""
     col = mk["col_l"] if lado == "l" else mk["col_v"]
     return (h[col] > mk["linea"]) if mk["over"] else (h[col] < mk["linea"])
+
+
+def ventaja(liga: str, met: str, regla: dict) -> str:
+    """'probada' = en la prueba el modelo eligió mejor que el lado más común · 'sin ventaja' = empató con él ·
+    'sin probar' = mercado o liga que la prueba no cubrió (doble oportunidad, ambos anotan, mayor número, 1X2 por tiempo, Champions)."""
+    if liga not in LIGAS_PROBADAS:
+        return "sin probar"
+    if regla["tipo"] == "ou":
+        return "sin ventaja" if (met, regla["lado"]) in SIN_VENTAJA else "probada"
+    if regla["tipo"] == "resultado" and met == "goles" and regla["lado"] in ("local", "empate", "visitante"):
+        return "probada"
+    return "sin probar"
 
 
 def calificar(p: float, tasa: float) -> tuple:
@@ -301,6 +320,7 @@ def analizar_partido(df: pd.DataFrame, local: str, visitante: str, met: str, inc
     for mk in lst:
         mk["seleccion"] = {"liga": df.attrs.get("liga"), "local": local, "visitante": visitante,
                            "metrica": met, "regla": mk["regla"], "version": pr.VERSION}
+        mk["ventaja"] = ventaja(df.attrs.get("liga"), met, mk["regla"])
 
 
     def var(eq, cond):
@@ -674,13 +694,15 @@ DICCIONARIO = [
     ("Modelo", "λ (lambda)", "Cantidad esperada de la métrica para un equipo en este partido, según el modelo. Ej. λ corners 5.2 = se esperan unos 5 corners de ese equipo."),
     ("Modelo", "Poisson", "Fórmula que convierte una λ en probabilidades: cuántas veces sale 0, 1, 2, 3… Se usa para goles, tiros, corners, faltas y tarjetas."),
     ("Modelo", "Dixon-Coles (ρ)", "Corrección a Poisson solo para goles: ajusta los marcadores 0-0, 1-0, 0-1 y 1-1, que Poisson estima mal. ρ negativo = más empates bajos."),
-    ("Modelo", "Ataque / defensa", "Fuerza del equipo relativa a la liga. 1.00 = promedio; 1.30 = produce 30% más que un equipo promedio; 0.80 = 20% menos."),
+    ("Modelo", "Ataque / defensa", "Fuerza del equipo relativa a un equipo promedio, contra los mismos rivales y en las mismas sedes. 1.00 = promedio; ataque 1.30 = anota 30% más; defensa 0.80 = recibe 20% menos (mejor)."),
     ("Modelo", "Peso por recencia", "Los partidos recientes pesan más que los viejos al calcular las fuerzas. Un partido de hace ~140 días pesa la mitad que uno de hoy."),
     ("Modelo", "Matriz de resultados", "Tabla con la probabilidad de cada marcador exacto (filas = local, columnas = visitante). Verde = marcadores con los que gana la pata."),
-    ("Modelo", "Rango bajo–alto de λ", "Sensibilidad heurística de los promedios ponderados de ataque y defensa, propagada a λ. Se evalúa una rejilla interior y la estimación central. No es un intervalo de confianza validado; no garantiza extremos globales ni cobertura. La referencia de liga permanece fija. Para cero eventos se usa un límite Poisson de cero eventos como sensibilidad."),
+    ("Modelo", "Rango bajo–alto de λ", "λ del modelo × (1 ∓ error relativo del ataque) × (1 ∓ error relativo de la defensa). Error relativo = t de Student (90 %) × desviación ÷ √partidos efectivos ÷ promedio, con los partidos del equipo en esa condición (casa o fuera). Es sensibilidad heurística: no es un intervalo de confianza validado ni garantiza cobertura. Si la liga no tiene eventos de un lado, se usa un límite Poisson de cero eventos."),
     ("Modelo", "Pesimista / optimista", "Mínimo y máximo de la probabilidad en una rejilla de sensibilidad que incluye el punto central. Evalúa ataque y defensa. No garantiza extremos globales ni cobertura. En líneas enteras Over + Under + devolución = 1; el EV usa acierto y devolución de cada mismo escenario."),
     ("Modelo", "Varianza vs liga (🟢🟡🔴⚪)", "Ancho del rango del equipo (relativo a su promedio, en esa condición: casa o fuera) dividido entre el ancho mediano de los equipos de la liga. 🟢 estable < 0.8×, 🟡 normal 0.8–1.2×, 🔴 volátil > 1.2×, ⚪ pocos datos = menos de 5 partidos efectivos en esa condición; ahí se usa la dispersión típica de la liga en lugar de la del equipo."),
-    ("Modelo", "Encogimiento (K)", (f"Al calcular la fuerza de un equipo se le suman {mo.K_ENCOGE} partidos 'extra' al promedio de la liga, para que un equipo con pocos partidos o una racha rara no se vaya a extremos." if mo.K_ENCOGE else "Desactivado (K = 0): la fuerza de cada equipo es su promedio ponderado puro, sin acercarlo al promedio de la liga.") + " Excepción: Champions League usa K = 10, porque tiene equipos nuevos con 1 o 2 partidos. Se ajusta con K_ENCOGE y K_ENCOGE_LIGA en modelo.py."),
+    ("Modelo", "Modelo B", "Cómo se calcula la fuerza de cada equipo: un ataque y una defensa con todos sus partidos (casa y fuera), descontando qué tan fuertes eran sus rivales y con un freno cuando tiene pocos partidos. La ventaja de local es la de la liga. Tarjetas rojas usan el promedio de la liga. Metodología y prueba con 2,014 partidos: docs/MODELO_B.md."),
+    ("Modelo", "Freno (K)", f"A cada equipo se le suman {mo.K_ENCOGE} partidos inventados donde anota y recibe exactamente lo que se esperaba. Con pocos partidos reales empujan su ataque y su defensa hacia 1.00 (promedio); con muchos, casi no se notan. Se ajusta con K_ENCOGE en modelo.py."),
+    ("Mercados", "Sin ventaja", "En la prueba con 2,014 partidos de 6 ligas, en este tipo de mercado el modelo no eligió el lado (Over o Under) mejor que apostar siempre a lo que más pasa en la liga; la diferencia puede ser suerte. Son: goles total y del visitante; goles 1er tiempo total y del visitante; goles 2do tiempo total y del local; corners total; tiros a puerta total; amarillas y rojas. Sin probar: doble oportunidad, ambos anotan, mayor número, resultado por tiempo y Champions League."),
     ("Mercados", "Cuota justa", "(1 − probabilidad de devolución) dividido entre probabilidad de acierto. Si el acierto es imposible, no está disponible. Es la cuota a la que no ganas ni pierdes a largo plazo. Si la casa paga más que la justa, hay valor."),
     ("Mercados", "EV (valor esperado)", "probabilidad de acierto × cuota + probabilidad de devolución − 1. Positivo = a largo plazo ganas; negativo = pierdes. EV +0.10 = ganas 10 centavos por cada Q1 apostado, en promedio."),
     ("Mercados", "Over / Under", "Más de / menos de una línea. Total Over 2.5 goles = 3 o más goles en el partido. Las líneas .5 no permiten devolución; en líneas enteras la igualdad devuelve la apuesta y no cuenta como acierto."),

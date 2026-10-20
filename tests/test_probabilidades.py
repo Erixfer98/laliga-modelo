@@ -81,13 +81,17 @@ def test_regresiones_auditoria(liga,local,vis,met):
             # Gráfico puede recortar la cola visual, pero no renormaliza las barras.
             assert sum(x["p"] for x in g["valores"] if x["gana"]) <= mk["prob"]+1e-14
     if local == "Barcelona" and met == "rojas":
-        assert a["lambda_local"] == 0
+        # Modelo B: rojas usan el promedio de la liga (sin ceros estructurales por equipo).
+        df = ku.cargar(liga)
+        assert a["lambda_local"] == pytest.approx(mo.fuerzas(df, "rojas").attrs["prom_casa"])
+        assert a["lambda_local"] > 0
         assert a["rango"]["local"][1] > 0
     if met == "tiros":
         assert a["distribucion"]["k_max"] > 35
     if met == "corners":
-        mk=next(x for x in a["mercados"] if x["mercado"]=="Barcelona Over 18.5")
-        assert mk["prob"] == pytest.approx(poisson.sf(18,a["lambda_local"]),abs=pr.TOL_COLA)
+        # La línea por defecto depende de los datos del día: se toma la primera línea Over del local.
+        mk=next(x for x in a["mercados"] if x["mercado"].startswith("Barcelona Over"))
+        assert mk["prob"] == pytest.approx(poisson.sf(math.floor(mk["linea"]),a["lambda_local"]),abs=pr.TOL_COLA)
 
 
 def test_empate_interior_hoff_en_fixture_numerico():
@@ -156,10 +160,16 @@ def test_kelly_inseguro_no_disponible(kind):
 
 def test_probabilidad_cero_sin_infinito():
     assert mo.cuota_justa(0) is None
-    rb=ku.resumen_boleto([leg(local="Barcelona",visitante="Real Madrid",met="rojas",
-        regla={"tipo":"ou","lado":"local","linea":.5,"over":True})])
-    assert rb["prob"]==0 and rb["justa"] is None and rb["ev"]==-1
-    json.dumps(ku.a_json({"boleto":rb,"inf":math.inf,"nan":math.nan}),allow_nan=False)
+    # Liga sin rojas: λ = 0, así que "local Over 0.5 rojas" tiene probabilidad 0 exacta.
+    df=ku.cargar('laliga').head(20).copy()
+    cl,cv,_=mo.METRICAS['rojas']
+    df[cl]=0;df[cv]=0
+    eq=mo.equipos(df)
+    a=ku.analizar_partido(df,eq[0],eq[1],'rojas',ku.incertidumbre(df,'rojas'))
+    mk=next(m for m in a['mercados'] if m['regla']=={"tipo":"ou","lado":"local","linea":.5,"over":True})
+    ev=ku.ev_pata(mk,2.)
+    assert mk["prob"]==0 and mk["justa"] is None and ev["ev"]==-1
+    json.dumps(ku.a_json({"ev":ev,"inf":math.inf,"nan":math.nan}),allow_nan=False)
 
 
 @pytest.mark.parametrize("regla", [{"tipo":"ou","lado":"total","linea":2.25,"over":True},
@@ -256,3 +266,44 @@ def test_conteos_corruptos_no_producen_probabilidades(valor):
 def test_cuota_justa_microscopica_no_infinita():
     assert mo.cuota_justa(1e-320) is None
     json.dumps(ku.a_json({'justa':mo.cuota_justa(1e-320)}),allow_nan=False)
+
+
+def test_modelo_b_fuerzas_ajustadas_por_rival_y_freno():
+    """Modelo B en un caso a mano: A anota 3 en casa vs B y 1 de visita vs B; sin freno el ataque relativo de A
+    sale de todos sus partidos, y con freno queda entre ese valor y 1.00."""
+    import pandas as pd
+    filas = [("01/01/2026", "A", "B", 3, 0), ("08/01/2026", "B", "A", 1, 1), ("15/01/2026", "C", "A", 2, 2), ("22/01/2026", "B", "C", 0, 1)]
+    df = pd.DataFrame(filas, columns=["fecha_dt", "equipo_local_txt", "equipo_visitante_txt", "goles_local_val", "goles_visitante_val"])
+    df["peso"] = 1.0
+    k = mo.K_ENCOGE
+    try:
+        mo.K_ENCOGE = 0
+        f0 = mo.fuerzas(df, "goles")
+        mo.K_ENCOGE = 10
+        f10 = mo.fuerzas(df, "goles")
+    finally:
+        mo.K_ENCOGE = k
+    for f in (f0, f10):
+        assert (f["ataque_casa"] == f["ataque_fuera"]).all() and (f["defensa_casa"] == f["defensa_fuera"]).all()
+        assert np.isfinite(f[["ataque", "defensa"]].to_numpy()).all()
+    # El freno acerca a 1.00 la fuerza más extrema.
+    for col in ("ataque", "defensa"):
+        assert (f10[col] - 1).abs().max() < (f0[col] - 1).abs().max()
+    # λ = promedio de la liga × ataque × defensa del rival, con la ventaja de local de la liga.
+    ll, lv = mo.lambdas(f10, "A", "B")
+    assert ll == pytest.approx(f10.attrs["prom_casa"] * f10.loc["A", "ataque"] * f10.loc["B", "defensa"])
+    assert lv == pytest.approx(f10.attrs["prom_fuera"] * f10.loc["B", "ataque"] * f10.loc["A", "defensa"])
+    # Rojas usan el promedio de la liga.
+    df["rojas_local_val"], df["rojas_visitante_val"] = [1, 0, 0, 0], [0, 0, 1, 0]
+    fr = mo.fuerzas(df, "rojas")
+    assert (fr[["ataque", "defensa"]] == 1.0).all().all()
+
+
+def test_etiqueta_sin_ventaja():
+    assert ku.ventaja("laliga", "goles", {"tipo": "ou", "lado": "total", "linea": 2.5, "over": True}) == "sin ventaja"
+    assert ku.ventaja("laliga", "tiros", {"tipo": "ou", "lado": "local", "linea": 12.5, "over": True}) == "probada"
+    assert ku.ventaja("laliga", "goles", {"tipo": "resultado", "lado": "local"}) == "probada"
+    assert ku.ventaja("laliga", "goles", {"tipo": "btts", "si": True}) == "sin probar"
+    assert ku.ventaja("champions", "tiros", {"tipo": "ou", "lado": "local", "linea": 12.5, "over": True}) == "sin probar"
+    a = analisis("laliga", "Barcelona", "Racing Santander", "corners")
+    assert all(m["ventaja"] in ("probada", "sin ventaja", "sin probar") for m in a["mercados"])

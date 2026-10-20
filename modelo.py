@@ -1,5 +1,7 @@
-"""Poisson y Dixon-Coles con soporte dinámico y sensibilidad heurística.
-Los rangos propagan producción y concesión; su cobertura no está validada.
+"""Modelo B + Poisson y Dixon-Coles con soporte dinámico y sensibilidad heurística.
+Fuerzas (Modelo B): un ataque y una defensa por equipo con todos sus partidos, ajustados por la fuerza
+de cada rival y frenados con K_ENCOGE partidos inventados de equipo promedio. Metodología y prueba:
+docs/MODELO_B.md. Los rangos son sensibilidad heurística; su cobertura no está validada.
 """
 
 import math
@@ -14,8 +16,9 @@ import probabilidades as pr
 RUTA_DATOS = "datos/bbdd_laliga.csv"
 XI = 0.005          # decaimiento por dia. 0.005 = un partido de hace 140 dias pesa la mitad
 RHO = -0.05         # Dixon-Coles, solo goles. Tipico -0.03 a -0.13; 0 = Poisson puro
-K_ENCOGE = 0        # Mantiene las medias ponderadas sin encogimiento.
-K_ENCOGE_LIGA = {"champions": 10}   # excepcion por liga (df.attrs["liga"]): equipos nuevos con 1-2 partidos
+K_ENCOGE = 10       # freno del Modelo B: partidos inventados de equipo promedio que se suman a cada equipo
+VUELTAS = 25        # vueltas del cálculo de fuerzas; desde la ~10 los valores ya no cambian
+METRICAS_PROMEDIO = ("rojas",)   # usan el promedio de la liga: en la prueba el modelo fue peor que el promedio
 CONFIANZA = 0.90    # Cuantil t usado como heurística; NO implica cobertura validada.
 PJ_MIN = 5          # partidos efectivos minimos en esa condicion para fiarse del rango -> si no, "pocos datos"
 CORTES_VAR = (0.8, 1.2)   # ancho relativo del equipo / mediana de la liga: < 0.8 estable, > 1.2 volatil
@@ -58,40 +61,50 @@ def equipos(df: pd.DataFrame) -> list:
 
 # ------------------------------------------------------------------ fuerzas
 def fuerzas(df: pd.DataFrame, metrica: str) -> pd.DataFrame:
-    """Tabla por equipo: ataque/defensa en casa y fuera, relativos al promedio de la liga."""
-    k_encoge = K_ENCOGE_LIGA.get(df.attrs.get("liga"), K_ENCOGE)
+    """Modelo B. Por equipo, un ataque y una defensa relativos a un equipo promedio (1.00 = promedio):
+      ataque  = (Σ peso × anotados + F) ÷ (Σ peso × esperados a favor + F)
+      defensa = (Σ peso × recibidos + F) ÷ (Σ peso × esperados en contra + F)
+      esperados a favor   = promedio de la liga en la sede del equipo × defensa del rival
+      esperados en contra = promedio de la liga en la sede del rival × ataque del rival
+      F (freno) = K_ENCOGE × (prom_casa + prom_fuera) / 2: K partidos inventados donde el equipo hace lo esperado.
+    Como cada fuerza depende de las de los rivales, se calcula en VUELTAS (vuelta 1: todas las defensas = 1).
+    La ventaja de local es la de la liga (prom_casa / prom_fuera). Las métricas de METRICAS_PROMEDIO usan 1.00.
+    Se conservan las columnas ataque_casa / defensa_casa / ataque_fuera / defensa_fuera (iguales a ataque y defensa)
+    para que lambdas() y quienes las leen no cambien."""
     col_l, col_v, _ = METRICAS[metrica]
     d = df.dropna(subset=[col_l, col_v])
-    w = d["peso"]
+    w = d["peso"].to_numpy(dtype=float)
     vals = d[[col_l, col_v]].to_numpy(dtype=float)
     if d.empty or not np.isfinite(w).all() or (w <= 0).any():
         raise ValueError("datos o pesos insuficientes/invalidos")
     if not np.isfinite(vals).all() or (vals < 0).any() or (vals != np.floor(vals)).any():
         raise ValueError("la métrica requiere conteos enteros, finitos y no negativos")
-    prom_casa = np.average(d[col_l], weights=w)     # lo que hace un local promedio
-    prom_fuera = np.average(d[col_v], weights=w)    # lo que hace un visitante promedio
-
-    def media(x, w, prom):
-        """Promedio ponderado del equipo encogido hacia el promedio de la liga (k_encoge partidos extra al promedio)."""
-        if len(x) == 0 or (w.sum() + k_encoge) == 0:
-            return prom
-        return (np.sum(x * w) + k_encoge * prom) / (w.sum() + k_encoge)
-
-    filas = []
-    for eq in equipos(d):
-        casa = d[d["equipo_local_txt"] == eq]
-        fuera = d[d["equipo_visitante_txt"] == eq]
-        wc, wf = casa["peso"].values, fuera["peso"].values
-        gf_casa = media(casa[col_l].values, wc, prom_casa)
-        gc_casa = media(casa[col_v].values, wc, prom_fuera)
-        gf_fuera = media(fuera[col_v].values, wf, prom_fuera)
-        gc_fuera = media(fuera[col_l].values, wf, prom_casa)
-        filas.append({
-            "equipo": eq, "pj_casa": len(casa), "pj_fuera": len(fuera),
-            "ataque_casa": gf_casa / prom_casa if prom_casa > 0 else 1.0, "defensa_casa": gc_casa / prom_fuera if prom_fuera > 0 else 1.0,
-            "ataque_fuera": gf_fuera / prom_fuera if prom_fuera > 0 else 1.0, "defensa_fuera": gc_fuera / prom_casa if prom_casa > 0 else 1.0,
-        })
-    out = pd.DataFrame(filas).set_index("equipo")
+    x, y = vals[:, 0], vals[:, 1]
+    prom_casa = float(np.average(x, weights=w))     # lo que hace un local promedio
+    prom_fuera = float(np.average(y, weights=w))    # lo que hace un visitante promedio
+    eqs = equipos(d)
+    n = len(eqs)
+    pos = {e: i for i, e in enumerate(eqs)}
+    il = d["equipo_local_txt"].map(pos).to_numpy()
+    iv = d["equipo_visitante_txt"].map(pos).to_numpy()
+    ataque, defensa = np.ones(n), np.ones(n)
+    freno = K_ENCOGE * (prom_casa + prom_fuera) / 2
+    if metrica not in METRICAS_PROMEDIO and prom_casa + prom_fuera > 0:
+        anotados = np.bincount(il, w * x, n) + np.bincount(iv, w * y, n)
+        recibidos = np.bincount(iv, w * x, n) + np.bincount(il, w * y, n)
+        for _ in range(VUELTAS):
+            esperados_favor = np.bincount(il, w * prom_casa * defensa[iv], n) + np.bincount(iv, w * prom_fuera * defensa[il], n)
+            ataque = (anotados + freno) / (esperados_favor + freno)
+            esperados_contra = np.bincount(iv, w * prom_casa * ataque[il], n) + np.bincount(il, w * prom_fuera * ataque[iv], n)
+            defensa = (recibidos + freno) / (esperados_contra + freno)
+        ataque = np.where(np.isfinite(ataque), ataque, 1.0)     # freno = 0 y equipo sin esperados: promedio
+        defensa = np.where(np.isfinite(defensa), defensa, 1.0)
+    out = pd.DataFrame({
+        "equipo": eqs,
+        "pj_casa": np.bincount(il, minlength=n), "pj_fuera": np.bincount(iv, minlength=n),
+        "ataque": ataque, "defensa": defensa,
+        "ataque_casa": ataque, "defensa_casa": defensa, "ataque_fuera": ataque, "defensa_fuera": defensa,
+    }).set_index("equipo")
     out.attrs["prom_casa"], out.attrs["prom_fuera"] = prom_casa, prom_fuera
     return out
 
@@ -240,29 +253,27 @@ def incertidumbre(df: pd.DataFrame, metrica: str) -> pd.DataFrame:
 
 
 def rango_componentes(inc, atacante, cond_a, defensor, cond_d, lam, referencia):
+    """Rango heurístico de λ centrado en la λ del modelo:
+      bajo = λ × (1 − rel_ataque) × (1 − rel_defensa)      alto = λ × (1 + rel_ataque) × (1 + rel_defensa)
+    rel = t de Student × desv / √n_ef / media sobre los partidos del equipo en esa condición (incertidumbre()).
+    Es sensibilidad, no un intervalo de confianza validado."""
     exposicion_liga = float(inc[f"n_ef_{cond_a}"].sum())
-    ref = referencia if referencia > 0 else -math.log(.1) / exposicion_liga
+
     def componente(eq, cond, prefijo):
         row = inc.loc[eq]
-        mean = float(row[f"{prefijo}media_{cond}"])
         n = float(row[f"{prefijo}n_ef_{cond}"])
-        rel = float(row[f"{prefijo}rel_{cond}"])
-        if n == 0:
-            mean = referencia  # Mismo fallback que fuerzas(): media de liga.
-        # Cero observado: límite Poisson unilateral para cero eventos (exposición efectiva).
-        # Es un recurso de sensibilidad, no un IC validado para datos ponderados.
-        upper = mean * (1 + rel) if mean > 0 else -math.log(.1) / (n if n > 0 else exposicion_liga)
-        return {"equipo": eq, "condicion": cond, "media": mean, "n_ef": n,
-                "rango": (max(0.0, mean * (1 - rel)), upper),
-                "origen": "historial" if n > 0 else "referencia de liga sin historial"}
+        rel = float(row[f"{prefijo}rel_{cond}"]) if n > 0 else 1.0
+        return {"equipo": eq, "condicion": cond, "media": float(row[f"{prefijo}media_{cond}"]), "n_ef": n,
+                "error_relativo": rel, "origen": "historial" if n > 0 else "sin partidos en esa condición"}
     off = componente(atacante, cond_a, "")
     deff = componente(defensor, cond_d, "def_")
-    # Liga sin eventos: no dividir por cero; referencia de sensibilidad de cero eventos.
-    lo = off["rango"][0] * deff["rango"][0] / ref
-    hi = off["rango"][1] * deff["rango"][1] / ref
+    lo = lam * max(0.0, 1 - off["error_relativo"]) * max(0.0, 1 - deff["error_relativo"])
+    hi = lam * (1 + off["error_relativo"]) * (1 + deff["error_relativo"])
+    if lam <= 0:
+        # Liga sin eventos en ese lado: límite Poisson de cero eventos como sensibilidad.
+        hi = -math.log(.1) / exposicion_liga if exposicion_liga > 0 else 0.0
     return (min(lo, lam), max(hi, lam)), {"ataque": off, "defensa": deff,
-            "referencia_liga": referencia, "denominador_sensibilidad": ref,
-            "referencia_liga_fija": True}
+            "referencia_liga": referencia, "metodo": "λ × (1 ∓ error relativo del ataque) × (1 ∓ error relativo de la defensa)"}
 
 
 def rango_lambda(inc: pd.DataFrame, equipo: str, cond: str, lam: float) -> tuple:

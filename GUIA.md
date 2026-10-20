@@ -11,7 +11,7 @@ Archivos del paquete (todos van en la raíz del repositorio):
 |---|---|
 | `generar_bbdd_laliga.py` | Tu notebook, como script. Descarga football-data.co.uk y escribe `datos/bbdd_laliga.xlsx` y `.csv` |
 | `espn.py` | Fuente ESPN para Liga MX (scoreboard + summary de `mex.1`). Incremental: solo pide los días nuevos |
-| `modelo.py` | Poisson (+ Dixon-Coles en goles) para las 9 métricas. Rango bajo–alto de cada λ (promedio ± t·desv/√n, 80%), prob. pesimista/optimista por mercado y varianza de cada equipo vs la liga |
+| `modelo.py` | Fuerzas con el Modelo B (ver `docs/MODELO_B.md`) y Poisson (+ Dixon-Coles en goles) para las 9 métricas. Rango bajo–alto de cada λ (promedio ± t·desv/√n, 80%), prob. pesimista/optimista por mercado y varianza de cada equipo vs la liga |
 | `kuota.py` | Motor: todo lo que calcula la app (mercados, calificación, boleto, tabla, cara a cara) en funciones que devuelven datos. Sin pantalla |
 | `app.py` | Web app (Streamlit): solo pantalla, llama a `kuota.py` |
 | `api.py` | La misma información en JSON (FastAPI) para la web app nueva. `pip install fastapi uvicorn` y `uvicorn api:app --reload` → http://localhost:8000/docs |
@@ -100,6 +100,7 @@ dale **Fetch origin → Pull** cuando quieras la versión más reciente. El arch
 - **Ajustar ρ (Dixon-Coles)**: campo arriba a la derecha. Solo afecta goles y goles 1T.
 - **Rangos y varianza**: `CONFIANZA` (0.90 = percentiles 10 y 90), `PJ_MIN` (5 partidos efectivos mínimos para fiarse del
   rango) y `CORTES_VAR` (0.8 / 1.2 = estable / volátil) en `modelo.py`. El Kelly del boleto usa la prob. pesimista.
+- **Cambiar el freno del Modelo B**: `K_ENCOGE` en `modelo.py` (10 = se suman 10 partidos de equipo promedio; 0 = sin freno).
 - **Cambiar cuánto pesa lo reciente**: `XI` en `modelo.py`. 0.005 = un partido de hace ~140 días
   pesa la mitad. Súbelo para que pese más lo reciente.
 - **Agregar una temporada**: una línea en `TEMPORADAS` de `generar_bbdd_laliga.py`.

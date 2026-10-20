@@ -172,6 +172,8 @@ export type Mercado = {
   serie_v: boolean[];
   volatil: boolean;
   tag: string;
+  /** Prueba del Modelo B (docs/MODELO_B.md): "sin ventaja" = no eligió mejor que el lado más común. */
+  ventaja?: "probada" | "sin ventaja" | "sin probar";
 };
 export type Hist = {
   fecha: string;

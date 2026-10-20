@@ -293,7 +293,10 @@ export default function Partido() {
             <div aria-live="polite" className="rounded-xl border border-line2 px-4 py-3 mb-4">
               <div className="text-xs text-mut mb-1">Selección actual</div>
               <div className="flex items-center justify-between gap-3">
-                <span className="font-extrabold text-sm sm:text-base">{p.mercado}</span>
+                <span className="font-extrabold text-sm sm:text-base">
+                  {p.mercado}
+                  {p.ventaja === "sin ventaja" && <SinVentaja />}
+                </span>
                 <span className="num text-2xl text-acc">{loading ? "…" : pct(p.prob, 1)}</span>
               </div>
               <p className="text-xs text-mut mt-2">Cuota justa {num(p.justa)} · Sensibilidad {pct(p.lo, 1)}–{pct(p.hi, 1)} · Devolución {pct(p.push, 1)}</p>
@@ -412,6 +415,7 @@ export default function Partido() {
                     <div className="min-w-0">
                       <div className="font-bold text-sm leading-snug">
                         {m.mercado}
+                        {m.ventaja === "sin ventaja" && <SinVentaja />}
                       </div>
                       <div className="text-xs text-mut mt-2">
                         Cuota justa {num(m.justa)}
@@ -724,5 +728,17 @@ export default function Partido() {
         Datos: football-data.co.uk y ESPN · Tiempo reglamentario.
       </p>
     </>
+  );
+}
+
+/** Mercados donde la prueba del Modelo B (2,014 partidos) no encontró ventaja sobre apostar siempre al lado más común. */
+function SinVentaja() {
+  return (
+    <span
+      className="tag sv ml-2 align-middle"
+      title="En la prueba con 2,014 partidos, en este tipo de mercado el modelo no eligió mejor que apostar siempre a lo más común de la liga"
+    >
+      Sin ventaja
+    </span>
   );
 }
