@@ -182,7 +182,7 @@ export default function Inicio() {
                     Procedencia y calidad de los datos
                   </summary>
                   <p className="text-xs text-mut leading-relaxed">
-                    football-data.co.uk (Europa) y ESPN (Liga MX). Temporadas:{" "}
+                    football-data.co.uk (Europa) y ESPN (Liga MX y Champions). Temporadas:{" "}
                     {v.torneos_recientes.join(", ")}. La validación estructural
                     no certifica vigencia ni completitud.
                   </p>

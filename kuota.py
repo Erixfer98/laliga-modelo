@@ -25,7 +25,8 @@ import probabilidades as pr
 from functools import lru_cache
 from itertools import product
 
-LIGAS = {"laliga": "La Liga", "premier": "Premier League", "seriea": "Serie A", "bundesliga": "Bundesliga", "ligue1": "Ligue 1", "ligamx": "Liga MX"}
+LIGAS = {"laliga": "La Liga", "premier": "Premier League", "seriea": "Serie A", "bundesliga": "Bundesliga", "ligue1": "Ligue 1", "ligamx": "Liga MX",
+         "champions": "Champions League"}
 GOL = ("goles", "goles_1t", "goles_2t")
 MAYOR_NUMERO = ("tiros", "tiros_a_puerta", "corners", "faltas", "amarillas")   # metricas con mercado "quien hace mas"
 NOM = mo.NOMBRES
@@ -702,10 +703,10 @@ DICCIONARIO = [
     ("Banca", "Kelly", "Maximiza el crecimiento logarítmico de la distribución de retornos, incluyendo devoluciones. Se usa el mínimo Kelly de los escenarios heurísticos calculados. Si falta distribución conjunta, hay duplicados o incompatibilidad, no se recomienda stake. Partidos distintos suponen independencia no validada."),
     ("Banca", "½, ¼, ⅛ Kelly", "La mitad, un cuarto y un octavo del Kelly completo. Para parlays usa ¼ o ⅛: menos crecimiento pero mucha menos probabilidad de quebrar."),
     ("Banca", "Patas no independientes", "Dos patas del mismo partido (ej. gana Madrid + over 2.5) están relacionadas; multiplicar sus probabilidades da un número inexacto."),
-    ("Datos", "Fuente", "football-data.co.uk para las 5 ligas europeas; ESPN para Liga MX. Se descarga todos los días a las 6:00 am (Guatemala) por GitHub Actions."),
+    ("Datos", "Fuente", "football-data.co.uk para las 5 ligas europeas; ESPN para Liga MX y Champions League. Se descarga todos los días a las 6:00 am (Guatemala) por GitHub Actions."),
     ("Datos", "Columnas _val", "goles, goles 1er/2do tiempo, tiros, tiros a puerta, corners, faltas, amarillas y rojas, cada una para local y visitante."),
     ("Datos", "Jornada", "Estimada: partido n-ésimo de cada equipo en la temporada. Un aplazado se cuenta cuando se jugó."),
-    ("Datos", "Temporada", "Europa: formato 2025-26 (agosto a mayo). Liga MX: Clausura AAAA (enero-junio) y Apertura AAAA (julio-diciembre), Liguilla incluida."),
+    ("Datos", "Temporada", "Europa: formato 2025-26 (agosto a mayo). Liga MX: Clausura AAAA (enero-junio) y Apertura AAAA (julio-diciembre), Liguilla incluida. Champions: 2025-26 y 2026-27, solo partidos de Champions (fase de liga y eliminatorias; sin previas ni partidos con prórroga)."),
 ]
 
 
