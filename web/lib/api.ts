@@ -11,6 +11,7 @@ export const LIGAS: Record<string, string> = {
   bundesliga: "Bundesliga",
   ligue1: "Ligue 1",
   ligamx: "Liga MX",
+  champions: "Champions League",
 };
 export const METRICAS: Record<string, string> = {
   goles: "Goles",

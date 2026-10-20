@@ -15,6 +15,7 @@ RUTA_DATOS = "datos/bbdd_laliga.csv"
 XI = 0.005          # decaimiento por dia. 0.005 = un partido de hace 140 dias pesa la mitad
 RHO = -0.05         # Dixon-Coles, solo goles. Tipico -0.03 a -0.13; 0 = Poisson puro
 K_ENCOGE = 0        # Mantiene las medias ponderadas sin encogimiento.
+K_ENCOGE_LIGA = {"champions": 10}   # excepcion por liga (df.attrs["liga"]): equipos nuevos con 1-2 partidos
 CONFIANZA = 0.90    # Cuantil t usado como heurística; NO implica cobertura validada.
 PJ_MIN = 5          # partidos efectivos minimos en esa condicion para fiarse del rango -> si no, "pocos datos"
 CORTES_VAR = (0.8, 1.2)   # ancho relativo del equipo / mediana de la liga: < 0.8 estable, > 1.2 volatil
@@ -58,6 +59,7 @@ def equipos(df: pd.DataFrame) -> list:
 # ------------------------------------------------------------------ fuerzas
 def fuerzas(df: pd.DataFrame, metrica: str) -> pd.DataFrame:
     """Tabla por equipo: ataque/defensa en casa y fuera, relativos al promedio de la liga."""
+    k_encoge = K_ENCOGE_LIGA.get(df.attrs.get("liga"), K_ENCOGE)
     col_l, col_v, _ = METRICAS[metrica]
     d = df.dropna(subset=[col_l, col_v])
     w = d["peso"]
@@ -70,10 +72,10 @@ def fuerzas(df: pd.DataFrame, metrica: str) -> pd.DataFrame:
     prom_fuera = np.average(d[col_v], weights=w)    # lo que hace un visitante promedio
 
     def media(x, w, prom):
-        """Promedio ponderado del equipo encogido hacia el promedio de la liga (K_ENCOGE partidos extra al promedio)."""
-        if len(x) == 0 or (w.sum() + K_ENCOGE) == 0:
+        """Promedio ponderado del equipo encogido hacia el promedio de la liga (k_encoge partidos extra al promedio)."""
+        if len(x) == 0 or (w.sum() + k_encoge) == 0:
             return prom
-        return (np.sum(x * w) + K_ENCOGE * prom) / (w.sum() + K_ENCOGE)
+        return (np.sum(x * w) + k_encoge * prom) / (w.sum() + k_encoge)
 
     filas = []
     for eq in equipos(d):

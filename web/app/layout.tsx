@@ -7,7 +7,7 @@ import { autorizado } from "@/lib/gate";
 
 export const metadata: Metadata = {
   title: "Kuota · El fútbol, con perspectiva",
-  description: "Poisson + Dixon-Coles para las 5 grandes ligas y Liga MX",
+  description: "Poisson + Dixon-Coles para las 5 grandes ligas, Liga MX y Champions League",
 };
 export const viewport: Viewport = {
   width: "device-width",

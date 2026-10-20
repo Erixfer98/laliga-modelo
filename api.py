@@ -37,7 +37,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import kuota
 
-app = FastAPI(title="Kuota API", description="Poisson + Dixon-Coles para las 5 grandes ligas y Liga MX")
+app = FastAPI(title="Kuota API", description="Poisson + Dixon-Coles para las 5 grandes ligas, Liga MX y Champions League")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 @app.exception_handler(ValueError)

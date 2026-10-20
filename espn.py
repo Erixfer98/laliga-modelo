@@ -1,5 +1,5 @@
 """
-espn.py — fuente ESPN para ligas que football-data.co.uk no cubre con estadisticas (hoy: Liga MX).
+espn.py — fuente ESPN para ligas que football-data.co.uk no cubre con estadisticas (hoy: Liga MX y Champions League).
 Portado del notebook cargar_estadisticas_espn_v2 (Colab) que ya genero la BBDD de Liga MX.
 
 Como funciona:
@@ -7,8 +7,9 @@ Como funciona:
      tiros, tiros a puerta, corners, faltas, amarillas y rojas.
   2. summary por partido: goles al descanso (keyEvents con respaldo en linescores) y tarjetas
      (keyEvents con respaldo en boxscore).
-  3. Temporada por fecha: enero-junio = "Clausura AAAA", julio-diciembre = "Apertura AAAA".
-     Hora local = UTC - 6 (Mexico no cambia de horario desde 2022).
+  3. Temporada por fecha: Liga MX enero-junio = "Clausura AAAA", julio-diciembre = "Apertura AAAA";
+     Champions julio-junio = "AAAA-AA" (temporada_europa). Hora local = zona horaria de la liga (tz).
+     Partidos con proroga (periodo > 2) se descartan: el modelo es de 90 minutos.
   4. Incremental: si ya existe datos/bbdd_ligamx.csv, solo consulta desde el ultimo partido menos
      DIAS_REPASO dias y mezcla (los partidos viejos no se vuelven a pedir). --completo lo rehace todo.
 
@@ -17,6 +18,8 @@ Devuelve un DataFrame con las mismas columnas de entrada que transformar() en ge
 
 import datetime as dt
 import time
+import unicodedata
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 import requests
@@ -44,8 +47,17 @@ def norm(s: str) -> str:
     return (s or "").lower().replace("á", "a").replace("é", "e").replace("í", "i").replace("ó", "o").replace("ú", "u").replace("ñ", "n")
 
 
+def limpio(s: str) -> str:
+    """displayName de ESPN sin acentos (convencion de la BBDD). Ej. F.C. København -> F.C. Kobenhavn."""
+    s = (s or "").replace("ø", "o").replace("Ø", "O").replace("æ", "ae").replace("ß", "ss").replace("ı", "i")
+    return unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode()
+
+
 def nombre_equipo(team: dict, alias: dict) -> str:
-    """Nombre normalizado de la BBDD; si no esta en el diccionario se deja el displayName de ESPN."""
+    """Nombre normalizado de la BBDD; si no esta en el diccionario se deja el displayName de ESPN.
+    Sin diccionario (Champions: equipos de muchas ligas) se usa el displayName de ESPN sin acentos."""
+    if not alias:
+        return limpio(team.get("displayName", ""))
     nombres = {norm(team.get(k, "")) for k in ("displayName", "shortDisplayName", "name", "location", "abbreviation")}
     for bbdd, variantes in alias.items():
         if any(norm(a) in nombres for a in variantes):
@@ -104,19 +116,27 @@ def temporada(fecha: dt.date) -> str:
     return f"{'Clausura' if fecha.month <= 6 else 'Apertura'} {fecha.year}"
 
 
-def partidos_dia(liga: str, dia: dt.date, alias: dict, utc_offset: int) -> list:
+def temporada_europa(fecha: dt.date) -> str:
+    """Julio-junio, mismo formato que las ligas europeas: 2026-27."""
+    a = fecha.year if fecha.month >= 7 else fecha.year - 1
+    return f"{a}-{str(a + 1)[2:]}"
+
+
+def partidos_dia(liga: str, dia: dt.date, alias: dict, tz: str, temporada_de=temporada) -> list:
     filas = []
     for e in get(SB.format(liga=liga), dates=dia.strftime("%Y%m%d"), limit=100).get("events", []):
         if not e.get("status", {}).get("type", {}).get("completed"):
+            continue
+        if (e.get("status", {}).get("period") or 2) > 2:      # hubo proroga: no es un partido de 90 minutos
             continue
         comp = e["competitions"][0]; ts = comp["competitors"]
         home = next((t for t in ts if t["homeAway"] == "home"), None); away = next((t for t in ts if t["homeAway"] == "away"), None)
         if not home or not away:
             continue
         kick = dt.datetime.strptime(e["date"], "%Y-%m-%dT%H:%MZ")
-        local = kick + dt.timedelta(hours=utc_offset)
+        local = kick.replace(tzinfo=dt.timezone.utc).astimezone(ZoneInfo(tz))
         f = {"Date": local.strftime("%d/%m/%Y"), "Time": local.strftime("%H:%M"), "hora_utc": kick.strftime("%H:%M"),
-             "temporada_txt": temporada(local.date()),
+             "temporada_txt": temporada_de(local.date()),
              "HomeTeam": nombre_equipo(home["team"], alias), "AwayTeam": nombre_equipo(away["team"], alias),
              "FTHG": int(float(home.get("score", 0))), "FTAG": int(float(away.get("score", 0)))}
         for key, col in STATS.items():
@@ -164,7 +184,8 @@ def csv_a_crudo(ruta: str) -> pd.DataFrame:
     })
 
 
-def descargar(liga: str, desde: dt.date, hasta: dt.date, alias: dict, utc_offset: int = -6, existente: str = None) -> pd.DataFrame:
+def descargar(liga: str, desde: dt.date, hasta: dt.date, alias: dict, tz: str = "America/Mexico_City",
+              temporada_de=temporada, existente: str = None) -> pd.DataFrame:
     """Partidos terminados entre desde y hasta (inclusive). Si existente (csv) se pasa, solo se consulta
     desde el ultimo partido menos DIAS_REPASO dias y se mezcla con lo ya guardado."""
     previo = pd.DataFrame()
@@ -180,7 +201,7 @@ def descargar(liga: str, desde: dt.date, hasta: dt.date, alias: dict, utc_offset
     filas, dia = [], desde
     while dia <= hasta:
         try:
-            filas += partidos_dia(liga, dia, alias, utc_offset)
+            filas += partidos_dia(liga, dia, alias, tz, temporada_de)
         except Exception as ex:
             print(f"AVISO: fallo el dia {dia}: {ex}")
         dia += dt.timedelta(days=1)

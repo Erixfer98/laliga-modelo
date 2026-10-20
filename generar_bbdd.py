@@ -1,11 +1,12 @@
 """
 generar_bbdd.py — regenera datos/bbdd_<liga>.xlsx + .csv (28 columnas, hojas partidos + diccionario).
   - 5 grandes ligas europeas: football-data.co.uk (se borra y reescribe todo en cada corrida).
-  - Liga MX: ESPN via espn.py (football-data no publica sus estadisticas). Incremental: solo pide los
-    dias nuevos y los mezcla con el CSV existente; con --completo rehace desde el inicio del torneo.
+  - Liga MX y Champions League: ESPN via espn.py (football-data no publica sus estadisticas). Incremental: solo
+    pide los dias nuevos y los mezcla con el CSV existente; con --completo rehace desde el inicio configurado.
 Uso: python generar_bbdd.py                    (todas las ligas)
      python generar_bbdd.py premier            (solo una)
      python generar_bbdd.py ligamx --completo  (Liga MX desde cero)
+     python generar_bbdd.py champions --completo (Champions desde la 2025-26)
 """
 from datetime import datetime
 from io import StringIO
@@ -68,9 +69,13 @@ LIGAS = {
     "seriea":     {"div": "I1",  "nombre": "Serie A",    "pais": "Italia",     "tz": "Europe/Rome",   "equipos": EQUIPOS_SERIEA},
     "bundesliga": {"div": "D1",  "nombre": "Bundesliga", "pais": "Alemania",   "tz": "Europe/Berlin", "equipos": EQUIPOS_BUNDESLIGA},
     "ligue1":     {"div": "F1",  "nombre": "Ligue 1",    "pais": "Francia",    "tz": "Europe/Paris",  "equipos": EQUIPOS_LIGUE1},
-    # fuente ESPN: los nombres ya salen normalizados de espn.py (ALIAS_LIGAMX). inicio = primer dia a consultar en --completo
+    # fuente ESPN: los nombres ya salen normalizados de espn.py (alias). inicio = primer dia a consultar en --completo
     "ligamx":     {"fuente": "espn", "espn": "mex.1", "inicio": "2026-01-01", "nombre": "Liga MX", "pais": "Mexico",
-                   "tz": "America/Mexico_City", "equipos": {}},
+                   "tz": "America/Mexico_City", "equipos": {}, "alias": espn.ALIAS_LIGAMX, "temporada": espn.temporada},
+    # Champions: solo partidos de Champions (fase de liga + eliminatorias, sin previas ni proroga), 2025-26 y 2026-27.
+    # Nombres = displayName de ESPN sin acentos. Hora local = hora de Europa central (la de UEFA).
+    "champions":  {"fuente": "espn", "espn": "uefa.champions", "inicio": "2025-09-01", "nombre": "Champions League",
+                   "pais": "Europa", "tz": "Europe/Madrid", "equipos": {}, "alias": {}, "temporada": espn.temporada_europa},
 }
 EQUIPOS = EQUIPOS_LALIGA   # se reasigna por liga en el ciclo principal
 TZ_LOCAL = "Europe/Madrid"
@@ -270,14 +275,15 @@ if __name__ == "__main__":
     claves = [a for a in sys.argv[1:] if not a.startswith("--")] or list(LIGAS)
     for clave in claves:
         liga = LIGAS[clave]
-        EQUIPOS, TZ_LOCAL = liga["equipos"] or {k: k for k in espn.ALIAS_LIGAMX}, liga["tz"]
+        EQUIPOS, TZ_LOCAL = liga["equipos"], liga["tz"]
         print(f"== {liga['nombre']} ({liga.get('div') or liga.get('espn')})")
         try:
             if liga.get("fuente") == "espn":
                 csv = f"datos/bbdd_{clave}.csv"
                 existente = None if completo or not os.path.exists(csv) else csv
                 crudo = espn.descargar(liga["espn"], datetime.strptime(liga["inicio"], "%Y-%m-%d").date(), datetime.now().date(),
-                                       espn.ALIAS_LIGAMX, utc_offset=-6, existente=existente)
+                                       liga["alias"], tz=liga["tz"], temporada_de=liga["temporada"], existente=existente)
+                EQUIPOS = {t: t for t in pd.concat([crudo["HomeTeam"], crudo["AwayTeam"]])}   # ya salen normalizados
             else:
                 crudo = pd.concat([descargar(c, liga["div"]) for c in TEMPORADAS], ignore_index=True)
             generar(transformar(crudo), salida=f"datos/bbdd_{clave}.xlsx")
