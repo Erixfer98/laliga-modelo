@@ -182,6 +182,10 @@ select.ctl {
 .tag.pes {
   color: var(--bad);
 }
+.tag.sv {
+  border-style: dashed;
+  background: transparent;
+}
 .primary {
   background: #1d4ed8;
   color: #fff;

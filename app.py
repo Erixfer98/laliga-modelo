@@ -75,6 +75,7 @@ st.markdown(f"""
   .tag {{display:inline-block; padding:3px 9px; border-radius:7px; font-size:0.7rem; font-weight:700; white-space:nowrap; letter-spacing:.01em;}}
   .exc {{background:#14532d; color:#bbf7d0;}} .bue {{background:#166534; color:#dcfce7;}} .reg {{background:#78350f; color:#fde68a;}}
   .mal {{background:#7f1d1d; color:#fecaca;}} .pes {{background:#450a0a; color:#fca5a5;}}
+  .sv {{background:transparent; color:#94a3b8; border:1px dashed #475569; margin-left:6px;}}
   .up {{color:{P['ok']};}} .down {{color:{P['bad']};}}
   /* libro de mercados: encabezado + una fila por mercado, columnas fijas alineadas */
   .lg-h {{display:flex; align-items:flex-end; gap:8px; padding:0 0 6px 0; border-bottom:1px solid {P['line']};}}
@@ -843,13 +844,18 @@ else:
         if [centro, rango] != cfg[grp]:
             cfg[grp] = [centro, rango]; st.rerun()
 
+    def sv(mk):
+        """Etiqueta para mercados donde la prueba del Modelo B no encontró ventaja sobre el lado más común."""
+        return '<span class="tag sv" title="En la prueba con 2,014 partidos el modelo no eligió mejor que el lado más común">sin ventaja</span>' \
+            if mk.get("ventaja") == "sin ventaja" else ""
+
     def ev_html(mk, e, cuota):
         """Tarjeta de EV para una pata con la cuota de la casa: EV Poisson y EV pesimista + calificacion."""
         evp = kuota.ev_pata(mk, cuota)
         tiles = [("EV Poisson", evp["ev"], f'acierto {mk["prob"]:.0%} · devolución {mk["push"]:.0%} · justa {evp["justa"]}'),
                  ("EV pesimista", evp["ev_lo"], f'prob. {mk["lo"]:.0%}')]
         kpi = "".join(f'<div><div class="t">{nm}</div><div class="pct {"up" if v > 0 else "down"}">{v:+.2f}</div><div class="rg">{s}</div></div>' for nm, v, s in tiles)
-        return (f'<div class="card flat" style="margin:4px 0"><div class="row" style="margin-bottom:8px"><div class="mid">{mk["mercado"]}</div>'
+        return (f'<div class="card flat" style="margin:4px 0"><div class="row" style="margin-bottom:8px"><div class="mid">{mk["mercado"]}{sv(mk)}</div>'
                 f'<span class="tag {e["cls"]}">{e["tag"]}</span></div><div class="kpi esc">{kpi}</div></div>')
 
     # ---------------------------------------------------------- ARMAR
@@ -903,14 +909,15 @@ else:
         for mk, e in evaluados:
             if solo and e["cls"] not in ("exc", "bue"): continue
             filas_n += 1
-            html += (f'<div class="mk"><div class="lg-r"><div class="c1"><div class="mid">{mk["mercado"]}</div><div class="small">justa <span class="w">{fmt_seguro(mk["justa"])}</span></div></div>'
+            html += (f'<div class="mk"><div class="lg-r"><div class="c1"><div class="mid">{mk["mercado"]}{sv(mk)}</div><div class="small">justa <span class="w">{fmt_seguro(mk["justa"])}</span></div></div>'
                      f'<div class="cn"><div class="pct">{mk["prob"]:.0%}</div><div class="rg">{mk["lo"]:.0%}–{mk["hi"]:.0%}</div></div>'
                      f'<div class="cq"><span class="tag {e["cls"]}">{e["tag"]}</span><div class="rg" style="margin-top:3px">{e["hl"]}/{e["nl"]} · {e["hv"]}/{e["nv"]}</div></div></div>'
                      f'{barra(mk["prob"], e["tasa"], 1, P["ok"] if mk["prob"] >= 0.6 else P["warn"])}</div>')
         if not filas_n:
             html += '<div class="mk small">Ningún mercado con calificación Buena o mejor en este grupo. Quita el filtro o cambia de línea.</div>'
         html += nota("Barra = probabilidad Poisson; marca vertical = % de cumplimiento histórico. Bajo cada % va su rango pesimista–optimista. "
-                     "Bajo la calificación, los aciertos de cada equipo. ↕ equipo volátil baja un nivel la calificación.")
+                     "Bajo la calificación, los aciertos de cada equipo. ↕ equipo volátil baja un nivel la calificación. "
+                     "«sin ventaja» = en la prueba con 2,014 partidos, en este tipo de mercado el modelo no eligió mejor que apostar siempre a lo más común.")
         st.markdown(html + '</div>', unsafe_allow_html=True)
         ss.ctx_titulo = f"Armar · {partido} · {NOM[met]} · {grp}"
         ss.ctx_ia = kuota.contexto_armar(LIGA, partido, an, n, grp, evaluados, ss.parlay)
@@ -955,7 +962,7 @@ else:
             "Calificación = 60% probabilidad Poisson + 40% cumplimiento histórico; ↕ equipo volátil la baja un nivel.")
         trio = (f'<div><div class="big">{mk["prob"]:.0%}</div><div class="t">Poisson</div><div class="rg">justa {fmt_seguro(mk["justa"])}</div></div>'
                 f'<div><div class="big">{e["tasa"]:.0%}</div><div class="t">Histórico</div><div class="rg">{e["hl"] + e["hv"]} de {e["nl"] + e["nv"]} partidos</div></div>')
-        st.markdown(f'<div class="card"><div class="row"><div class="c1"><div class="mid">{sel}</div><div class="small">{NOM[met]} · {partido}</div></div><span class="tag {e["cls"]}">{e["tag"]}</span></div>'
+        st.markdown(f'<div class="card"><div class="row"><div class="c1"><div class="mid">{sel}{sv(mk)}</div><div class="small">{NOM[met]} · {partido}</div></div><span class="tag {e["cls"]}">{e["tag"]}</span></div>'
                     f'<div class="trio">{trio}</div>{barra(mk["prob"], e["tasa"], 1, P["acc"])}'
                     f'<div class="rg" style="margin-bottom:4px">acierto {mk["prob"]:.0%} · devolución {mk["push"]:.0%} · fallo {mk["loss"]:.0%}. Barra = probabilidad; marca = % histórico</div>'
                     f'<div class="sec"><div class="t">Escenarios Poisson · la misma pata con la λ pesimista y la optimista de cada equipo</div>{escenarios_html(mk)}</div>'
