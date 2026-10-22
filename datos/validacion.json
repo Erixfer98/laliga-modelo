@@ -1,5 +1,5 @@
 {
- "fecha": "21/10/2026 16:39 UTC",
+ "fecha": "22/10/2026 12:17 UTC",
  "ligas": {
   "bundesliga": {
    "partidos": 360,
@@ -16,11 +16,11 @@
    "ok": true
   },
   "champions": {
-   "partidos": 231,
-   "ultimo": "20/10/2026",
+   "partidos": 240,
+   "ultimo": "21/10/2026",
    "temporadas": {
     "2025-26": 186,
-    "2026-27": 45
+    "2026-27": 54
    },
    "equipos": 54,
    "vacias": 0,
@@ -29,12 +29,26 @@
    "avisos": [],
    "ok": true
   },
+  "europa": {
+   "partidos": 220,
+   "ultimo": "15/10/2026",
+   "temporadas": {
+    "2025-26": 184,
+    "2026-27": 36
+   },
+   "equipos": 64,
+   "vacias": 0,
+   "duplicados": 0,
+   "errores": [],
+   "avisos": [],
+   "ok": true
+  },
   "laliga": {
-   "partidos": 468,
-   "ultimo": "19/10/2026",
+   "partidos": 469,
+   "ultimo": "21/10/2026",
    "temporadas": {
     "2025-26": 380,
-    "2026-27": 88
+    "2026-27": 89
    },
    "equipos": 23,
    "vacias": 0,
@@ -44,11 +58,11 @@
    "ok": true
   },
   "ligamx": {
-   "partidos": 277,
-   "ultimo": "20/10/2026",
+   "partidos": 282,
+   "ultimo": "21/10/2026",
    "temporadas": {
     "Clausura 2026": 167,
-    "Apertura 2026": 110
+    "Apertura 2026": 115
    },
    "equipos": 19,
    "vacias": 0,
