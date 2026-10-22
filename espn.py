@@ -1,5 +1,5 @@
 """
-espn.py — fuente ESPN para ligas que football-data.co.uk no cubre con estadisticas (hoy: Liga MX y Champions League).
+espn.py — fuente ESPN para ligas que football-data.co.uk no cubre con estadisticas (hoy: Liga MX, Champions League y Europa League).
 Portado del notebook cargar_estadisticas_espn_v2 (Colab) que ya genero la BBDD de Liga MX.
 
 Como funciona:
@@ -8,7 +8,7 @@ Como funciona:
   2. summary por partido: goles al descanso (keyEvents con respaldo en linescores) y tarjetas
      (keyEvents con respaldo en boxscore).
   3. Temporada por fecha: Liga MX enero-junio = "Clausura AAAA", julio-diciembre = "Apertura AAAA";
-     Champions julio-junio = "AAAA-AA" (temporada_europa). Hora local = zona horaria de la liga (tz).
+     Champions y Europa League julio-junio = "AAAA-AA" (temporada_europa). Hora local = zona horaria de la liga (tz).
      Partidos con proroga (periodo > 2) se descartan: el modelo es de 90 minutos.
   4. Incremental: si ya existe datos/bbdd_ligamx.csv, solo consulta desde el ultimo partido menos
      DIAS_REPASO dias y mezcla (los partidos viejos no se vuelven a pedir). --completo lo rehace todo.
@@ -55,7 +55,7 @@ def limpio(s: str) -> str:
 
 def nombre_equipo(team: dict, alias: dict) -> str:
     """Nombre normalizado de la BBDD; si no esta en el diccionario se deja el displayName de ESPN.
-    Sin diccionario (Champions: equipos de muchas ligas) se usa el displayName de ESPN sin acentos."""
+    Sin diccionario (Champions y Europa League: equipos de muchas ligas) se usa el displayName de ESPN sin acentos."""
     if not alias:
         return limpio(team.get("displayName", ""))
     nombres = {norm(team.get(k, "")) for k in ("displayName", "shortDisplayName", "name", "location", "abbreviation")}

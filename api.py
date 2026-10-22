@@ -60,7 +60,7 @@ async def _vida(app):
     yield
 
 
-app = FastAPI(title="Kuota API", description="Poisson + Dixon-Coles para las 5 grandes ligas, Liga MX y Champions League", lifespan=_vida)
+app = FastAPI(title="Kuota API", description="Poisson + Dixon-Coles para las 5 grandes ligas, Liga MX, Champions League y Europa League", lifespan=_vida)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 

@@ -26,7 +26,7 @@ from functools import lru_cache
 from itertools import product
 
 LIGAS = {"laliga": "La Liga", "premier": "Premier League", "seriea": "Serie A", "bundesliga": "Bundesliga", "ligue1": "Ligue 1", "ligamx": "Liga MX",
-         "champions": "Champions League"}
+         "champions": "Champions League", "europa": "Europa League"}
 GOL = ("goles", "goles_1t", "goles_2t")
 MAYOR_NUMERO = ("tiros", "tiros_a_puerta", "corners", "faltas", "amarillas")   # metricas con mercado "quien hace mas"
 NOM = mo.NOMBRES
@@ -164,7 +164,7 @@ def cumple(h: pd.DataFrame, mk: dict, lado: str) -> pd.Series:
 
 def ventaja(liga: str, met: str, regla: dict) -> str:
     """'probada' = en la prueba el modelo eligió mejor que el lado más común · 'sin ventaja' = empató con él ·
-    'sin probar' = mercado o liga que la prueba no cubrió (doble oportunidad, ambos anotan, mayor número, 1X2 por tiempo, Champions)."""
+    'sin probar' = mercado o liga que la prueba no cubrió (doble oportunidad, ambos anotan, mayor número, 1X2 por tiempo, Champions, Europa League)."""
     if liga not in LIGAS_PROBADAS:
         return "sin probar"
     if regla["tipo"] == "ou":
@@ -711,7 +711,7 @@ DICCIONARIO = [
     ("Modelo", "Varianza vs liga (🟢🟡🔴⚪)", "Ancho del rango del equipo (relativo a su promedio, en esa condición: casa o fuera) dividido entre el ancho mediano de los equipos de la liga. 🟢 estable < 0.8×, 🟡 normal 0.8–1.2×, 🔴 volátil > 1.2×, ⚪ pocos datos = menos de 5 partidos efectivos en esa condición; ahí se usa la dispersión típica de la liga en lugar de la del equipo."),
     ("Modelo", "Modelo B", "Cómo se calcula la fuerza de cada equipo: un ataque y una defensa con todos sus partidos (casa y fuera), descontando qué tan fuertes eran sus rivales y con un freno cuando tiene pocos partidos. La ventaja de local es la de la liga. Tarjetas rojas usan el promedio de la liga. Metodología y prueba con 2,014 partidos: docs/MODELO_B.md."),
     ("Modelo", "Freno (K)", f"A cada equipo se le suman {mo.K_ENCOGE} partidos inventados donde anota y recibe exactamente lo que se esperaba. Con pocos partidos reales empujan su ataque y su defensa hacia 1.00 (promedio); con muchos, casi no se notan. Se ajusta con K_ENCOGE en modelo.py."),
-    ("Mercados", "Sin ventaja", "En la prueba con 2,014 partidos de 6 ligas, en este tipo de mercado el modelo no eligió el lado (Over o Under) mejor que apostar siempre a lo que más pasa en la liga; la diferencia puede ser suerte. Son: goles total y del visitante; goles 1er tiempo total y del visitante; goles 2do tiempo total y del local; corners total; tiros a puerta total; amarillas y rojas. Sin probar: doble oportunidad, ambos anotan, mayor número, resultado por tiempo y Champions League."),
+    ("Mercados", "Sin ventaja", "En la prueba con 2,014 partidos de 6 ligas, en este tipo de mercado el modelo no eligió el lado (Over o Under) mejor que apostar siempre a lo que más pasa en la liga; la diferencia puede ser suerte. Son: goles total y del visitante; goles 1er tiempo total y del visitante; goles 2do tiempo total y del local; corners total; tiros a puerta total; amarillas y rojas. Sin probar: doble oportunidad, ambos anotan, mayor número, resultado por tiempo, Champions League y Europa League."),
     ("Mercados", "Cuota justa", "(1 − probabilidad de devolución) dividido entre probabilidad de acierto. Si el acierto es imposible, no está disponible. Es la cuota a la que no ganas ni pierdes a largo plazo. Si la casa paga más que la justa, hay valor."),
     ("Mercados", "EV (valor esperado)", "probabilidad de acierto × cuota + probabilidad de devolución − 1. Positivo = a largo plazo ganas; negativo = pierdes. EV +0.10 = ganas 10 centavos por cada Q1 apostado, en promedio."),
     ("Mercados", "Over / Under", "Más de / menos de una línea. Total Over 2.5 goles = 3 o más goles en el partido. Las líneas .5 no permiten devolución; en líneas enteras la igualdad devuelve la apuesta y no cuenta como acierto."),
@@ -734,10 +734,10 @@ DICCIONARIO = [
     ("Banca", "Kelly", "Maximiza el crecimiento logarítmico de la distribución de retornos, incluyendo devoluciones. Se usa el mínimo Kelly de los escenarios heurísticos calculados. Si falta distribución conjunta, hay duplicados o incompatibilidad, no se recomienda stake. Partidos distintos suponen independencia no validada."),
     ("Banca", "½, ¼, ⅛ Kelly", "La mitad, un cuarto y un octavo del Kelly completo. Para parlays usa ¼ o ⅛: menos crecimiento pero mucha menos probabilidad de quebrar."),
     ("Banca", "Patas no independientes", "Dos patas del mismo partido (ej. gana Madrid + over 2.5) están relacionadas; multiplicar sus probabilidades da un número inexacto."),
-    ("Datos", "Fuente", "football-data.co.uk para las 5 ligas europeas; ESPN para Liga MX y Champions League. Se descarga todos los días a las 6:00 am (Guatemala) por GitHub Actions."),
+    ("Datos", "Fuente", "football-data.co.uk para las 5 ligas europeas; ESPN para Liga MX, Champions League y Europa League. Se descarga todos los días a las 6:00 am (Guatemala) por GitHub Actions."),
     ("Datos", "Columnas _val", "goles, goles 1er/2do tiempo, tiros, tiros a puerta, corners, faltas, amarillas y rojas, cada una para local y visitante."),
     ("Datos", "Jornada", "Estimada: partido n-ésimo de cada equipo en la temporada. Un aplazado se cuenta cuando se jugó."),
-    ("Datos", "Temporada", "Europa: formato 2025-26 (agosto a mayo). Liga MX: Clausura AAAA (enero-junio) y Apertura AAAA (julio-diciembre), Liguilla incluida. Champions: 2025-26 y 2026-27, solo partidos de Champions (fase de liga y eliminatorias; sin previas ni partidos con prórroga)."),
+    ("Datos", "Temporada", "Europa: formato 2025-26 (agosto a mayo). Liga MX: Clausura AAAA (enero-junio) y Apertura AAAA (julio-diciembre), Liguilla incluida. Champions: 2025-26 y 2026-27, solo partidos de Champions (fase de liga y eliminatorias; sin previas ni partidos con prórroga). Europa League: igual que Champions."),
 ]
 
 
