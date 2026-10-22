@@ -305,5 +305,6 @@ def test_etiqueta_sin_ventaja():
     assert ku.ventaja("laliga", "goles", {"tipo": "resultado", "lado": "local"}) == "probada"
     assert ku.ventaja("laliga", "goles", {"tipo": "btts", "si": True}) == "sin probar"
     assert ku.ventaja("champions", "tiros", {"tipo": "ou", "lado": "local", "linea": 12.5, "over": True}) == "sin probar"
+    assert ku.ventaja("europa", "tiros", {"tipo": "ou", "lado": "local", "linea": 12.5, "over": True}) == "sin probar"
     a = analisis("laliga", "Barcelona", "Racing Santander", "corners")
     assert all(m["ventaja"] in ("probada", "sin ventaja", "sin probar") for m in a["mercados"])

@@ -101,6 +101,7 @@ export function LigaLogo({
     ligue1: "FR",
     ligamx: "MX",
     champions: "CL",
+    europa: "EL",
   };
   return (
     <span

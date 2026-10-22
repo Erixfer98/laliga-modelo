@@ -24,7 +24,7 @@ from espn import ALIAS_LIGAMX
 
 LIGAS = {"laliga": ("esp.1", "La Liga"), "premier": ("eng.1", "Premier League"), "seriea": ("ita.1", "Serie A"),
          "bundesliga": ("ger.1", "Bundesliga"), "ligue1": ("fra.1", "Ligue 1"), "ligamx": ("mex.1", "Liga MX"),
-         "champions": ("uefa.champions", "Champions League")}
+         "champions": ("uefa.champions", "Champions League"), "europa": ("uefa.europa", "Europa League")}
 TEAMS = "https://site.api.espn.com/apis/site/v2/sports/soccer/{code}/teams"
 SCOREBOARD = "https://site.api.espn.com/apis/site/v2/sports/soccer/{code}/scoreboard"
 SALIDA = "datos/logos.json"

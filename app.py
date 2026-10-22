@@ -1038,4 +1038,4 @@ with st.popover("IA"):
         ss.chat = []; st.rerun()
 
 st.markdown(f'<div class="note" style="margin-top:18px">{LIGA}: {len(df)} partidos cargados, último el {df["fecha"].max():%d/%m/%Y}. '
-            f'Fuente: {"ESPN" if ss.liga in ("ligamx", "champions") else "football-data.co.uk"}. Los términos de la app están explicados en el Diccionario.</div>', unsafe_allow_html=True)
+            f'Fuente: {"ESPN" if ss.liga in ("ligamx", "champions", "europa") else "football-data.co.uk"}. Los términos de la app están explicados en el Diccionario.</div>', unsafe_allow_html=True)
