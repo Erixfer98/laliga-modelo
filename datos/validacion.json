@@ -1,5 +1,5 @@
 {
- "fecha": "22/10/2026 16:41 UTC",
+ "fecha": "23/10/2026 16:31 UTC",
  "ligas": {
   "bundesliga": {
    "partidos": 360,
@@ -30,11 +30,11 @@
    "ok": true
   },
   "europa": {
-   "partidos": 220,
-   "ultimo": "15/10/2026",
+   "partidos": 238,
+   "ultimo": "22/10/2026",
    "temporadas": {
     "2025-26": 184,
-    "2026-27": 36
+    "2026-27": 54
    },
    "equipos": 64,
    "vacias": 0,
