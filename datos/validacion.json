@@ -1,5 +1,5 @@
 {
- "fecha": "28/10/2026 17:56 UTC",
+ "fecha": "29/10/2026 18:03 UTC",
  "ligas": {
   "bundesliga": {
    "partidos": 369,
@@ -58,11 +58,11 @@
    "ok": true
   },
   "ligamx": {
-   "partidos": 291,
-   "ultimo": "25/10/2026",
+   "partidos": 292,
+   "ultimo": "28/10/2026",
    "temporadas": {
     "Clausura 2026": 167,
-    "Apertura 2026": 124
+    "Apertura 2026": 125
    },
    "equipos": 19,
    "vacias": 0,
@@ -100,11 +100,11 @@
    "ok": true
   },
   "seriea": {
-   "partidos": 460,
-   "ultimo": "25/10/2026",
+   "partidos": 468,
+   "ultimo": "28/10/2026",
    "temporadas": {
     "2025-26": 380,
-    "2026-27": 80
+    "2026-27": 88
    },
    "equipos": 23,
    "vacias": 0,
