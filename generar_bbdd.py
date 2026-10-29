@@ -173,6 +173,14 @@ def transformar(df: pd.DataFrame) -> pd.DataFrame:
     })
     # deduplicar: la fuente republica el CSV completo cada vez
     out = out.drop_duplicates(subset=["fecha_dt", "equipo_local_txt"]).reset_index(drop=True)
+    # tiros a puerta > tiros es un error de la fuente: ese par queda vacio (el modelo salta el partido en esas 2 metricas)
+    # y vuelve solo cuando la fuente lo corrija. Asi un dato malo no frena la actualizacion de todas las ligas.
+    for lado in ("local", "visitante"):
+        malo = out[f"tiros_a_puerta_{lado}_val"] > out[f"tiros_{lado}_val"]
+        for _, p in out[malo].iterrows():
+            print(f"AVISO: {p.fecha_dt} {p.equipo_local_txt}-{p.equipo_visitante_txt}: tiros a puerta {lado} "
+                  f"{p[f'tiros_a_puerta_{lado}_val']} > tiros {p[f'tiros_{lado}_val']}; se dejan vacios")
+        out.loc[malo, [f"tiros_{lado}_val", f"tiros_a_puerta_{lado}_val"]] = None
     return out
 
 
@@ -272,7 +280,9 @@ def generar(partidos: pd.DataFrame, salida: str = SALIDA):
                   [38, 10, 62, 58], alto_hdr=20, wrap_cuerpo=True)
     wb.save(salida)
     # copia CSV con los mismos valores: es lo que leen modelo.py y la app
-    pd.DataFrame([f for f in filas], columns=COLUMNAS).to_csv(salida.replace(".xlsx", ".csv"), index=False)
+    tabla = pd.DataFrame([f for f in filas], columns=COLUMNAS)
+    tabla = tabla.astype({c: "Int64" for c in COLUMNAS if c.endswith("_val")})   # enteros aunque haya celdas vacias (5, no 5.0)
+    tabla.to_csv(salida.replace(".xlsx", ".csv"), index=False)
     print(f"OK -> {salida} y .csv ({len(partidos)} partidos)")
 
 if __name__ == "__main__":
