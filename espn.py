@@ -1,5 +1,5 @@
 """
-espn.py — fuente ESPN para ligas que football-data.co.uk no cubre con estadisticas (hoy: Liga MX, Champions League y Europa League).
+espn.py — fuente ESPN para ligas que football-data.co.uk no cubre con estadisticas (hoy: Liga MX, Champions League, Europa League y Brasileirao).
 Portado del notebook cargar_estadisticas_espn_v2 (Colab) que ya genero la BBDD de Liga MX.
 
 Como funciona:
@@ -8,7 +8,8 @@ Como funciona:
   2. summary por partido: goles al descanso (keyEvents con respaldo en linescores) y tarjetas
      (keyEvents con respaldo en boxscore).
   3. Temporada por fecha: Liga MX enero-junio = "Clausura AAAA", julio-diciembre = "Apertura AAAA";
-     Champions y Europa League julio-junio = "AAAA-AA" (temporada_europa). Hora local = zona horaria de la liga (tz).
+     Champions y Europa League julio-junio = "AAAA-AA" (temporada_europa); Brasileirao ano calendario = "AAAA"
+     (temporada_anual). Hora local = zona horaria de la liga (tz).
      Partidos con proroga (periodo > 2) se descartan: el modelo es de 90 minutos.
   4. Incremental: si ya existe datos/bbdd_ligamx.csv, solo consulta desde el ultimo partido menos
      DIAS_REPASO dias y mezcla (los partidos viejos no se vuelven a pedir). --completo lo rehace todo.
@@ -55,7 +56,7 @@ def limpio(s: str) -> str:
 
 def nombre_equipo(team: dict, alias: dict) -> str:
     """Nombre normalizado de la BBDD; si no esta en el diccionario se deja el displayName de ESPN.
-    Sin diccionario (Champions y Europa League: equipos de muchas ligas) se usa el displayName de ESPN sin acentos."""
+    Sin diccionario (Champions, Europa League y Brasileirao) se usa el displayName de ESPN sin acentos."""
     if not alias:
         return limpio(team.get("displayName", ""))
     nombres = {norm(team.get(k, "")) for k in ("displayName", "shortDisplayName", "name", "location", "abbreviation")}
@@ -120,6 +121,11 @@ def temporada_europa(fecha: dt.date) -> str:
     """Julio-junio, mismo formato que las ligas europeas: 2026-27."""
     a = fecha.year if fecha.month >= 7 else fecha.year - 1
     return f"{a}-{str(a + 1)[2:]}"
+
+
+def temporada_anual(fecha: dt.date) -> str:
+    """Ano calendario (Brasileirao: enero/marzo a diciembre): 2026."""
+    return str(fecha.year)
 
 
 def partidos_dia(liga: str, dia: dt.date, alias: dict, tz: str, temporada_de=temporada) -> list:

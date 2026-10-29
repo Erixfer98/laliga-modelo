@@ -15,6 +15,7 @@ Uso: python validar_bbdd.py
 
 import glob
 import json
+import os
 import sys
 from datetime import datetime
 
@@ -86,8 +87,12 @@ if __name__ == "__main__":
               f"{r['vacias']} celdas vacias")
         for e in r["errores"]:
             print("   ERROR:", e)
+            if os.environ.get("GITHUB_ACTIONS"):          # se ve arriba en la pagina del Action, sin abrir el log
+                print(f"::error title=Validacion {clave}::{e}")
         for a in r["avisos"]:
             print("   aviso:", a)
+            if os.environ.get("GITHUB_ACTIONS"):
+                print(f"::warning title=Validacion {clave}::{a}")
     json.dump(reporte, open("datos/validacion.json", "w"), ensure_ascii=False, indent=1)
     if hay_error:
         print("\nValidacion FALLIDA: no se publican los datos.")

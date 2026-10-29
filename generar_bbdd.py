@@ -1,13 +1,14 @@
 """
 generar_bbdd.py — regenera datos/bbdd_<liga>.xlsx + .csv (28 columnas, hojas partidos + diccionario).
   - 5 grandes ligas europeas: football-data.co.uk (se borra y reescribe todo en cada corrida).
-  - Liga MX, Champions League y Europa League: ESPN via espn.py (football-data no publica sus estadisticas). Incremental: solo
+  - Liga MX, Champions League, Europa League y Brasileirao: ESPN via espn.py (football-data no publica sus estadisticas). Incremental: solo
     pide los dias nuevos y los mezcla con el CSV existente; con --completo rehace desde el inicio configurado.
 Uso: python generar_bbdd.py                    (todas las ligas)
      python generar_bbdd.py premier            (solo una)
      python generar_bbdd.py ligamx --completo  (Liga MX desde cero)
      python generar_bbdd.py champions --completo (Champions desde la 2025-26)
      python generar_bbdd.py europa --completo    (Europa League desde la 2025-26)
+     python generar_bbdd.py brasileirao --completo (Brasileirao desde la temporada 2025)
 """
 from datetime import datetime
 from io import StringIO
@@ -80,6 +81,9 @@ LIGAS = {
     # Europa League: igual que Champions (solo partidos de Europa League, sin previas ni proroga, 2025-26 y 2026-27).
     "europa":     {"fuente": "espn", "espn": "uefa.europa", "inicio": "2025-09-01", "nombre": "Europa League",
                    "pais": "Europa", "tz": "Europe/Madrid", "equipos": {}, "alias": {}, "temporada": espn.temporada_europa},
+    # Brasileirao (Serie A de Brasil): temporadas 2025 y 2026 (ano calendario). Nombres = displayName de ESPN sin acentos.
+    "brasileirao": {"fuente": "espn", "espn": "bra.1", "inicio": "2025-03-01", "nombre": "Brasileirao", "pais": "Brasil",
+                    "tz": "America/Sao_Paulo", "equipos": {}, "alias": {}, "temporada": espn.temporada_anual},
 }
 EQUIPOS = EQUIPOS_LALIGA   # se reasigna por liga en el ciclo principal
 TZ_LOCAL = "Europe/Madrid"
@@ -169,6 +173,14 @@ def transformar(df: pd.DataFrame) -> pd.DataFrame:
     })
     # deduplicar: la fuente republica el CSV completo cada vez
     out = out.drop_duplicates(subset=["fecha_dt", "equipo_local_txt"]).reset_index(drop=True)
+    # tiros a puerta > tiros es un error de la fuente: ese par queda vacio (el modelo salta el partido en esas 2 metricas)
+    # y vuelve solo cuando la fuente lo corrija. Asi un dato malo no frena la actualizacion de todas las ligas.
+    for lado in ("local", "visitante"):
+        malo = out[f"tiros_a_puerta_{lado}_val"] > out[f"tiros_{lado}_val"]
+        for _, p in out[malo].iterrows():
+            print(f"AVISO: {p.fecha_dt} {p.equipo_local_txt}-{p.equipo_visitante_txt}: tiros a puerta {lado} "
+                  f"{p[f'tiros_a_puerta_{lado}_val']} > tiros {p[f'tiros_{lado}_val']}; se dejan vacios")
+        out.loc[malo, [f"tiros_{lado}_val", f"tiros_a_puerta_{lado}_val"]] = None
     return out
 
 
@@ -268,7 +280,9 @@ def generar(partidos: pd.DataFrame, salida: str = SALIDA):
                   [38, 10, 62, 58], alto_hdr=20, wrap_cuerpo=True)
     wb.save(salida)
     # copia CSV con los mismos valores: es lo que leen modelo.py y la app
-    pd.DataFrame([f for f in filas], columns=COLUMNAS).to_csv(salida.replace(".xlsx", ".csv"), index=False)
+    tabla = pd.DataFrame([f for f in filas], columns=COLUMNAS)
+    tabla = tabla.astype({c: "Int64" for c in COLUMNAS if c.endswith("_val")})   # enteros aunque haya celdas vacias (5, no 5.0)
+    tabla.to_csv(salida.replace(".xlsx", ".csv"), index=False)
     print(f"OK -> {salida} y .csv ({len(partidos)} partidos)")
 
 if __name__ == "__main__":
