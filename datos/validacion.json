@@ -1,20 +1,6 @@
 {
- "fecha": "29/10/2026 22:46 UTC",
+ "fecha": "29/10/2026 18:03 UTC",
  "ligas": {
-  "brasileirao": {
-   "partidos": 704,
-   "ultimo": "28/10/2026",
-   "temporadas": {
-    "2025": 380,
-    "2026": 324
-   },
-   "equipos": 24,
-   "vacias": 0,
-   "duplicados": 0,
-   "errores": [],
-   "avisos": [],
-   "ok": true
-  },
   "bundesliga": {
    "partidos": 369,
    "ultimo": "25/10/2026",
@@ -114,19 +100,17 @@
    "ok": true
   },
   "seriea": {
-   "partidos": 470,
-   "ultimo": "29/10/2026",
+   "partidos": 468,
+   "ultimo": "28/10/2026",
    "temporadas": {
     "2025-26": 380,
-    "2026-27": 90
+    "2026-27": 88
    },
    "equipos": 23,
-   "vacias": 2,
+   "vacias": 0,
    "duplicados": 0,
    "errores": [],
-   "avisos": [
-    "2 celdas de estadisticas vacias en 1 partidos (ej. 29/10/2026 Fiorentina-Atalanta)"
-   ],
+   "avisos": [],
    "ok": true
   }
  }
