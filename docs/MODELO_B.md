@@ -78,7 +78,7 @@ predicción. También reprogramó el modelo desde cero y obtuvo los mismos núme
 - Corners total y tiros a puerta total.
 - Amarillas y rojas: los tres mercados de cada una.
 
-**Sin probar:** doble oportunidad, ambos anotan, mayor número, resultado por tiempo y toda la Champions League y la Europa League.
+**Sin probar:** doble oportunidad, ambos anotan, mayor número, resultado por tiempo y toda la Champions League, la Europa League y el Brasileirão.
 
 **Exactitud de los porcentajes** (picks donde el modelo daba entre 80 % y 90 %, sin rojas):
 

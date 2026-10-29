@@ -1,13 +1,14 @@
 """
 generar_bbdd.py — regenera datos/bbdd_<liga>.xlsx + .csv (28 columnas, hojas partidos + diccionario).
   - 5 grandes ligas europeas: football-data.co.uk (se borra y reescribe todo en cada corrida).
-  - Liga MX, Champions League y Europa League: ESPN via espn.py (football-data no publica sus estadisticas). Incremental: solo
+  - Liga MX, Champions League, Europa League y Brasileirao: ESPN via espn.py (football-data no publica sus estadisticas). Incremental: solo
     pide los dias nuevos y los mezcla con el CSV existente; con --completo rehace desde el inicio configurado.
 Uso: python generar_bbdd.py                    (todas las ligas)
      python generar_bbdd.py premier            (solo una)
      python generar_bbdd.py ligamx --completo  (Liga MX desde cero)
      python generar_bbdd.py champions --completo (Champions desde la 2025-26)
      python generar_bbdd.py europa --completo    (Europa League desde la 2025-26)
+     python generar_bbdd.py brasileirao --completo (Brasileirao desde la temporada 2025)
 """
 from datetime import datetime
 from io import StringIO
@@ -80,6 +81,9 @@ LIGAS = {
     # Europa League: igual que Champions (solo partidos de Europa League, sin previas ni proroga, 2025-26 y 2026-27).
     "europa":     {"fuente": "espn", "espn": "uefa.europa", "inicio": "2025-09-01", "nombre": "Europa League",
                    "pais": "Europa", "tz": "Europe/Madrid", "equipos": {}, "alias": {}, "temporada": espn.temporada_europa},
+    # Brasileirao (Serie A de Brasil): temporadas 2025 y 2026 (ano calendario). Nombres = displayName de ESPN sin acentos.
+    "brasileirao": {"fuente": "espn", "espn": "bra.1", "inicio": "2025-03-01", "nombre": "Brasileirao", "pais": "Brasil",
+                    "tz": "America/Sao_Paulo", "equipos": {}, "alias": {}, "temporada": espn.temporada_anual},
 }
 EQUIPOS = EQUIPOS_LALIGA   # se reasigna por liga en el ciclo principal
 TZ_LOCAL = "Europe/Madrid"
