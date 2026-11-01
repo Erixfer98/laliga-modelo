@@ -111,6 +111,7 @@ export default function Partido() {
           <p className="text-xs text-mut mb-3 leading-relaxed">
             λ = cuántos {METRICAS[met].toLowerCase()} espera el modelo. {n === 5 ? "4/5" : "8/10"} = en {n === 5 ? 4 : 8} de sus últimos {n} partidos se cumplió el mercado
             {filtro === "Todos" ? "" : ` (${local} solo en casa, ${visitante} solo fuera)`}. En los mercados de un equipo, la columna del rival cuenta lo que el rival recibió.
+            Últ. 5 = promedio de {local} en casa y {visitante} fuera; CV = cuánto varía de un partido a otro (más de 0.5 = irregular).
           </p>
           <TablaMercados d={d} enBoleto={enBoleto} abrir={setAbierto} masLineas={masLineas} />
         </div>

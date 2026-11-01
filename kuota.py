@@ -152,6 +152,26 @@ def historial(df: pd.DataFrame, equipo: str, met: str, n: int, condicion: str = 
     return h
 
 
+LIMITE_CV = 0.5  # coeficiente de variación por encima del cual la serie se marca «irregular»
+
+
+def _media_cv(valores) -> dict:
+    """Media y coeficiente de variación (desviación estándar muestral / media) de una serie de partidos."""
+    v = pd.Series(valores, dtype=float).dropna()
+    media = float(v.mean()) if len(v) else None
+    cv = float(v.std(ddof=1) / media) if len(v) >= 2 and media else None
+    return {"media": media, "cv": cv, "n": int(len(v)),
+            "estado": None if cv is None else ("irregular" if cv > LIMITE_CV else "regular")}
+
+
+def forma_reciente(df: pd.DataFrame, local: str, visitante: str, met: str, n: int = 5) -> dict:
+    """Últimos n partidos del local en casa y del visitante fuera: media y CV de lo que hizo cada uno (a favor)
+    y del total de esos partidos (los 2n juntos)."""
+    hl, hv = historial(df, local, met, n, "Casa"), historial(df, visitante, met, n, "Fuera")
+    return {"n": n, "local": _media_cv(hl.a_favor), "visitante": _media_cv(hv.a_favor),
+            "total": _media_cv(pd.concat([hl.total, hv.total]))}
+
+
 def historial_json(h: pd.DataFrame) -> list:
     return h.to_dict("records")
 
@@ -607,7 +627,7 @@ def vista_partido(df: pd.DataFrame, liga: str, local: str, visitante: str, met: 
     if modo == "compacto":
         return {"liga": liga, "nombre_liga": nombre_liga, "partido": partido, "metrica": met, "local": local, "visitante": visitante,
                 "lambda_local": an["lambda_local"], "lambda_visitante": an["lambda_visitante"], "medias_liga": an["medias_liga"],
-                "cfg": an["cfg"], "grupos": an["grupos"], "n": n, "filtro": filtro,
+                "forma": forma_reciente(df, local, visitante, met), "cfg": an["cfg"], "grupos": an["grupos"], "n": n, "filtro": filtro,
                 "mercados": [{k: x[k] for k in COMPACTO} for x in evaluados]}
     nombres = [x["mercado"] for x in evaluados]
     if sel not in nombres:

@@ -23,6 +23,7 @@ export type MercadoCorto = {
   ventaja?: "probada" | "sin ventaja" | "sin probar";
   seleccion: Seleccion;
 };
+export type Forma = { media: number | null; cv: number | null; n: number; estado: "regular" | "irregular" | null };
 export type Compacto = {
   liga: string;
   nombre_liga: string;
@@ -33,6 +34,8 @@ export type Compacto = {
   lambda_local: number;
   lambda_visitante: number;
   medias_liga: { local: number; visitante: number; total: number };
+  /** Últimos 5: local en casa, visitante fuera; total = los 10 partidos juntos. cv = desviación / media. */
+  forma?: { n: number; local: Forma; visitante: Forma; total: Forma };
   cfg: Cfg;
   grupos: string[];
   n: number;
