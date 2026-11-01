@@ -216,5 +216,10 @@ def descargar(liga: str, desde: dt.date, hasta: dt.date, alias: dict, tz: str = 
     todo = pd.concat([nuevo, previo], ignore_index=True) if not previo.empty else nuevo
     # lo nuevo va primero: si un partido se repasa, gana la version recien descargada
     todo = todo.drop_duplicates(subset=["Date", "HomeTeam"], keep="first")
+    # Juego de Estrellas (MLS All-Stars vs Liga MX All-Stars): ESPN lo publica en usa.1 pero no es un partido de liga
+    estrellas = todo["HomeTeam"].str.contains("All-Star", na=False) | todo["AwayTeam"].str.contains("All-Star", na=False)
+    if estrellas.any():
+        print(f"   ESPN {liga}: se quitan {int(estrellas.sum())} partidos del Juego de Estrellas")
+        todo = todo[~estrellas]
     todo["_f"] = pd.to_datetime(todo["Date"], dayfirst=True)
     return todo.sort_values("_f").drop(columns="_f").reset_index(drop=True)
