@@ -7,7 +7,7 @@ import { autorizado } from "@/lib/gate";
 
 export const metadata: Metadata = {
   title: "Kuota · Parlays con datos",
-  description: "Poisson + Dixon-Coles para las 5 grandes ligas, Liga MX, Champions League, Europa League y Brasileirão",
+  description: "Poisson + Dixon-Coles para las 5 grandes ligas, Liga MX, Champions League, Europa League, Brasileirão y MLS",
 };
 export const viewport: Viewport = {
   width: "device-width",

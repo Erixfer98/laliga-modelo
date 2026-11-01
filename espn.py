@@ -1,5 +1,5 @@
 """
-espn.py — fuente ESPN para ligas que football-data.co.uk no cubre con estadisticas (hoy: Liga MX, Champions League, Europa League y Brasileirao).
+espn.py — fuente ESPN para ligas que football-data.co.uk no cubre con estadisticas (hoy: Liga MX, Champions League, Europa League, Brasileirao y MLS).
 Portado del notebook cargar_estadisticas_espn_v2 (Colab) que ya genero la BBDD de Liga MX.
 
 Como funciona:
@@ -8,7 +8,7 @@ Como funciona:
   2. summary por partido: goles al descanso (keyEvents con respaldo en linescores) y tarjetas
      (keyEvents con respaldo en boxscore).
   3. Temporada por fecha: Liga MX enero-junio = "Clausura AAAA", julio-diciembre = "Apertura AAAA";
-     Champions y Europa League julio-junio = "AAAA-AA" (temporada_europa); Brasileirao ano calendario = "AAAA"
+     Champions y Europa League julio-junio = "AAAA-AA" (temporada_europa); Brasileirao y MLS ano calendario = "AAAA"
      (temporada_anual). Hora local = zona horaria de la liga (tz).
      Partidos con proroga (periodo > 2) se descartan: el modelo es de 90 minutos.
   4. Incremental: si ya existe datos/bbdd_ligamx.csv, solo consulta desde el ultimo partido menos
@@ -56,7 +56,7 @@ def limpio(s: str) -> str:
 
 def nombre_equipo(team: dict, alias: dict) -> str:
     """Nombre normalizado de la BBDD; si no esta en el diccionario se deja el displayName de ESPN.
-    Sin diccionario (Champions, Europa League y Brasileirao) se usa el displayName de ESPN sin acentos."""
+    Sin diccionario (Champions, Europa League, Brasileirao y MLS) se usa el displayName de ESPN sin acentos."""
     if not alias:
         return limpio(team.get("displayName", ""))
     nombres = {norm(team.get(k, "")) for k in ("displayName", "shortDisplayName", "name", "location", "abbreviation")}
@@ -124,7 +124,7 @@ def temporada_europa(fecha: dt.date) -> str:
 
 
 def temporada_anual(fecha: dt.date) -> str:
-    """Ano calendario (Brasileirao: enero/marzo a diciembre): 2026."""
+    """Ano calendario (Brasileirao y MLS: febrero/marzo a diciembre): 2026."""
     return str(fecha.year)
 
 
@@ -216,5 +216,10 @@ def descargar(liga: str, desde: dt.date, hasta: dt.date, alias: dict, tz: str = 
     todo = pd.concat([nuevo, previo], ignore_index=True) if not previo.empty else nuevo
     # lo nuevo va primero: si un partido se repasa, gana la version recien descargada
     todo = todo.drop_duplicates(subset=["Date", "HomeTeam"], keep="first")
+    # Juego de Estrellas (MLS All-Stars vs Liga MX All-Stars): ESPN lo publica en usa.1 pero no es un partido de liga
+    estrellas = todo["HomeTeam"].str.contains("All-Star", na=False) | todo["AwayTeam"].str.contains("All-Star", na=False)
+    if estrellas.any():
+        print(f"   ESPN {liga}: se quitan {int(estrellas.sum())} partidos del Juego de Estrellas")
+        todo = todo[~estrellas]
     todo["_f"] = pd.to_datetime(todo["Date"], dayfirst=True)
     return todo.sort_values("_f").drop(columns="_f").reset_index(drop=True)

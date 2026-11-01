@@ -167,7 +167,7 @@ export default function ResumenLiga() {
                     Procedencia y calidad de los datos
                   </summary>
                   <p className="text-xs text-mut leading-relaxed">
-                    football-data.co.uk (Europa) y ESPN (Liga MX, Champions, Europa League y Brasileirão). Temporadas:{" "}
+                    football-data.co.uk (Europa) y ESPN (Liga MX, Champions, Europa League, Brasileirão y MLS). Temporadas:{" "}
                     {v.torneos_recientes.join(", ")}. La validación estructural
                     no certifica vigencia ni completitud.
                   </p>
