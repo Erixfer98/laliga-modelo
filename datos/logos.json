@@ -35,6 +35,10 @@
   "brasileirao": {
    "nombre": "Brasileirão",
    "logo": "https://a.espncdn.com/i/leaguelogos/soccer/500/85.png"
+  },
+  "mls": {
+   "nombre": "MLS",
+   "logo": "https://a.espncdn.com/i/leaguelogos/soccer/500/19.png"
   }
  },
  "equipos": {
@@ -261,6 +265,38 @@
    "Sao Paulo": "https://a.espncdn.com/i/teamlogos/soccer/500/2026.png",
    "Vasco da Gama": "https://a.espncdn.com/i/teamlogos/soccer/500/3454.png",
    "Vitoria": "https://a.espncdn.com/i/teamlogos/soccer/500/3457.png"
+  },
+  "mls": {
+   "Atlanta United FC": "https://a.espncdn.com/i/teamlogos/soccer/500/18418.png",
+   "Austin FC": "https://a.espncdn.com/i/teamlogos/soccer/500/20906.png",
+   "CF Montreal": "https://a.espncdn.com/i/teamlogos/soccer/500/9720.png",
+   "Charlotte FC": "https://a.espncdn.com/i/teamlogos/soccer/500/21300.png",
+   "Chicago Fire FC": "https://a.espncdn.com/i/teamlogos/soccer/500/182.png",
+   "Colorado Rapids": "https://a.espncdn.com/i/teamlogos/soccer/500/184.png",
+   "Columbus Crew": "https://a.espncdn.com/i/teamlogos/soccer/500/183.png",
+   "D.C. United": "https://a.espncdn.com/i/teamlogos/soccer/500/193.png",
+   "FC Cincinnati": "https://a.espncdn.com/i/teamlogos/soccer/500/18267.png",
+   "FC Dallas": "https://a.espncdn.com/i/teamlogos/soccer/500/185.png",
+   "Houston Dynamo FC": "https://a.espncdn.com/i/teamlogos/soccer/500/6077.png",
+   "Inter Miami CF": "https://a.espncdn.com/i/teamlogos/soccer/500/20232.png",
+   "LA Galaxy": "https://a.espncdn.com/i/teamlogos/soccer/500/187.png",
+   "LAFC": "https://a.espncdn.com/i/teamlogos/soccer/500/18966.png",
+   "Minnesota United FC": "https://a.espncdn.com/i/teamlogos/soccer/500/17362.png",
+   "Nashville SC": "https://a.espncdn.com/i/teamlogos/soccer/500/18986.png",
+   "New England Revolution": "https://a.espncdn.com/i/teamlogos/soccer/500/189.png",
+   "New York City FC": "https://a.espncdn.com/i/teamlogos/soccer/500/17606.png",
+   "Orlando City SC": "https://a.espncdn.com/i/teamlogos/soccer/500/12011.png",
+   "Philadelphia Union": "https://a.espncdn.com/i/teamlogos/soccer/500/10739.png",
+   "Portland Timbers": "https://a.espncdn.com/i/teamlogos/soccer/500/9723.png",
+   "Real Salt Lake": "https://a.espncdn.com/i/teamlogos/soccer/500/4771.png",
+   "Red Bull New York": "https://a.espncdn.com/i/teamlogos/soccer/500/190.png",
+   "San Diego FC": "https://a.espncdn.com/i/teamlogos/soccer/500/22529.png",
+   "San Jose Earthquakes": "https://a.espncdn.com/i/teamlogos/soccer/500/191.png",
+   "Seattle Sounders FC": "https://a.espncdn.com/i/teamlogos/soccer/500/9726.png",
+   "Sporting Kansas City": "https://a.espncdn.com/i/teamlogos/soccer/500/186.png",
+   "St. Louis CITY SC": "https://a.espncdn.com/i/teamlogos/soccer/500/21812.png",
+   "Toronto FC": "https://a.espncdn.com/i/teamlogos/soccer/500/7318.png",
+   "Vancouver Whitecaps": "https://a.espncdn.com/i/teamlogos/soccer/500/9727.png"
   }
  }
 }

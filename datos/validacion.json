@@ -1,5 +1,5 @@
 {
- "fecha": "01/11/2026 17:40 UTC",
+ "fecha": "01/11/2026 20:08 UTC",
  "ligas": {
   "brasileirao": {
    "partidos": 709,
@@ -95,6 +95,20 @@
     "2026-27": 72
    },
    "equipos": 20,
+   "vacias": 0,
+   "duplicados": 0,
+   "errores": [],
+   "avisos": [],
+   "ok": true
+  },
+  "mls": {
+   "partidos": 1024,
+   "ultimo": "31/10/2026",
+   "temporadas": {
+    "2025": 534,
+    "2026": 490
+   },
+   "equipos": 32,
    "vacias": 0,
    "duplicados": 0,
    "errores": [],
