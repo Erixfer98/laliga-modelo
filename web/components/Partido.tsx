@@ -72,10 +72,11 @@ export function Equipos({
 
 // ------------------------------------------------------------------ λ
 export function Lambdas({ d }: { d: Compacto }) {
+  const f = d.forma;
   const items = [
-    { nombre: d.local, valor: d.lambda_local, liga: d.medias_liga.local },
-    { nombre: d.visitante, valor: d.lambda_visitante, liga: d.medias_liga.visitante },
-    { nombre: "Total", valor: d.lambda_local + d.lambda_visitante, liga: d.medias_liga.total },
+    { nombre: d.local, valor: d.lambda_local, liga: d.medias_liga.local, forma: f?.local, donde: "en casa" },
+    { nombre: d.visitante, valor: d.lambda_visitante, liga: d.medias_liga.visitante, forma: f?.visitante, donde: "fuera" },
+    { nombre: "Total", valor: d.lambda_local + d.lambda_visitante, liga: d.medias_liga.total, forma: f?.total, donde: "ambos" },
   ];
   return (
     <div className="grid grid-cols-3 gap-2" data-testid="lambdas">
@@ -84,6 +85,23 @@ export function Lambdas({ d }: { d: Compacto }) {
           <div className="text-[11px] font-semibold text-mut truncate">λ {x.nombre}</div>
           <div className="num text-2xl mt-1">{num(x.valor, 2)}</div>
           <div className="text-[11px] text-mut2 mt-1">liga {num(x.liga, 2)}</div>
+          {x.forma && (
+            <div className="mt-2 pt-2 border-t border-line2" data-testid="forma">
+              <div className="text-[11px] text-mut2" title={`Últimos ${f!.n} ${x.donde}`}>
+                últ. {f!.n} {x.forma.media == null ? "—" : num(x.forma.media, 2)}
+              </div>
+              <div className="text-[11px] text-mut2">CV {x.forma.cv == null ? "—" : num(x.forma.cv, 2)}</div>
+              {x.forma.estado && (
+                <span
+                  className={`inline-block mt-1 px-2 py-0.5 rounded-full border text-[10px] font-bold ${
+                    x.forma.estado === "irregular" ? "border-bad text-bad" : "border-ok text-ok"
+                  }`}
+                >
+                  {x.forma.estado === "irregular" ? "Irregular" : "Regular"}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       ))}
     </div>

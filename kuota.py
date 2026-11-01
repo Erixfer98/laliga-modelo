@@ -152,6 +152,32 @@ def historial(df: pd.DataFrame, equipo: str, met: str, n: int, condicion: str = 
     return h
 
 
+# CV típico (mediana) de cada mercado en las 10 ligas, rachas de 5 partidos (equipo) y 10 partidos juntos (total).
+# Arriba del típico = «irregular». Rojas sin etiqueta: en la mitad de las rachas no hubo ninguna.
+UMBRAL_CV = {"goles": (0.76, 0.56), "goles_1t": (1.37, 0.85), "goles_2t": (1.05, 0.76), "tiros": (0.34, 0.22),
+             "tiros_a_puerta": (0.47, 0.33), "corners": (0.52, 0.34), "faltas": (0.28, 0.22), "amarillas": (0.63, 0.49),
+             "rojas": (None, None)}
+
+
+def _media_cv(valores, limite: float = None) -> dict:
+    """Media y coeficiente de variación (desviación estándar muestral / media) de una serie de partidos.
+    estado = «irregular» si el CV pasa el límite del mercado, «regular» si no; None sin CV o sin límite."""
+    v = pd.Series(valores, dtype=float).dropna()
+    media = float(v.mean()) if len(v) else None
+    cv = float(v.std(ddof=1) / media) if len(v) >= 2 and media else None
+    estado = None if cv is None or limite is None else ("irregular" if cv > limite else "regular")
+    return {"media": media, "cv": cv, "n": int(len(v)), "limite": limite, "estado": estado}
+
+
+def forma_reciente(df: pd.DataFrame, local: str, visitante: str, met: str, n: int = 5) -> dict:
+    """Últimos n partidos del local en casa y del visitante fuera: media y CV de lo que hizo cada uno (a favor)
+    y del total de esos partidos (los 2n juntos)."""
+    hl, hv = historial(df, local, met, n, "Casa"), historial(df, visitante, met, n, "Fuera")
+    l_eq, l_tot = UMBRAL_CV.get(met, (None, None))
+    return {"n": n, "local": _media_cv(hl.a_favor, l_eq), "visitante": _media_cv(hv.a_favor, l_eq),
+            "total": _media_cv(pd.concat([hl.total, hv.total]), l_tot)}
+
+
 def historial_json(h: pd.DataFrame) -> list:
     return h.to_dict("records")
 
@@ -607,7 +633,7 @@ def vista_partido(df: pd.DataFrame, liga: str, local: str, visitante: str, met: 
     if modo == "compacto":
         return {"liga": liga, "nombre_liga": nombre_liga, "partido": partido, "metrica": met, "local": local, "visitante": visitante,
                 "lambda_local": an["lambda_local"], "lambda_visitante": an["lambda_visitante"], "medias_liga": an["medias_liga"],
-                "cfg": an["cfg"], "grupos": an["grupos"], "n": n, "filtro": filtro,
+                "forma": forma_reciente(df, local, visitante, met), "cfg": an["cfg"], "grupos": an["grupos"], "n": n, "filtro": filtro,
                 "mercados": [{k: x[k] for k in COMPACTO} for x in evaluados]}
     nombres = [x["mercado"] for x in evaluados]
     if sel not in nombres:
