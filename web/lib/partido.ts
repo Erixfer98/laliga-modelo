@@ -23,7 +23,7 @@ export type MercadoCorto = {
   ventaja?: "probada" | "sin ventaja" | "sin probar";
   seleccion: Seleccion;
 };
-export type Forma = { media: number | null; cv: number | null; n: number; estado: "regular" | "irregular" | null };
+export type Forma = { media: number | null; cv: number | null; n: number; limite: number | null; estado: "regular" | "irregular" | null };
 export type Compacto = {
   liga: string;
   nombre_liga: string;
