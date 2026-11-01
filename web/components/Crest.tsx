@@ -103,6 +103,7 @@ export function LigaLogo({
     champions: "CL",
     europa: "EL",
     brasileirao: "BR",
+    mls: "US",
   };
   return (
     <span

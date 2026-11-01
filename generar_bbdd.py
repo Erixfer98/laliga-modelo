@@ -1,7 +1,7 @@
 """
 generar_bbdd.py — regenera datos/bbdd_<liga>.xlsx + .csv (28 columnas, hojas partidos + diccionario).
   - 5 grandes ligas europeas: football-data.co.uk (se borra y reescribe todo en cada corrida).
-  - Liga MX, Champions League, Europa League y Brasileirao: ESPN via espn.py (football-data no publica sus estadisticas). Incremental: solo
+  - Liga MX, Champions League, Europa League, Brasileirao y MLS: ESPN via espn.py (football-data no publica sus estadisticas). Incremental: solo
     pide los dias nuevos y los mezcla con el CSV existente; con --completo rehace desde el inicio configurado.
 Uso: python generar_bbdd.py                    (todas las ligas)
      python generar_bbdd.py premier            (solo una)
@@ -9,6 +9,7 @@ Uso: python generar_bbdd.py                    (todas las ligas)
      python generar_bbdd.py champions --completo (Champions desde la 2025-26)
      python generar_bbdd.py europa --completo    (Europa League desde la 2025-26)
      python generar_bbdd.py brasileirao --completo (Brasileirao desde la temporada 2025)
+     python generar_bbdd.py mls --completo         (MLS desde la temporada 2025)
 """
 from datetime import datetime
 from io import StringIO
@@ -84,6 +85,10 @@ LIGAS = {
     # Brasileirao (Serie A de Brasil): temporadas 2025 y 2026 (ano calendario). Nombres = displayName de ESPN sin acentos.
     "brasileirao": {"fuente": "espn", "espn": "bra.1", "inicio": "2025-03-01", "nombre": "Brasileirao", "pais": "Brasil",
                     "tz": "America/Sao_Paulo", "equipos": {}, "alias": {}, "temporada": espn.temporada_anual},
+    # MLS: temporadas 2025 y 2026 (ano calendario, playoffs incluidos sin proroga). Nombres = displayName de ESPN sin acentos.
+    # Hora local = hora del este de EE. UU. (la de la liga).
+    "mls":        {"fuente": "espn", "espn": "usa.1", "inicio": "2025-02-15", "nombre": "MLS", "pais": "Estados Unidos",
+                   "tz": "America/New_York", "equipos": {}, "alias": {}, "temporada": espn.temporada_anual},
 }
 EQUIPOS = EQUIPOS_LALIGA   # se reasigna por liga en el ciclo principal
 TZ_LOCAL = "Europe/Madrid"
