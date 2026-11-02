@@ -1,5 +1,5 @@
 {
- "fecha": "01/11/2026 20:18 UTC",
+ "fecha": "02/11/2026 21:26 UTC",
  "ligas": {
   "brasileirao": {
    "partidos": 709,
@@ -16,11 +16,11 @@
    "ok": true
   },
   "bundesliga": {
-   "partidos": 369,
-   "ultimo": "25/10/2026",
+   "partidos": 378,
+   "ultimo": "01/11/2026",
    "temporadas": {
     "2025-26": 306,
-    "2026-27": 63
+    "2026-27": 72
    },
    "equipos": 21,
    "vacias": 0,
@@ -41,7 +41,7 @@
    "duplicados": 0,
    "errores": [],
    "avisos": [
-    "ultimo partido hace 11 dias (21/10/2026); revisar si la fuente dejo de actualizar"
+    "ultimo partido hace 12 dias (21/10/2026); revisar si la fuente dejo de actualizar"
    ],
    "ok": true
   },
@@ -56,15 +56,17 @@
    "vacias": 0,
    "duplicados": 0,
    "errores": [],
-   "avisos": [],
+   "avisos": [
+    "ultimo partido hace 11 dias (22/10/2026); revisar si la fuente dejo de actualizar"
+   ],
    "ok": true
   },
   "laliga": {
-   "partidos": 479,
-   "ultimo": "26/10/2026",
+   "partidos": 488,
+   "ultimo": "01/11/2026",
    "temporadas": {
     "2025-26": 380,
-    "2026-27": 99
+    "2026-27": 108
    },
    "equipos": 23,
    "vacias": 0,
@@ -74,11 +76,11 @@
    "ok": true
   },
   "ligamx": {
-   "partidos": 299,
-   "ultimo": "31/10/2026",
+   "partidos": 301,
+   "ultimo": "01/11/2026",
    "temporadas": {
     "Clausura 2026": 167,
-    "Apertura 2026": 132
+    "Apertura 2026": 134
    },
    "equipos": 19,
    "vacias": 0,
@@ -88,11 +90,11 @@
    "ok": true
   },
   "ligue1": {
-   "partidos": 378,
-   "ultimo": "26/10/2026",
+   "partidos": 386,
+   "ultimo": "01/11/2026",
    "temporadas": {
     "2025-26": 306,
-    "2026-27": 72
+    "2026-27": 80
    },
    "equipos": 20,
    "vacias": 0,
@@ -102,11 +104,11 @@
    "ok": true
   },
   "mls": {
-   "partidos": 1022,
-   "ultimo": "31/10/2026",
+   "partidos": 1028,
+   "ultimo": "01/11/2026",
    "temporadas": {
     "2025": 533,
-    "2026": 489
+    "2026": 495
    },
    "equipos": 30,
    "vacias": 0,
@@ -116,11 +118,11 @@
    "ok": true
   },
   "premier": {
-   "partidos": 460,
-   "ultimo": "25/10/2026",
+   "partidos": 469,
+   "ultimo": "01/11/2026",
    "temporadas": {
     "2025-26": 380,
-    "2026-27": 80
+    "2026-27": 89
    },
    "equipos": 23,
    "vacias": 0,
@@ -130,11 +132,11 @@
    "ok": true
   },
   "seriea": {
-   "partidos": 470,
-   "ultimo": "29/10/2026",
+   "partidos": 478,
+   "ultimo": "01/11/2026",
    "temporadas": {
     "2025-26": 380,
-    "2026-27": 90
+    "2026-27": 98
    },
    "equipos": 23,
    "vacias": 2,
