@@ -1,12 +1,12 @@
 {
- "fecha": "04/11/2026 19:25 UTC",
+ "fecha": "05/11/2026 19:31 UTC",
  "ligas": {
   "brasileirao": {
-   "partidos": 712,
-   "ultimo": "03/11/2026",
+   "partidos": 716,
+   "ultimo": "04/11/2026",
    "temporadas": {
     "2025": 380,
-    "2026": 332
+    "2026": 336
    },
    "equipos": 24,
    "vacias": 0,
@@ -30,11 +30,11 @@
    "ok": true
   },
   "champions": {
-   "partidos": 249,
-   "ultimo": "03/11/2026",
+   "partidos": 258,
+   "ultimo": "04/11/2026",
    "temporadas": {
     "2025-26": 186,
-    "2026-27": 63
+    "2026-27": 72
    },
    "equipos": 54,
    "vacias": 0,
