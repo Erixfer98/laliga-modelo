@@ -19,3 +19,9 @@ def test_sin_etiqueta_en_rojas_o_media_cero():
 
 def test_hay_umbral_para_cada_metrica():
     assert set(kuota.UMBRAL_CV) == set(kuota.NOM)
+
+
+def test_sin_cv_con_menos_de_3_partidos():
+    assert kuota._media_cv([7], 0.47) == {"media": 7.0, "cv": None, "n": 1, "limite": 0.47, "estado": None}
+    assert kuota._media_cv([11, 8], 0.33)["cv"] is None
+    assert kuota._media_cv([11, 8, 9], 0.33)["estado"] is not None

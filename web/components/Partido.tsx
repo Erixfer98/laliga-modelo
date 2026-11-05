@@ -86,19 +86,33 @@ export function Lambdas({ d }: { d: Compacto }) {
           <div className="num text-2xl mt-1">{num(x.valor, 2)}</div>
           <div className="text-[11px] text-mut2 mt-1">liga {num(x.liga, 2)}</div>
           {x.forma && (
-            <div className="mt-2 pt-2 border-t border-line2" data-testid="forma">
-              <div className="text-[11px] text-mut2" title={`Últimos ${f!.n} ${x.donde}`}>
-                últ. {f!.n} {x.forma.media == null ? "—" : num(x.forma.media, 2)}
+            <div className="mt-2 pt-2 border-t border-line2" data-testid="forma" title={`Últimos ${x.forma.n} partidos ${x.donde}`}>
+              <div className="grid grid-cols-3 divide-x divide-line2 text-[10px] leading-4">
+                {[
+                  ["Últ.", String(x.forma.n)],
+                  ["Avg.", x.forma.media == null ? "—" : num(x.forma.media, 2)],
+                  ["CV", x.forma.cv == null ? "—" : num(x.forma.cv, 2)],
+                ].map(([t, v]) => (
+                  <div key={t} className="min-w-0 px-0.5">
+                    <div className="text-mut2">{t}</div>
+                    <div className="num text-[11px] text-txt">{v}</div>
+                  </div>
+                ))}
               </div>
-              <div className="text-[11px] text-mut2">CV {x.forma.cv == null ? "—" : num(x.forma.cv, 2)}</div>
-              {x.forma.estado && (
-                <span
-                  className={`inline-block mt-1 px-2 py-0.5 rounded-full border text-[10px] font-bold ${
-                    x.forma.estado === "irregular" ? "border-bad text-bad" : "border-ok text-ok"
-                  }`}
-                >
-                  {x.forma.estado === "irregular" ? "Irregular" : "Regular"}
+              {x.forma.n < 3 ? (
+                <span className="inline-block mt-1 px-2 py-0.5 rounded-full border border-line2 text-[10px] font-bold text-mut2">
+                  Pocos partidos
                 </span>
+              ) : (
+                x.forma.estado && (
+                  <span
+                    className={`inline-block mt-1 px-2 py-0.5 rounded-full border text-[10px] font-bold ${
+                      x.forma.estado === "irregular" ? "border-bad text-bad" : "border-ok text-ok"
+                    }`}
+                  >
+                    {x.forma.estado === "irregular" ? "Irregular" : "Regular"}
+                  </span>
+                )
               )}
             </div>
           )}

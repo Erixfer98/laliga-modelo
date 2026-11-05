@@ -157,14 +157,16 @@ def historial(df: pd.DataFrame, equipo: str, met: str, n: int, condicion: str = 
 UMBRAL_CV = {"goles": (0.76, 0.56), "goles_1t": (1.37, 0.85), "goles_2t": (1.05, 0.76), "tiros": (0.34, 0.22),
              "tiros_a_puerta": (0.47, 0.33), "corners": (0.52, 0.34), "faltas": (0.28, 0.22), "amarillas": (0.63, 0.49),
              "rojas": (None, None)}
+MIN_PARTIDOS_CV = 3  # con menos partidos no se da CV ni etiqueta: no hay variación que medir
 
 
 def _media_cv(valores, limite: float = None) -> dict:
     """Media y coeficiente de variación (desviación estándar muestral / media) de una serie de partidos.
+    Sin CV con menos de MIN_PARTIDOS_CV partidos o media 0.
     estado = «irregular» si el CV pasa el límite del mercado, «regular» si no; None sin CV o sin límite."""
     v = pd.Series(valores, dtype=float).dropna()
     media = float(v.mean()) if len(v) else None
-    cv = float(v.std(ddof=1) / media) if len(v) >= 2 and media else None
+    cv = float(v.std(ddof=1) / media) if len(v) >= MIN_PARTIDOS_CV and media else None
     estado = None if cv is None or limite is None else ("irregular" if cv > limite else "regular")
     return {"media": media, "cv": cv, "n": int(len(v)), "limite": limite, "estado": estado}
 
