@@ -114,6 +114,11 @@ export function Lambdas({ d }: { d: Compacto }) {
                   </span>
                 )
               )}
+              {x.forma.limite != null && (
+                <div className="text-[10px] text-mut2 mt-1" data-testid="corte-cv">
+                  Corte CV {num(x.forma.limite, 2)}
+                </div>
+              )}
             </div>
           )}
         </div>

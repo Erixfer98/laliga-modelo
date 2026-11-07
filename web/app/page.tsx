@@ -10,7 +10,6 @@ import { identidadSeleccion } from "@/lib/selecciones";
 import { usePartido } from "@/components/Selectores";
 import { CaraACara, Equipos, HojaMercado, Lambdas, TablaMercados } from "@/components/Partido";
 import { ErrorBox } from "@/components/ui";
-import { num } from "@/lib/fmt";
 
 const NS = [5, 10];
 
@@ -114,7 +113,7 @@ export default function Partido() {
             {filtro === "Todos" ? "" : ` (${local} solo en casa, ${visitante} solo fuera)`}. En los mercados de un equipo, la columna del rival cuenta lo que el rival recibió.
             Últ. = partidos usados: hasta 5 de {local} en casa y 5 de {visitante} fuera (el total junta los dos). Avg. = promedio. CV = cuánto varía de un partido a otro; se da desde 3 partidos.
             {d.forma?.local.limite != null
-              ? ` Irregular = CV arriba del típico en ${METRICAS[met].toLowerCase()}: ${num(d.forma.local.limite, 2)} por equipo, ${num(d.forma.total.limite!, 2)} en el total.`
+              ? " Irregular = CV arriba del corte, que es el CV típico de este mercado en las 10 ligas."
               : " En este mercado no hay etiqueta: casi nunca hay suficientes casos para medir cuánto varía."}
           </p>
           <TablaMercados d={d} enBoleto={enBoleto} abrir={setAbierto} masLineas={masLineas} />
