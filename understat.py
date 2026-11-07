@@ -45,9 +45,9 @@ def _partidos_crudos(liga_us: str, anio: int) -> list:
     m = re.search(r"datesData\s*=\s*JSON\.parse\('(.*?)'\)", p.text)
     if m:
         return json.loads(codecs.decode(m.group(1), "unicode_escape"))
-    with open(f"datos/_understat_{liga_us}.html", "w") as f:   # TEMPORAL: diagnóstico
-        f.write(f"<!-- pagina {p.status_code} {p.url} | json {r.status_code} {r.url} {dict(r.headers)} -->\n{r.text}\n<!-- ===== pagina ===== -->\n{p.text}")
-    raise RuntimeError(f"página {p.status_code} ({len(p.text)} car.), getLeagueData {r.status_code} {r.headers.get('content-type')} ({len(r.text)} car.)")
+    if "come back soon" in p.text:
+        raise RuntimeError("Understat está en mantenimiento («We will come back soon»)")
+    raise RuntimeError(f"Understat cambió el formato (página {p.status_code}, getLeagueData {r.headers.get('content-type')})")
 
 
 def descargar(liga_us: str) -> pd.DataFrame:

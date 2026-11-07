@@ -1,12 +1,12 @@
 {
- "fecha": "07/11/2026 13:52 UTC",
+ "fecha": "06/11/2026 18:56 UTC",
  "ligas": {
   "brasileirao": {
-   "partidos": 719,
-   "ultimo": "06/11/2026",
+   "partidos": 718,
+   "ultimo": "05/11/2026",
    "temporadas": {
     "2025": 380,
-    "2026": 339
+    "2026": 338
    },
    "equipos": 24,
    "vacias": 0,
@@ -72,11 +72,11 @@
    "ok": true
   },
   "ligamx": {
-   "partidos": 304,
-   "ultimo": "06/11/2026",
+   "partidos": 301,
+   "ultimo": "01/11/2026",
    "temporadas": {
     "Clausura 2026": 167,
-    "Apertura 2026": 137
+    "Apertura 2026": 134
    },
    "equipos": 19,
    "vacias": 0,
