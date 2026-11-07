@@ -38,11 +38,13 @@ def _partidos_crudos(liga_us: str, anio: int) -> list:
         r.raise_for_status()
         return r.json()["dates"]
     except Exception as e:
-        primero = f"getLeagueData: {type(e).__name__} {str(e)[:120]}"
+        primero = (f"getLeagueData: {type(e).__name__} {str(e)[:80]} [{r.status_code} {r.headers.get('content-type')} "
+                   f"{r.headers.get('content-encoding')} {r.text[:150]!r}]" if "r" in locals() else str(e)[:120])
     r = requests.get(f"https://understat.com/league/{liga_us}/{anio}", headers=CABECERAS, timeout=30)
     m = re.search(r"datesData\s*=\s*JSON\.parse\('(.*?)'\)", r.text)
     if not m:
-        raise RuntimeError(f"{primero} | página {r.status_code}, {len(r.text)} caracteres, sin datesData")
+        pistas = re.findall(r"(?:src=\"[^\"]+\.js[^\"]*\"|getLeagueData[^;]{0,80}|var \w+Data)", r.text)[:12]
+        raise RuntimeError(f"{primero} | página {r.status_code}, {len(r.text)} caracteres, sin datesData; pistas {pistas}")
     return json.loads(codecs.decode(m.group(1), "unicode_escape"))
 
 
