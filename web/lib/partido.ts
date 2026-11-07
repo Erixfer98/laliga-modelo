@@ -24,6 +24,8 @@ export type MercadoCorto = {
   seleccion: Seleccion;
 };
 export type Forma = { media: number | null; cv: number | null; n: number; limite: number | null; estado: "regular" | "irregular" | null };
+export type XGEquipo = { favor: Forma; contra: Forma };
+export type XG = { n: number; fuente: string; local: XGEquipo; visitante: XGEquipo };
 export type Compacto = {
   liga: string;
   nombre_liga: string;
@@ -36,6 +38,8 @@ export type Compacto = {
   medias_liga: { local: number; visitante: number; total: number };
   /** Últimos 5: local en casa, visitante fuera; total = los 10 partidos juntos. cv = desviación / media. */
   forma?: { n: number; local: Forma; visitante: Forma; total: Forma };
+  /** xG de Understat (solo métrica goles y las 5 ligas europeas): local en casa, visitante fuera. */
+  xg?: XG | null;
   cfg: Cfg;
   grupos: string[];
   n: number;

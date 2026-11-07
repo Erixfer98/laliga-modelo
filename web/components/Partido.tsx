@@ -1,7 +1,7 @@
 "use client";
 // Piezas de la pantalla de partido: cabecera con equipos, λ, tabla de mercados, cara a cara y hoja de un mercado.
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import {
   api,
   METRICAS,
@@ -10,7 +10,7 @@ import {
   type Pata,
   type VistaCara,
 } from "@/lib/api";
-import type { Compacto, MercadoCorto } from "@/lib/partido";
+import type { Compacto, Forma, MercadoCorto } from "@/lib/partido";
 import { identidadSeleccion } from "@/lib/selecciones";
 import { fechaCorta, num, pct, signed } from "@/lib/fmt";
 import { Crest } from "./Crest";
@@ -79,48 +79,90 @@ export function Lambdas({ d }: { d: Compacto }) {
     { nombre: "Total", valor: d.lambda_local + d.lambda_visitante, liga: d.medias_liga.total, forma: f?.total, donde: "ambos" },
   ];
   return (
-    <div className="grid grid-cols-3 gap-2" data-testid="lambdas">
-      {items.map((x) => (
-        <div key={x.nombre} className="rounded-xl bg-card border border-line2 px-2 py-3 text-center min-w-0">
-          <div className="text-[11px] font-semibold text-mut truncate">λ {x.nombre}</div>
-          <div className="num text-2xl mt-1">{num(x.valor, 2)}</div>
-          <div className="text-[11px] text-mut2 mt-1">liga {num(x.liga, 2)}</div>
-          {x.forma && (
-            <div className="mt-2 pt-2 border-t border-line2" data-testid="forma" title={`Últimos ${x.forma.n} partidos ${x.donde}`}>
-              <div className="grid grid-cols-3 divide-x divide-line2 text-[10px] leading-4">
-                {[
-                  ["Últ.", String(x.forma.n)],
-                  ["Avg.", x.forma.media == null ? "—" : num(x.forma.media, 2)],
-                  ["CV", x.forma.cv == null ? "—" : num(x.forma.cv, 2)],
-                ].map(([t, v]) => (
-                  <div key={t} className="min-w-0 px-0.5">
-                    <div className="text-mut2">{t}</div>
-                    <div className="num text-[11px] text-txt">{v}</div>
-                  </div>
-                ))}
-              </div>
-              {x.forma.n < 3 ? (
-                <span className="inline-block mt-1 px-2 py-0.5 rounded-full border border-line2 text-[10px] font-bold text-mut2">
-                  Pocos partidos
-                </span>
-              ) : (
-                x.forma.estado && (
-                  <span
-                    className={`inline-block mt-1 px-2 py-0.5 rounded-full border text-[10px] font-bold ${
-                      x.forma.estado === "irregular" ? "border-bad text-bad" : "border-ok text-ok"
-                    }`}
-                  >
-                    {x.forma.estado === "irregular" ? "Irregular" : "Regular"}
-                  </span>
-                )
-              )}
-              {x.forma.limite != null && (
-                <div className="text-[10px] text-mut2 mt-1" data-testid="corte-cv">
-                  Corte CV {num(x.forma.limite, 2)}
+    <div className="space-y-2">
+      <div className="grid grid-cols-3 gap-2" data-testid="lambdas">
+        {items.map((x) => (
+          <div key={x.nombre} className="rounded-xl bg-card border border-line2 px-2 py-3 text-center min-w-0">
+            <div className="text-[11px] font-semibold text-mut truncate">λ {x.nombre}</div>
+            <div className="num text-2xl mt-1">{num(x.valor, 2)}</div>
+            <div className="text-[11px] text-mut2 mt-1">liga {num(x.liga, 2)}</div>
+            {x.forma && (
+              <div className="mt-2 pt-2 border-t border-line2" data-testid="forma" title={`Últimos ${x.forma.n} partidos ${x.donde}`}>
+                <div className="grid grid-cols-3 divide-x divide-line2 text-[10px] leading-4">
+                  {[
+                    ["Últ.", String(x.forma.n)],
+                    ["Avg.", x.forma.media == null ? "—" : num(x.forma.media, 2)],
+                    ["CV", x.forma.cv == null ? "—" : num(x.forma.cv, 2)],
+                  ].map(([t, v]) => (
+                    <div key={t} className="min-w-0 px-0.5">
+                      <div className="text-mut2">{t}</div>
+                      <div className="num text-[11px] text-txt">{v}</div>
+                    </div>
+                  ))}
                 </div>
-              )}
-            </div>
-          )}
+                {x.forma.n < 3 ? (
+                  <span className="inline-block mt-1 px-2 py-0.5 rounded-full border border-line2 text-[10px] font-bold text-mut2">
+                    Pocos partidos
+                  </span>
+                ) : (
+                  x.forma.estado && (
+                    <span
+                      className={`inline-block mt-1 px-2 py-0.5 rounded-full border text-[10px] font-bold ${
+                        x.forma.estado === "irregular" ? "border-bad text-bad" : "border-ok text-ok"
+                      }`}
+                    >
+                      {x.forma.estado === "irregular" ? "Irregular" : "Regular"}
+                    </span>
+                  )
+                )}
+                {x.forma.limite != null && (
+                  <div className="text-[10px] text-mut2 mt-1" data-testid="corte-cv">
+                    Corte CV {num(x.forma.limite, 2)}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+      {d.xg && <TarjetaXG d={d} />}
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------ xG (Understat): local en casa, visitante fuera
+function TarjetaXG({ d }: { d: Compacto }) {
+  const xg = d.xg!;
+  const lados = [
+    { nombre: d.local, x: xg.local, donde: "en casa" },
+    { nombre: d.visitante, x: xg.visitante, donde: "fuera" },
+  ];
+  const celdas = (f: Forma) => [String(f.n), f.media == null ? "—" : num(f.media, 2), f.cv == null ? "—" : num(f.cv, 2)];
+  return (
+    <div className="grid grid-cols-2 gap-2" data-testid="xg">
+      {lados.map(({ nombre, x, donde }) => (
+        <div
+          key={nombre}
+          className="rounded-xl bg-card border border-line2 px-2 py-2.5 min-w-0"
+          title={`Últimos ${xg.n} partidos ${donde} · xG de ${xg.fuente}`}
+        >
+          <div className="text-[11px] font-semibold text-mut truncate text-center">
+            xG {nombre} <span className="font-normal text-mut2">({donde})</span>
+          </div>
+          <div className="grid grid-cols-[auto_1fr_1fr_1fr] gap-x-1 mt-1.5 text-[10px] leading-4 text-center">
+            <span />
+            {["Últ.", "Avg.", "CV"].map((t) => (
+              <span key={t} className="text-mut2">{t}</span>
+            ))}
+            {([["A favor", x.favor], ["En contra", x.contra]] as const).map(([t, f]) => (
+              <Fragment key={t}>
+                <span className="text-mut2 text-left">{t}</span>
+                {celdas(f).map((v, i) => (
+                  <span key={i} className="num text-[11px] text-txt">{v}</span>
+                ))}
+              </Fragment>
+            ))}
+          </div>
         </div>
       ))}
     </div>
