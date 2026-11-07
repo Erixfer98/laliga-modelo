@@ -11,6 +11,7 @@ Archivos del paquete (todos van en la raíz del repositorio):
 |---|---|
 | `generar_bbdd_laliga.py` | Tu notebook, como script. Descarga football-data.co.uk y escribe `datos/bbdd_laliga.xlsx` y `.csv` |
 | `espn.py` | Fuente ESPN para Liga MX (scoreboard + summary de `mex.1`). Incremental: solo pide los días nuevos |
+| `understat.py` | xG por partido desde Understat (5 ligas europeas) → `datos/xg_<liga>.csv`. Empareja nombres por calendario. Si Understat falla, no frena el Action |
 | `modelo.py` | Fuerzas con el Modelo B (ver `docs/MODELO_B.md`) y Poisson (+ Dixon-Coles en goles) para las 9 métricas. Rango bajo–alto de cada λ (promedio ± t·desv/√n, 80%), prob. pesimista/optimista por mercado y varianza de cada equipo vs la liga |
 | `kuota.py` | Motor: todo lo que calcula la app (mercados, calificación, boleto, tabla, cara a cara) en funciones que devuelven datos. Sin pantalla |
 | `app.py` | Web app (Streamlit): solo pantalla, llama a `kuota.py` |
