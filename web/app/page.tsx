@@ -42,8 +42,8 @@ export default function Partido() {
   const masLineas = (grupo: string) => {
     if (!d) return;
     const actual = cfgs[met] ?? d.cfg;
-    const [centro, rango] = actual[grupo];
-    setLineas({ partido, cfgs: { ...cfgs, [met]: { ...actual, [grupo]: [centro, rango + 1] } } });
+    const [centro, abajo, arriba = abajo] = actual[grupo];
+    setLineas({ partido, cfgs: { ...cfgs, [met]: { ...actual, [grupo]: [centro, abajo + 1, arriba + 1] } } });
   };
 
   // Si el servidor estaba dormido tarda ~1 min: se avisa a los 5 s.

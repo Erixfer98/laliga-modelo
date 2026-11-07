@@ -257,21 +257,27 @@ def stats_historial(h: pd.DataFrame, linea: float, over: bool) -> dict:
 
 
 # ================================================================== mercados (linea configurable)
-def lineas(centro: float, rango: int) -> list:
-    return [x for x in np.arange(centro - rango, centro + rango + 0.01, 1.0) if x >= 0]
+def lineas(centro: float, abajo: int, arriba: int = None) -> list:
+    """Lineas de centro - abajo a centro + arriba, de 1 en 1 (sin arriba: simetrico)."""
+    arriba = abajo if arriba is None else arriba
+    return [x for x in np.arange(centro - abajo, centro + arriba + 0.01, 1.0) if x >= 0]
 
 
-def centro_defecto(lam: float, met: str) -> float:
-    if met == "goles": return 2.5
-    if met in GOL: return 1.5
-    if met == "rojas": return 0.5
-    return max(round(lam) - 0.5, 0.5)
+LINEAS_ABAJO, LINEAS_ARRIBA = 5, 3   # por defecto: 5 lineas por debajo de λ y 3 por encima (pedido de Erick, 07/11/2026)
+
+
+def centro_defecto(lam: float, met: str = None) -> float:
+    """Linea .5 inmediatamente por debajo de λ (ej. 26.96 -> 26.5; 26.40 -> 25.5); minimo 0.5."""
+    return max(math.floor(lam - 0.5) + 0.5, 0.5)
 
 
 def cfg_defecto(lam_l: float, lam_v: float, met: str, local: str, visitante: str) -> dict:
-    """Lineas iniciales por grupo: {grupo: [centro, ± lineas]}."""
-    return {"Total": [centro_defecto(lam_l + lam_v, met), 2 if met == "goles" else 1],
-            local: [centro_defecto(lam_l, met), 1], visitante: [centro_defecto(lam_v, met), 1]}
+    """Lineas iniciales por grupo: {grupo: [centro, lineas abajo, lineas arriba]}. El centro ya es la 1a linea por debajo
+    de λ, por eso abajo = LINEAS_ABAJO - 1 (ej. tiros λ 26.96 -> 22.5 ... 29.5)."""
+    def una(lam):
+        c = centro_defecto(lam)
+        return [c, LINEAS_ABAJO - 1, LINEAS_ARRIBA] if c <= lam else [c, 0, LINEAS_ARRIBA - 1]   # λ < 0.5: no hay lineas abajo
+    return {"Total": una(lam_l + lam_v), local: una(lam_l), visitante: una(lam_v)}
 
 
 def mercados(r: dict, met: str, local: str, visitante: str, cfg: dict, _memo=None) -> list:
@@ -334,16 +340,17 @@ def analizar_partido(df: pd.DataFrame, local: str, visitante: str, met: str, inc
         cfg = cfg_defecto(lam_l, lam_v, met, local, visitante)
     if set(cfg) != {"Total", local, visitante}:
         raise ValueError("cfg debe incluir Total y ambos equipos")
-    if any(not isinstance(v, (list, tuple)) or len(v) != 2 for v in cfg.values()):
-        raise ValueError("cada cfg requiere [centro, amplitud]")
-    for centro, amplitud in cfg.values():
+    if any(not isinstance(v, (list, tuple)) or len(v) not in (2, 3) for v in cfg.values()):
+        raise ValueError("cada cfg requiere [centro, amplitud] o [centro, abajo, arriba]")
+    for centro, *amplitudes in cfg.values():
         try:
             pr.validar_linea(float(centro))
         except (ValueError, TypeError) as exc:
             raise ValueError("centro de línea inválido") from exc
-        if not isinstance(amplitud, (int, float)) or not float(amplitud).is_integer() or not 0 <= amplitud <= 10:
-            raise ValueError("amplitud de líneas debe ser un entero entre 0 y 10")
-    cfg = {key: [float(value[0]), int(value[1])] for key, value in cfg.items()}
+        for amplitud in amplitudes:
+            if not isinstance(amplitud, (int, float)) or not float(amplitud).is_integer() or not 0 <= amplitud <= 10:
+                raise ValueError("amplitud de líneas debe ser un entero entre 0 y 10")
+    cfg = {key: [float(value[0]), *(int(a) for a in value[1:])] for key, value in cfg.items()}
     lst = mercados(r, met, local, visitante, cfg, _memo=_memo)
     for mk in lst:
         mk["seleccion"] = {"liga": df.attrs.get("liga"), "local": local, "visitante": visitante,
@@ -743,7 +750,7 @@ DICCIONARIO = [
     ("Mercados", "Cuota justa", "(1 − probabilidad de devolución) dividido entre probabilidad de acierto. Si el acierto es imposible, no está disponible. Es la cuota a la que no ganas ni pierdes a largo plazo. Si la casa paga más que la justa, hay valor."),
     ("Mercados", "EV (valor esperado)", "probabilidad de acierto × cuota + probabilidad de devolución − 1. Positivo = a largo plazo ganas; negativo = pierdes. EV +0.10 = ganas 10 centavos por cada Q1 apostado, en promedio."),
     ("Mercados", "Over / Under", "Más de / menos de una línea. Total Over 2.5 goles = 3 o más goles en el partido. Las líneas .5 no permiten devolución; en líneas enteras la igualdad devuelve la apuesta y no cuenta como acierto."),
-    ("Mercados", "Línea y ± líneas", "Línea = el centro que quieres ver (ej. 9.5 corners). ± líneas = cuántas líneas alrededor mostrar (±2 con 9.5 muestra 7.5, 8.5, 9.5, 10.5 y 11.5)."),
+    ("Mercados", "Línea y ± líneas", "Línea = el centro que quieres ver (ej. 9.5 corners). ± líneas = cuántas líneas alrededor mostrar (±2 con 9.5 muestra 7.5, 8.5, 9.5, 10.5 y 11.5). Por defecto se muestran 5 líneas por debajo de λ y 3 por encima (λ 26.96 tiros → 22.5 a 29.5)."),
     ("Mercados", "1X2 / doble oportunidad", "1 = gana local, X = empate, 2 = gana visitante. 1X = local o empate; X2 = visitante o empate."),
     ("Mercados", "Ambos anotan (BTTS)", "Sí = los dos equipos marcan al menos un gol. No = al menos uno se queda en cero."),
     ("Mercados", "Total / Local / Visitante", "Grupos de mercados. Total suma los dos equipos; Local y Visitante son la métrica de un solo equipo."),
