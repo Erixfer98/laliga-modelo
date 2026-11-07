@@ -1,0 +1,18 @@
+{
+  "synthetic": true,
+  "real_provider_calls": 0,
+  "fixtures": 60,
+  "leagues": 6,
+  "discovery_seconds": 12.43575830699956,
+  "cached_rerun_seconds": 0.9105645829986315,
+  "mock_requests": [
+    12,
+    0
+  ],
+  "peak_python_mib": 1.0824565887451172,
+  "sqlite_bytes": 344064,
+  "verified": {
+    "fixtures": 60,
+    "captures": 12
+  }
+}
