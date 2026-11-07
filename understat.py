@@ -31,21 +31,23 @@ COLUMNAS = ["temporada_txt", "fecha_dt", "equipo_local_txt", "equipo_visitante_t
 
 
 def _partidos_crudos(liga_us: str, anio: int) -> list:
-    """Lista de partidos de Understat (formato propio). Primero el JSON que usa la página; si no, el que venía incrustado en el HTML."""
+    """Lista de partidos de Understat (formato propio). Se visita primero la página de la liga (cookies) y después
+    se pide el JSON que usa esa página; si no llega, se busca el que venía incrustado en el HTML."""
+    pagina = f"https://understat.com/league/{liga_us}/{anio}"
+    with requests.Session() as s:
+        s.headers.update(CABECERAS)
+        p = s.get(pagina, timeout=30)
+        r = s.get(f"https://understat.com/getLeagueData/{liga_us}/{anio}", headers={"Referer": pagina}, timeout=30)
     try:
-        r = requests.get(f"https://understat.com/getLeagueData/{liga_us}/{anio}", timeout=30,
-                         headers={**CABECERAS, "Referer": f"https://understat.com/league/{liga_us}/{anio}"})
-        r.raise_for_status()
         return r.json()["dates"]
-    except Exception as e:
-        primero = (f"getLeagueData: {type(e).__name__} {str(e)[:80]} [{r.status_code} {r.headers.get('content-type')} "
-                   f"{r.headers.get('content-encoding')} {r.text[:150]!r}]" if "r" in locals() else str(e)[:120])
-    r = requests.get(f"https://understat.com/league/{liga_us}/{anio}", headers=CABECERAS, timeout=30)
-    m = re.search(r"datesData\s*=\s*JSON\.parse\('(.*?)'\)", r.text)
-    if not m:
-        pistas = re.findall(r"(?:src=\"[^\"]+\.js[^\"]*\"|getLeagueData[^;]{0,80}|var \w+Data)", r.text)[:12]
-        raise RuntimeError(f"{primero} | página {r.status_code}, {len(r.text)} caracteres, sin datesData; pistas {pistas}")
-    return json.loads(codecs.decode(m.group(1), "unicode_escape"))
+    except Exception:
+        pass
+    m = re.search(r"datesData\s*=\s*JSON\.parse\('(.*?)'\)", p.text)
+    if m:
+        return json.loads(codecs.decode(m.group(1), "unicode_escape"))
+    with open(f"datos/_understat_{liga_us}.html", "w") as f:   # TEMPORAL: diagnóstico
+        f.write(f"<!-- pagina {p.status_code} {p.url} | json {r.status_code} {r.url} {dict(r.headers)} -->\n{r.text}\n<!-- ===== pagina ===== -->\n{p.text}")
+    raise RuntimeError(f"página {p.status_code} ({len(p.text)} car.), getLeagueData {r.status_code} {r.headers.get('content-type')} ({len(r.text)} car.)")
 
 
 def descargar(liga_us: str) -> pd.DataFrame:
