@@ -36,13 +36,13 @@ def _partidos_crudos(liga_us: str, anio: int) -> list:
         r = requests.get(f"https://understat.com/getLeagueData/{liga_us}/{anio}", headers=CABECERAS, timeout=30)
         r.raise_for_status()
         return r.json()["dates"]
-    except Exception:
-        r = requests.get(f"https://understat.com/league/{liga_us}/{anio}", headers=CABECERAS, timeout=30)
-        r.raise_for_status()
-        m = re.search(r"datesData\s*=\s*JSON\.parse\('(.*?)'\)", r.text)
-        if not m:
-            raise RuntimeError(f"Understat cambió el formato de {liga_us} {anio}")
-        return json.loads(codecs.decode(m.group(1), "unicode_escape"))
+    except Exception as e:
+        primero = f"getLeagueData: {type(e).__name__} {str(e)[:120]}"
+    r = requests.get(f"https://understat.com/league/{liga_us}/{anio}", headers=CABECERAS, timeout=30)
+    m = re.search(r"datesData\s*=\s*JSON\.parse\('(.*?)'\)", r.text)
+    if not m:
+        raise RuntimeError(f"{primero} | página {r.status_code}, {len(r.text)} caracteres, sin datesData")
+    return json.loads(codecs.decode(m.group(1), "unicode_escape"))
 
 
 def descargar(liga_us: str) -> pd.DataFrame:
@@ -89,10 +89,10 @@ def construir(liga: str, carpeta: str = "datos", us: pd.DataFrame = None) -> pd.
     us = us.assign(equipo_local_txt=us.us_local.map(mapa), equipo_visitante_txt=us.us_visitante.map(mapa))
     sin_nombre = sorted(set(us.us_local[us.equipo_local_txt.isna()]) | set(us.us_visitante[us.equipo_visitante_txt.isna()]))
     if sin_nombre:
-        print(f"AVISO {liga}: equipos de Understat sin pareja en la BBDD: {sin_nombre}")
+        print(f"::warning::xG {liga}: equipos de Understat sin pareja en la BBDD: {sin_nombre}")
     llave = ["temporada_txt", "equipo_local_txt", "equipo_visitante_txt"]
     xg = bbdd[llave + ["fecha_dt"]].merge(us.dropna(subset=llave)[llave + ["xg_local_val", "xg_visitante_val"]], on=llave, how="inner")
-    print(f"{liga}: xG en {len(xg)} de {len(bbdd)} partidos de la BBDD ({len(xg) / max(len(bbdd), 1):.0%})")
+    print(f"::notice::xG {liga}: {len(xg)} de {len(bbdd)} partidos de la BBDD ({len(xg) / max(len(bbdd), 1):.0%})")
     return xg[COLUMNAS]
 
 
@@ -107,7 +107,7 @@ def main(ligas: list) -> int:
                 print(f"AVISO {liga}: Understat no devolvió partidos; se deja el CSV anterior")
         except Exception as e:   # Understat caído o cambió: no frena el resto
             fallos += 1
-            print(f"AVISO {liga}: no se pudo bajar el xG de Understat ({e})")
+            print(f"::warning::xG {liga}: no se pudo bajar de Understat ({e})")
     return fallos
 
 
