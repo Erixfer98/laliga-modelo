@@ -33,7 +33,8 @@ COLUMNAS = ["temporada_txt", "fecha_dt", "equipo_local_txt", "equipo_visitante_t
 def _partidos_crudos(liga_us: str, anio: int) -> list:
     """Lista de partidos de Understat (formato propio). Primero el JSON que usa la página; si no, el que venía incrustado en el HTML."""
     try:
-        r = requests.get(f"https://understat.com/getLeagueData/{liga_us}/{anio}", headers=CABECERAS, timeout=30)
+        r = requests.get(f"https://understat.com/getLeagueData/{liga_us}/{anio}", timeout=30,
+                         headers={**CABECERAS, "Referer": f"https://understat.com/league/{liga_us}/{anio}"})
         r.raise_for_status()
         return r.json()["dates"]
     except Exception as e:
