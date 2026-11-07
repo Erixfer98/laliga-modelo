@@ -39,12 +39,6 @@ export default function Partido() {
   const enBoleto = new Set(
     d ? d.mercados.filter((m) => boleto.some((l) => identidadSeleccion(l.seleccion) === identidadSeleccion(m.seleccion))).map((m) => m.mercado) : [],
   );
-  const masLineas = (grupo: string) => {
-    if (!d) return;
-    const actual = cfgs[met] ?? d.cfg;
-    const [centro, abajo, arriba = abajo] = actual[grupo];
-    setLineas({ partido, cfgs: { ...cfgs, [met]: { ...actual, [grupo]: [centro, abajo + 1, arriba + 1] } } });
-  };
 
   // Si el servidor estaba dormido tarda ~1 min: se avisa a los 5 s.
   const [lento, setLento] = useState(false);
@@ -116,7 +110,7 @@ export default function Partido() {
               ? " Irregular = CV arriba del corte, que es el CV típico de este mercado en las 10 ligas."
               : " En este mercado no hay etiqueta: casi nunca hay suficientes casos para medir cuánto varía."}
           </p>
-          <TablaMercados d={d} enBoleto={enBoleto} abrir={setAbierto} masLineas={masLineas} />
+          <TablaMercados d={d} enBoleto={enBoleto} abrir={setAbierto} />
         </div>
       )}
 

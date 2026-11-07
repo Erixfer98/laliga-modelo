@@ -116,7 +116,7 @@ test("las 9 métricas se cargan una vez; cambiar de métrica no vuelve a pedir",
   expect(pedidos.length).toBe(antes);
 });
 
-test("últimos 10, casa/fuera y más líneas", async ({ page }) => {
+test("últimos 10, casa/fuera y líneas de 5 abajo a 3 arriba de λ", async ({ page }) => {
   await page.goto("/");
   const total = page.getByRole("region", { name: /^Total de / });
   await expect(total.getByTestId("fila-mercado").first()).toBeVisible();
@@ -124,9 +124,9 @@ test("últimos 10, casa/fuera y más líneas", async ({ page }) => {
   await expect(total.getByTestId("fila-mercado").first()).toContainText(/\/10/);
   await page.getByRole("button", { name: "Casa / fuera", exact: true }).click();
   await expect(page.getByRole("button", { name: "Casa / fuera", exact: true })).toHaveAttribute("aria-pressed", "true");
-  const antes = await total.getByTestId("fila-mercado").count();
-  await total.getByRole("button", { name: "Más líneas" }).click();
-  await expect.poll(() => total.getByTestId("fila-mercado").count()).toBe(antes + 2);
+  await expect(total.getByTestId("fila-mercado").first()).toBeVisible();
+  expect(await total.getByTestId("fila-mercado").count()).toBeGreaterThan(6);
+  await expect(total.getByRole("button", { name: "Más líneas" })).toHaveCount(0);
 });
 
 test("cambio de equipos y métrica no conserva la cuota de otro mercado", async ({ page }) => {
