@@ -841,7 +841,7 @@ else:
         a, b = st.columns([1, 1])
         centro = a.number_input(f"Línea {grp[:14]}", 0.5, 60.5, float(cfg[grp][0]), 1.0, key=f"c_{key}_{grp}")
         rango = b.selectbox("± líneas", [0, 1, 2, 3, 4], index=cfg[grp][1], key=f"r_{key}_{grp}")
-        if [centro, rango] != cfg[grp]:
+        if [centro, rango] != cfg[grp][:2]:
             cfg[grp] = [centro, rango]; st.rerun()
 
     def sv(mk):

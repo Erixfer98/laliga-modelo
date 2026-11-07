@@ -154,12 +154,10 @@ export function TablaMercados({
   d,
   enBoleto,
   abrir,
-  masLineas,
 }: {
   d: Compacto;
   enBoleto: Set<string>;
   abrir: (m: MercadoCorto) => void;
-  masLineas: (grupo: string) => void;
 }) {
   const orden = ["Total", d.local, d.visitante, "Resultado", "Mayor número"].filter((g) =>
     d.grupos.includes(g),
@@ -169,8 +167,6 @@ export function TablaMercados({
       {orden.map((g) => {
         const filas = d.mercados.filter((m) => m.grupo === g);
         const sinVentaja = filas.every((m) => m.ventaja === "sin ventaja");
-        const ou = g === "Total" || g === d.local || g === d.visitante;
-        const rango = d.cfg[g]?.[1] ?? 0;
         return (
           <section key={g} aria-label={tituloGrupo(g, d)} className="rounded-card bg-card border border-line2 px-3 pt-3 pb-1">
             <div className="flex items-center justify-between gap-2 mb-1">
@@ -212,15 +208,6 @@ export function TablaMercados({
                 </li>
               ))}
             </ul>
-            {ou && rango < 4 && (
-              <button
-                type="button"
-                onClick={() => masLineas(g)}
-                className="w-full min-h-11 text-xs font-semibold text-acc"
-              >
-                Más líneas
-              </button>
-            )}
           </section>
         );
       })}

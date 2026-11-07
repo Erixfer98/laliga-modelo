@@ -220,7 +220,8 @@ export type Pata = Mercado & {
   stats_local: Stats;
   stats_visitante: Stats;
 };
-export type Cfg = Record<string, [number, number]>;
+/** Por grupo: [centro, ± líneas] o [centro, líneas abajo, líneas arriba]. */
+export type Cfg = Record<string, [number, number] | [number, number, number]>;
 
 export type VistaPartido = {
   liga: string;
