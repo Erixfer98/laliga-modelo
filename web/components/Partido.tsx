@@ -82,22 +82,22 @@ export function Lambdas({ d }: { d: Compacto }) {
     <div className="space-y-2">
       <div className="grid grid-cols-3 gap-2" data-testid="lambdas">
         {items.map((x) => (
-          <div key={x.nombre} className="rounded-xl bg-card border border-line2 px-2 py-3 text-center min-w-0">
+          <div key={x.nombre} className="rounded-xl bg-card border border-line2 px-1.5 py-3 text-center min-w-0">
             <div className="text-[11px] font-semibold text-mut truncate">λ {x.nombre}</div>
             <div className="num text-2xl mt-1">{num(x.valor, 2)}</div>
             <div className="text-[11px] text-mut2 mt-1">liga {num(x.liga, 2)}</div>
             {x.forma && (
               <div className="mt-2 pt-2 border-t border-line2" data-testid="forma" title={`Últimos ${x.forma.n} partidos ${x.donde}`}>
-                <div className="grid grid-cols-2 gap-y-1 text-[10px] leading-4">
+                <div className="grid grid-cols-[auto_1fr_1fr_1fr] divide-x divide-line2 text-[10px] leading-4">
                   {[
                     ["Últ.", String(x.forma.n)],
-                    ["Avg.", x.forma.media == null ? "—" : num(x.forma.media, 2)],
-                    ["Med.", x.forma.mediana == null ? "—" : num(x.forma.mediana, 1)],
+                    ["Avg.", x.forma.media == null ? "—" : num(x.forma.media, x.forma.media >= 10 ? 1 : 2)],
+                    ["Med.", x.forma.mediana == null ? "—" : num(x.forma.mediana, Number.isInteger(x.forma.mediana) ? 0 : 1)],
                     ["CV", x.forma.cv == null ? "—" : num(x.forma.cv, 2)],
-                  ].map(([t, v], i) => (
-                    <div key={t} className={`min-w-0 px-0.5 ${i % 2 ? "border-l border-line2" : ""}`}>
+                  ].map(([t, v]) => (
+                    <div key={t} className="min-w-0 px-[2px]">
                       <div className="text-mut2">{t}</div>
-                      <div className="num text-[11px] text-txt">{v}</div>
+                      <div className="num text-[10.5px] tracking-tight text-txt whitespace-nowrap">{v}</div>
                     </div>
                   ))}
                 </div>
