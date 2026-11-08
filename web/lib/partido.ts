@@ -23,7 +23,7 @@ export type MercadoCorto = {
   ventaja?: "probada" | "sin ventaja" | "sin probar";
   seleccion: Seleccion;
 };
-export type Forma = { media: number | null; cv: number | null; n: number; limite: number | null; estado: "regular" | "irregular" | null };
+export type Forma = { media: number | null; mediana: number | null; cv: number | null; n: number; limite: number | null; estado: "regular" | "irregular" | null };
 export type XGEquipo = { favor: Forma; contra: Forma };
 export type XG = { n: number; fuente: string; local: XGEquipo; visitante: XGEquipo };
 export type Compacto = {

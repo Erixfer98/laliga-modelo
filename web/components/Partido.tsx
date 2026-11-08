@@ -88,13 +88,14 @@ export function Lambdas({ d }: { d: Compacto }) {
             <div className="text-[11px] text-mut2 mt-1">liga {num(x.liga, 2)}</div>
             {x.forma && (
               <div className="mt-2 pt-2 border-t border-line2" data-testid="forma" title={`Últimos ${x.forma.n} partidos ${x.donde}`}>
-                <div className="grid grid-cols-3 divide-x divide-line2 text-[10px] leading-4">
+                <div className="grid grid-cols-2 gap-y-1 text-[10px] leading-4">
                   {[
                     ["Últ.", String(x.forma.n)],
                     ["Avg.", x.forma.media == null ? "—" : num(x.forma.media, 2)],
+                    ["Med.", x.forma.mediana == null ? "—" : num(x.forma.mediana, 1)],
                     ["CV", x.forma.cv == null ? "—" : num(x.forma.cv, 2)],
-                  ].map(([t, v]) => (
-                    <div key={t} className="min-w-0 px-0.5">
+                  ].map(([t, v], i) => (
+                    <div key={t} className={`min-w-0 px-0.5 ${i % 2 ? "border-l border-line2" : ""}`}>
                       <div className="text-mut2">{t}</div>
                       <div className="num text-[11px] text-txt">{v}</div>
                     </div>

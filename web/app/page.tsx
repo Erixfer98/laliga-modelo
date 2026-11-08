@@ -105,7 +105,7 @@ export default function Partido() {
           <p className="text-xs text-mut mb-3 leading-relaxed">
             λ = cuántos {METRICAS[met].toLowerCase()} espera el modelo. {n === 5 ? "4/5" : "8/10"} = en {n === 5 ? 4 : 8} de sus últimos {n} partidos se cumplió el mercado
             {filtro === "Todos" ? "" : ` (${local} solo en casa, ${visitante} solo fuera)`}. En los mercados de un equipo, la columna del rival cuenta lo que el rival recibió.
-            Últ. = partidos usados: hasta 5 de {local} en casa y 5 de {visitante} fuera (el total junta los dos). Avg. = promedio. CV = cuánto varía de un partido a otro; se da desde 3 partidos.
+            Últ. = partidos usados: hasta 5 de {local} en casa y 5 de {visitante} fuera (el total junta los dos). Avg. = promedio. Med. = mediana (el valor del medio al ordenarlos; un partido raro no la mueve). CV = cuánto varía de un partido a otro; se da desde 3 partidos.
             {d.forma?.local.limite != null
               ? " Irregular = CV arriba del corte, que es el CV típico de este mercado en las 10 ligas."
               : " En este mercado no hay etiqueta: casi nunca hay suficientes casos para medir cuánto varía."}
