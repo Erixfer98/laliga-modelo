@@ -161,14 +161,15 @@ MIN_PARTIDOS_CV = 3  # con menos partidos no se da CV ni etiqueta: no hay variac
 
 
 def _media_cv(valores, limite: float = None) -> dict:
-    """Media y coeficiente de variación (desviación estándar muestral / media) de una serie de partidos.
+    """Media, mediana y coeficiente de variación (desviación estándar muestral / media) de una serie de partidos.
     Sin CV con menos de MIN_PARTIDOS_CV partidos o media 0.
     estado = «irregular» si el CV pasa el límite del mercado, «regular» si no; None sin CV o sin límite."""
     v = pd.Series(valores, dtype=float).dropna()
     media = float(v.mean()) if len(v) else None
+    mediana = float(v.median()) if len(v) else None
     cv = float(v.std(ddof=1) / media) if len(v) >= MIN_PARTIDOS_CV and media else None
     estado = None if cv is None or limite is None else ("irregular" if cv > limite else "regular")
-    return {"media": media, "cv": cv, "n": int(len(v)), "limite": limite, "estado": estado}
+    return {"media": media, "mediana": mediana, "cv": cv, "n": int(len(v)), "limite": limite, "estado": estado}
 
 
 def forma_reciente(df: pd.DataFrame, local: str, visitante: str, met: str, n: int = 5) -> dict:
