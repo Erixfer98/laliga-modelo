@@ -1,5 +1,5 @@
 {
- "fecha": "08/11/2026 17:40 UTC",
+ "fecha": "09/11/2026 21:57 UTC",
  "ligas": {
   "brasileirao": {
    "partidos": 719,
@@ -16,11 +16,11 @@
    "ok": true
   },
   "bundesliga": {
-   "partidos": 378,
-   "ultimo": "01/11/2026",
+   "partidos": 387,
+   "ultimo": "08/11/2026",
    "temporadas": {
     "2025-26": 306,
-    "2026-27": 72
+    "2026-27": 81
    },
    "equipos": 21,
    "vacias": 0,
@@ -58,11 +58,11 @@
    "ok": true
   },
   "laliga": {
-   "partidos": 489,
-   "ultimo": "02/11/2026",
+   "partidos": 499,
+   "ultimo": "08/11/2026",
    "temporadas": {
     "2025-26": 380,
-    "2026-27": 109
+    "2026-27": 119
    },
    "equipos": 23,
    "vacias": 0,
@@ -72,11 +72,11 @@
    "ok": true
   },
   "ligamx": {
-   "partidos": 308,
-   "ultimo": "07/11/2026",
+   "partidos": 310,
+   "ultimo": "08/11/2026",
    "temporadas": {
     "Clausura 2026": 167,
-    "Apertura 2026": 141
+    "Apertura 2026": 143
    },
    "equipos": 19,
    "vacias": 0,
@@ -86,11 +86,11 @@
    "ok": true
   },
   "ligue1": {
-   "partidos": 387,
-   "ultimo": "02/11/2026",
+   "partidos": 396,
+   "ultimo": "08/11/2026",
    "temporadas": {
     "2025-26": 306,
-    "2026-27": 81
+    "2026-27": 90
    },
    "equipos": 20,
    "vacias": 0,
@@ -114,11 +114,11 @@
    "ok": true
   },
   "premier": {
-   "partidos": 470,
-   "ultimo": "02/11/2026",
+   "partidos": 480,
+   "ultimo": "08/11/2026",
    "temporadas": {
     "2025-26": 380,
-    "2026-27": 90
+    "2026-27": 100
    },
    "equipos": 23,
    "vacias": 0,
@@ -128,11 +128,11 @@
    "ok": true
   },
   "seriea": {
-   "partidos": 480,
-   "ultimo": "02/11/2026",
+   "partidos": 490,
+   "ultimo": "08/11/2026",
    "temporadas": {
     "2025-26": 380,
-    "2026-27": 100
+    "2026-27": 110
    },
    "equipos": 23,
    "vacias": 2,
