@@ -191,6 +191,15 @@ def transformar(df: pd.DataFrame) -> pd.DataFrame:
             print(f"AVISO: {p.fecha_dt} {p.equipo_local_txt}-{p.equipo_visitante_txt}: tiros a puerta {lado} "
                   f"{p[f'tiros_a_puerta_{lado}_val']} > tiros {p[f'tiros_{lado}_val']}; se dejan vacios")
         out.loc[malo, [f"tiros_{lado}_val", f"tiros_a_puerta_{lado}_val"]] = None
+    # goles al descanso > goles finales: el descanso de la fuente esta mal; los dos goles al descanso del partido quedan
+    # vacios (el modelo salta ese partido en goles 1T y 2T; goles del partido sigue igual)
+    malo = (out["goles_local_primer_tiempo_val"] > out["goles_local_val"]) | \
+           (out["goles_visitante_primer_tiempo_val"] > out["goles_visitante_val"])
+    for _, p in out[malo].iterrows():
+        print(f"AVISO: {p.fecha_dt} {p.equipo_local_txt}-{p.equipo_visitante_txt}: descanso "
+              f"{p.goles_local_primer_tiempo_val}-{p.goles_visitante_primer_tiempo_val} > final "
+              f"{p.goles_local_val}-{p.goles_visitante_val}; se deja vacio")
+    out.loc[malo, ["goles_local_primer_tiempo_val", "goles_visitante_primer_tiempo_val"]] = None
     return out
 
 
