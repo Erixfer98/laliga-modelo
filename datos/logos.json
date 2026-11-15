@@ -39,6 +39,10 @@
   "mls": {
    "nombre": "MLS",
    "logo": "https://a.espncdn.com/i/leaguelogos/soccer/500/19.png"
+  },
+  "nations": {
+   "nombre": "Nations League",
+   "logo": "https://a.espncdn.com/i/leaguelogos/soccer/500/2395.png"
   }
  },
  "equipos": {
@@ -297,6 +301,62 @@
    "St. Louis CITY SC": "https://a.espncdn.com/i/teamlogos/soccer/500/21812.png",
    "Toronto FC": "https://a.espncdn.com/i/teamlogos/soccer/500/7318.png",
    "Vancouver Whitecaps": "https://a.espncdn.com/i/teamlogos/soccer/500/9727.png"
+  },
+  "nations": {
+   "Albania": "https://a.espncdn.com/i/teamlogos/countries/500/alb.png",
+   "Andorra": "https://a.espncdn.com/i/teamlogos/countries/500/and.png",
+   "Armenia": "https://a.espncdn.com/i/teamlogos/countries/500/fifa.armenia.png",
+   "Austria": "https://a.espncdn.com/i/teamlogos/countries/500/aut.png",
+   "Azerbaijan": "https://a.espncdn.com/i/teamlogos/countries/500/aze.png",
+   "Belarus": "https://a.espncdn.com/i/teamlogos/countries/500/blr.png",
+   "Belgium": "https://a.espncdn.com/i/teamlogos/countries/500/bel.png",
+   "Bosnia-Herzegovina": "https://a.espncdn.com/i/teamlogos/countries/500/bih.png",
+   "Bulgaria": "https://a.espncdn.com/i/teamlogos/countries/500/bul.png",
+   "Croatia": "https://a.espncdn.com/i/teamlogos/countries/500/cro.png",
+   "Cyprus": "https://a.espncdn.com/i/teamlogos/countries/500/cyp.png",
+   "Czechia": "https://a.espncdn.com/i/teamlogos/countries/500/cze.png",
+   "Denmark": "https://a.espncdn.com/i/teamlogos/countries/500/den.png",
+   "England": "https://a.espncdn.com/i/teamlogos/countries/500/eng.png",
+   "Estonia": "https://a.espncdn.com/i/teamlogos/countries/500/est.png",
+   "Faroe Islands": "https://a.espncdn.com/i/teamlogos/countries/500/fro.png",
+   "Finland": "https://a.espncdn.com/i/teamlogos/countries/500/fin.png",
+   "France": "https://a.espncdn.com/i/teamlogos/countries/500/fra.png",
+   "Georgia": "https://a.espncdn.com/i/teamlogos/countries/500/geo.png",
+   "Germany": "https://a.espncdn.com/i/teamlogos/countries/500/ger.png",
+   "Gibraltar": "https://a.espncdn.com/i/teamlogos/countries/500/gib.png",
+   "Greece": "https://a.espncdn.com/i/teamlogos/countries/500/gre.png",
+   "Hungary": "https://a.espncdn.com/i/teamlogos/countries/500/hun.png",
+   "Iceland": "https://a.espncdn.com/i/teamlogos/countries/500/isl.png",
+   "Israel": "https://a.espncdn.com/i/teamlogos/countries/500/isr.png",
+   "Italy": "https://a.espncdn.com/i/teamlogos/countries/500/ita.png",
+   "Kazakhstan": "https://a.espncdn.com/i/teamlogos/countries/500/kaz.png",
+   "Kosovo": "https://a.espncdn.com/i/teamlogos/countries/500/kosovo.png",
+   "Latvia": "https://a.espncdn.com/i/teamlogos/countries/500/lva.png",
+   "Liechtenstein": "https://a.espncdn.com/i/teamlogos/countries/500/lie.png",
+   "Lithuania": "https://a.espncdn.com/i/teamlogos/countries/500/ltu.png",
+   "Luxembourg": "https://a.espncdn.com/i/teamlogos/countries/500/lux.png",
+   "Malta": "https://a.espncdn.com/i/teamlogos/countries/500/mlt.png",
+   "Moldova": "https://a.espncdn.com/i/teamlogos/countries/500/mda.png",
+   "Montenegro": "https://a.espncdn.com/i/teamlogos/countries/500/mtg.png",
+   "Netherlands": "https://a.espncdn.com/i/teamlogos/countries/500/ned.png",
+   "North Macedonia": "https://a.espncdn.com/i/teamlogos/countries/500/mkd.png",
+   "Northern Ireland": "https://a.espncdn.com/i/teamlogos/countries/500/nir.png",
+   "Norway": "https://a.espncdn.com/i/teamlogos/countries/500/nor.png",
+   "Poland": "https://a.espncdn.com/i/teamlogos/countries/500/pol.png",
+   "Portugal": "https://a.espncdn.com/i/teamlogos/countries/500/por.png",
+   "Republic of Ireland": "https://a.espncdn.com/i/teamlogos/countries/500/irl.png",
+   "Romania": "https://a.espncdn.com/i/teamlogos/countries/500/rom.png",
+   "San Marino": "https://a.espncdn.com/i/teamlogos/countries/500/smr.png",
+   "Scotland": "https://a.espncdn.com/i/teamlogos/countries/500/sco.png",
+   "Serbia": "https://a.espncdn.com/i/teamlogos/countries/500/sba.png",
+   "Slovakia": "https://a.espncdn.com/i/teamlogos/countries/500/svk.png",
+   "Slovenia": "https://a.espncdn.com/i/teamlogos/countries/500/svn.png",
+   "Spain": "https://a.espncdn.com/i/teamlogos/countries/500/esp.png",
+   "Sweden": "https://a.espncdn.com/i/teamlogos/countries/500/swe.png",
+   "Switzerland": "https://a.espncdn.com/i/teamlogos/countries/500/sui.png",
+   "Turkiye": "https://a.espncdn.com/i/teamlogos/countries/500/tur.png",
+   "Ukraine": "https://a.espncdn.com/i/teamlogos/countries/500/ukr.png",
+   "Wales": "https://a.espncdn.com/i/teamlogos/countries/500/wal.png"
   }
  }
 }

@@ -1,12 +1,12 @@
 {
- "fecha": "14/11/2026 17:42 UTC",
+ "fecha": "15/11/2026 17:01 UTC",
  "ligas": {
   "brasileirao": {
-   "partidos": 719,
-   "ultimo": "06/11/2026",
+   "partidos": 721,
+   "ultimo": "14/11/2026",
    "temporadas": {
     "2025": 380,
-    "2026": 339
+    "2026": 341
    },
    "equipos": 24,
    "vacias": 0,
@@ -40,7 +40,9 @@
    "vacias": 0,
    "duplicados": 0,
    "errores": [],
-   "avisos": [],
+   "avisos": [
+    "ultimo partido hace 11 dias (04/11/2026); revisar si la fuente dejo de actualizar"
+   ],
    "ok": true
   },
   "europa": {
@@ -72,11 +74,11 @@
    "ok": true
   },
   "ligamx": {
-   "partidos": 310,
-   "ultimo": "08/11/2026",
+   "partidos": 311,
+   "ultimo": "14/11/2026",
    "temporadas": {
     "Clausura 2026": 167,
-    "Apertura 2026": 143
+    "Apertura 2026": 144
    },
    "equipos": 19,
    "vacias": 0,
@@ -111,6 +113,23 @@
    "duplicados": 0,
    "errores": [],
    "avisos": [],
+   "ok": true
+  },
+  "nations": {
+   "partidos": 315,
+   "ultimo": "15/11/2026",
+   "temporadas": {
+    "2024-25": 179,
+    "2026-27": 132,
+    "2025-26": 4
+   },
+   "equipos": 54,
+   "vacias": 2,
+   "duplicados": 0,
+   "errores": [],
+   "avisos": [
+    "2 celdas de estadisticas vacias en 1 partidos (ej. 05/09/2024 Scotland-Poland)"
+   ],
    "ok": true
   },
   "premier": {
