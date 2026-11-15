@@ -1,5 +1,5 @@
 """
-espn.py — fuente ESPN para ligas que football-data.co.uk no cubre con estadisticas (hoy: Liga MX, Champions League, Europa League, Brasileirao y MLS).
+espn.py — fuente ESPN para ligas que football-data.co.uk no cubre con estadisticas (hoy: Liga MX, Champions League, Europa League, Brasileirao, MLS y Nations League).
 Portado del notebook cargar_estadisticas_espn_v2 (Colab) que ya genero la BBDD de Liga MX.
 
 Como funciona:
@@ -8,7 +8,7 @@ Como funciona:
   2. summary por partido: goles al descanso (keyEvents con respaldo en linescores) y tarjetas
      (keyEvents con respaldo en boxscore).
   3. Temporada por fecha: Liga MX enero-junio = "Clausura AAAA", julio-diciembre = "Apertura AAAA";
-     Champions y Europa League julio-junio = "AAAA-AA" (temporada_europa); Brasileirao y MLS ano calendario = "AAAA"
+     Champions y Europa League julio-junio = "AAAA-AA" (temporada_europa); Nations League por edicion (temporada_nations); Brasileirao y MLS ano calendario = "AAAA"
      (temporada_anual). Hora local = zona horaria de la liga (tz).
      Partidos con proroga (periodo > 2) se descartan: el modelo es de 90 minutos.
   4. Incremental: si ya existe datos/bbdd_ligamx.csv, solo consulta desde el ultimo partido menos
@@ -56,7 +56,7 @@ def limpio(s: str) -> str:
 
 def nombre_equipo(team: dict, alias: dict) -> str:
     """Nombre normalizado de la BBDD; si no esta en el diccionario se deja el displayName de ESPN.
-    Sin diccionario (Champions, Europa League, Brasileirao y MLS) se usa el displayName de ESPN sin acentos."""
+    Sin diccionario (Champions, Europa League, Brasileirao, MLS y Nations League) se usa el displayName de ESPN sin acentos."""
     if not alias:
         return limpio(team.get("displayName", ""))
     nombres = {norm(team.get(k, "")) for k in ("displayName", "shortDisplayName", "name", "location", "abbreviation")}
@@ -120,6 +120,14 @@ def temporada(fecha: dt.date) -> str:
 def temporada_europa(fecha: dt.date) -> str:
     """Julio-junio, mismo formato que las ligas europeas: 2026-27."""
     a = fecha.year if fecha.month >= 7 else fecha.year - 1
+    return f"{a}-{str(a + 1)[2:]}"
+
+
+def temporada_nations(fecha: dt.date) -> str:
+    """Edicion de la Nations League: empieza en septiembre de ano par (2024-25, 2026-27). Los repechajes de marzo del
+    ano impar siguiente (ej. 26/03/2026) siguen siendo de la edicion anterior: 2024-25."""
+    a = fecha.year if fecha.month >= 7 else fecha.year - 1
+    a -= a % 2
     return f"{a}-{str(a + 1)[2:]}"
 
 

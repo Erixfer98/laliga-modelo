@@ -15,6 +15,7 @@ export const LIGAS: Record<string, string> = {
   europa: "Europa League",
   brasileirao: "Brasileirão",
   mls: "MLS",
+  nations: "Nations League",
 };
 export const METRICAS: Record<string, string> = {
   goles: "Goles",

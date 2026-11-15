@@ -1,7 +1,7 @@
 """
 generar_bbdd.py — regenera datos/bbdd_<liga>.xlsx + .csv (28 columnas, hojas partidos + diccionario).
   - 5 grandes ligas europeas: football-data.co.uk (se borra y reescribe todo en cada corrida).
-  - Liga MX, Champions League, Europa League, Brasileirao y MLS: ESPN via espn.py (football-data no publica sus estadisticas). Incremental: solo
+  - Liga MX, Champions League, Europa League, Brasileirao, MLS y Nations League: ESPN via espn.py (football-data no publica sus estadisticas). Incremental: solo
     pide los dias nuevos y los mezcla con el CSV existente; con --completo rehace desde el inicio configurado.
 Uso: python generar_bbdd.py                    (todas las ligas)
      python generar_bbdd.py premier            (solo una)
@@ -10,6 +10,7 @@ Uso: python generar_bbdd.py                    (todas las ligas)
      python generar_bbdd.py europa --completo    (Europa League desde la 2025-26)
      python generar_bbdd.py brasileirao --completo (Brasileirao desde la temporada 2025)
      python generar_bbdd.py mls --completo         (MLS desde la temporada 2025)
+     python generar_bbdd.py nations --completo     (Nations League desde la 2024-25)
 """
 from datetime import datetime
 from io import StringIO
@@ -89,6 +90,10 @@ LIGAS = {
     # Hora local = hora del este de EE. UU. (la de la liga).
     "mls":        {"fuente": "espn", "espn": "usa.1", "inicio": "2025-02-15", "nombre": "MLS", "pais": "Estados Unidos",
                    "tz": "America/New_York", "equipos": {}, "alias": {}, "temporada": espn.temporada_anual},
+    # UEFA Nations League: ediciones 2024-25 y 2026-27 (no hubo 2025-26: eliminatorias del Mundial). Ligas A-D, cuartos,
+    # Final Four y repechajes de ascenso/descenso, sin proroga. Nombres = displayName de ESPN sin acentos (selecciones).
+    "nations":    {"fuente": "espn", "espn": "uefa.nations", "inicio": "2024-09-01", "nombre": "Nations League",
+                   "pais": "Europa", "tz": "Europe/Madrid", "equipos": {}, "alias": {}, "temporada": espn.temporada_nations},
 }
 EQUIPOS = EQUIPOS_LALIGA   # se reasigna por liga en el ciclo principal
 TZ_LOCAL = "Europe/Madrid"
@@ -186,6 +191,15 @@ def transformar(df: pd.DataFrame) -> pd.DataFrame:
             print(f"AVISO: {p.fecha_dt} {p.equipo_local_txt}-{p.equipo_visitante_txt}: tiros a puerta {lado} "
                   f"{p[f'tiros_a_puerta_{lado}_val']} > tiros {p[f'tiros_{lado}_val']}; se dejan vacios")
         out.loc[malo, [f"tiros_{lado}_val", f"tiros_a_puerta_{lado}_val"]] = None
+    # goles al descanso > goles finales: el descanso de la fuente esta mal; los dos goles al descanso del partido quedan
+    # vacios (el modelo salta ese partido en goles 1T y 2T; goles del partido sigue igual)
+    malo = (out["goles_local_primer_tiempo_val"] > out["goles_local_val"]) | \
+           (out["goles_visitante_primer_tiempo_val"] > out["goles_visitante_val"])
+    for _, p in out[malo].iterrows():
+        print(f"AVISO: {p.fecha_dt} {p.equipo_local_txt}-{p.equipo_visitante_txt}: descanso "
+              f"{p.goles_local_primer_tiempo_val}-{p.goles_visitante_primer_tiempo_val} > final "
+              f"{p.goles_local_val}-{p.goles_visitante_val}; se deja vacio")
+    out.loc[malo, ["goles_local_primer_tiempo_val", "goles_visitante_primer_tiempo_val"]] = None
     return out
 
 
