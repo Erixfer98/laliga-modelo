@@ -104,6 +104,7 @@ export function LigaLogo({
     europa: "EL",
     brasileirao: "BR",
     mls: "US",
+    nations: "NL",
   };
   return (
     <span
