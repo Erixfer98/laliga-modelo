@@ -93,7 +93,7 @@ LIGAS = {
     # UEFA Nations League: ediciones 2024-25 y 2026-27 (no hubo 2025-26: eliminatorias del Mundial). Ligas A-D, cuartos,
     # Final Four y repechajes de ascenso/descenso, sin proroga. Nombres = displayName de ESPN sin acentos (selecciones).
     "nations":    {"fuente": "espn", "espn": "uefa.nations", "inicio": "2024-09-01", "nombre": "Nations League",
-                   "pais": "Europa", "tz": "Europe/Madrid", "equipos": {}, "alias": {}, "temporada": espn.temporada_europa},
+                   "pais": "Europa", "tz": "Europe/Madrid", "equipos": {}, "alias": {}, "temporada": espn.temporada_nations},
 }
 EQUIPOS = EQUIPOS_LALIGA   # se reasigna por liga en el ciclo principal
 TZ_LOCAL = "Europe/Madrid"
