@@ -1,5 +1,5 @@
 {
- "fecha": "16/11/2026 21:40 UTC",
+ "fecha": "17/11/2026 20:30 UTC",
  "ligas": {
   "brasileirao": {
    "partidos": 721,
@@ -41,7 +41,7 @@
    "duplicados": 0,
    "errores": [],
    "avisos": [
-    "ultimo partido hace 12 dias (04/11/2026); revisar si la fuente dejo de actualizar"
+    "ultimo partido hace 13 dias (04/11/2026); revisar si la fuente dejo de actualizar"
    ],
    "ok": true
   },
@@ -57,7 +57,7 @@
    "duplicados": 0,
    "errores": [],
    "avisos": [
-    "ultimo partido hace 11 dias (05/11/2026); revisar si la fuente dejo de actualizar"
+    "ultimo partido hace 12 dias (05/11/2026); revisar si la fuente dejo de actualizar"
    ],
    "ok": true
   },
