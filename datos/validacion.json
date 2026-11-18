@@ -1,5 +1,5 @@
 {
- "fecha": "17/11/2026 20:30 UTC",
+ "fecha": "18/11/2026 20:01 UTC",
  "ligas": {
   "brasileirao": {
    "partidos": 721,
@@ -41,7 +41,7 @@
    "duplicados": 0,
    "errores": [],
    "avisos": [
-    "ultimo partido hace 13 dias (04/11/2026); revisar si la fuente dejo de actualizar"
+    "ultimo partido hace 14 dias (04/11/2026); revisar si la fuente dejo de actualizar"
    ],
    "ok": true
   },
@@ -57,7 +57,7 @@
    "duplicados": 0,
    "errores": [],
    "avisos": [
-    "ultimo partido hace 12 dias (05/11/2026); revisar si la fuente dejo de actualizar"
+    "ultimo partido hace 13 dias (05/11/2026); revisar si la fuente dejo de actualizar"
    ],
    "ok": true
   },
@@ -114,15 +114,17 @@
    "vacias": 0,
    "duplicados": 0,
    "errores": [],
-   "avisos": [],
+   "avisos": [
+    "ultimo partido hace 11 dias (07/11/2026); revisar si la fuente dejo de actualizar"
+   ],
    "ok": true
   },
   "nations": {
-   "partidos": 331,
-   "ultimo": "16/11/2026",
+   "partidos": 339,
+   "ultimo": "17/11/2026",
    "temporadas": {
     "2024-25": 183,
-    "2026-27": 148
+    "2026-27": 156
    },
    "equipos": 54,
    "vacias": 2,
