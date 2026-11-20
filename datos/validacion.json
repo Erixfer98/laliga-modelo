@@ -1,12 +1,12 @@
 {
- "fecha": "19/11/2026 20:00 UTC",
+ "fecha": "20/11/2026 19:40 UTC",
  "ligas": {
   "brasileirao": {
-   "partidos": 727,
-   "ultimo": "18/11/2026",
+   "partidos": 730,
+   "ultimo": "19/11/2026",
    "temporadas": {
     "2025": 380,
-    "2026": 347
+    "2026": 350
    },
    "equipos": 24,
    "vacias": 0,
@@ -27,7 +27,7 @@
    "duplicados": 0,
    "errores": [],
    "avisos": [
-    "ultimo partido hace 11 dias (08/11/2026); revisar si la fuente dejo de actualizar"
+    "ultimo partido hace 12 dias (08/11/2026); revisar si la fuente dejo de actualizar"
    ],
    "ok": true
   },
@@ -43,7 +43,7 @@
    "duplicados": 0,
    "errores": [],
    "avisos": [
-    "ultimo partido hace 15 dias (04/11/2026); revisar si la fuente dejo de actualizar"
+    "ultimo partido hace 16 dias (04/11/2026); revisar si la fuente dejo de actualizar"
    ],
    "ok": true
   },
@@ -59,7 +59,7 @@
    "duplicados": 0,
    "errores": [],
    "avisos": [
-    "ultimo partido hace 14 dias (05/11/2026); revisar si la fuente dejo de actualizar"
+    "ultimo partido hace 15 dias (05/11/2026); revisar si la fuente dejo de actualizar"
    ],
    "ok": true
   },
@@ -75,7 +75,7 @@
    "duplicados": 0,
    "errores": [],
    "avisos": [
-    "ultimo partido hace 11 dias (08/11/2026); revisar si la fuente dejo de actualizar"
+    "ultimo partido hace 12 dias (08/11/2026); revisar si la fuente dejo de actualizar"
    ],
    "ok": true
   },
@@ -105,24 +105,22 @@
    "duplicados": 0,
    "errores": [],
    "avisos": [
-    "ultimo partido hace 11 dias (08/11/2026); revisar si la fuente dejo de actualizar"
+    "ultimo partido hace 12 dias (08/11/2026); revisar si la fuente dejo de actualizar"
    ],
    "ok": true
   },
   "mls": {
-   "partidos": 1043,
-   "ultimo": "07/11/2026",
+   "partidos": 1044,
+   "ultimo": "19/11/2026",
    "temporadas": {
     "2025": 533,
-    "2026": 510
+    "2026": 511
    },
    "equipos": 30,
    "vacias": 0,
    "duplicados": 0,
    "errores": [],
-   "avisos": [
-    "ultimo partido hace 12 dias (07/11/2026); revisar si la fuente dejo de actualizar"
-   ],
+   "avisos": [],
    "ok": true
   },
   "nations": {
@@ -153,7 +151,7 @@
    "duplicados": 0,
    "errores": [],
    "avisos": [
-    "ultimo partido hace 11 dias (08/11/2026); revisar si la fuente dejo de actualizar"
+    "ultimo partido hace 12 dias (08/11/2026); revisar si la fuente dejo de actualizar"
    ],
    "ok": true
   },
@@ -170,7 +168,7 @@
    "errores": [],
    "avisos": [
     "2 celdas de estadisticas vacias en 1 partidos (ej. 29/10/2026 Fiorentina-Atalanta)",
-    "ultimo partido hace 11 dias (08/11/2026); revisar si la fuente dejo de actualizar"
+    "ultimo partido hace 12 dias (08/11/2026); revisar si la fuente dejo de actualizar"
    ],
    "ok": true
   }
