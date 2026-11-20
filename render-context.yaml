@@ -1,0 +1,52 @@
+# Propuesta independiente. NO sincronizar/crear/desplegar sin autorización posterior.
+# No añadir kuota-api, envVarGroups compartidos ni recursos de producción.
+services:
+  - type: worker
+    name: kuota-context-worker
+    runtime: python
+    region: oregon
+    plan: 0.5c-512mb
+    repo: https://github.com/Erixfer98/laliga-modelo
+    branch: feature/fase-5-inteligencia-contextual
+    numInstances: 1
+    autoDeployTrigger: "off"
+    buildCommand: pip install -r requirements-context-worker.txt
+    startCommand: python -u -m contexto.worker run
+    maxShutdownDelaySeconds: 120
+    disk:
+      name: kuota-context-data
+      mountPath: /var/data
+      sizeGB: 5
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.12"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: KUOTA_CONTEXT_STORAGE_ROOT
+        value: /var/data/kuota-context
+      - key: KUOTA_CONTEXT_STORAGE_AUTHORIZED
+        value: "false"
+      - key: KUOTA_CONTEXT_SCHEDULER_ENABLED
+        value: "false"
+      - key: KUOTA_CONTEXT_CAPTURES_ENABLED
+        value: "false"
+      - key: KUOTA_CONTEXT_BACKUP_ENABLED
+        value: "false"
+      - key: KUOTA_CONTEXT_R2_PRIVATE_CONFIRMED
+        value: "false"
+      - key: KUOTA_CONTEXT_PROVIDER_DIAGNOSTICS_AUTHORIZED
+        value: "false"
+      - key: KUOTA_CONTEXT_INTERVAL_SECONDS
+        value: "86400"
+      - key: KUOTA_CONTEXT_HEARTBEAT_SECONDS
+        value: "60"
+      - key: KUOTA_CONTEXT_WINDOW_DAYS
+        value: "1"
+      - key: KUOTA_CONTEXT_MAX_ARCHIVE_MB
+        value: "64"
+      - key: KUOTA_CONTEXT_RETENTION_DAYS
+        value: "30"
+      - key: KUOTA_CONTEXT_KEEP_BACKUPS
+        value: "3"
+      - key: KUOTA_CONTEXT_MAX_EXPORTS_PER_DAY
+        value: "8"
