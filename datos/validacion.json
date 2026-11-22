@@ -1,12 +1,12 @@
 {
- "fecha": "21/11/2026 18:44 UTC",
+ "fecha": "22/11/2026 19:05 UTC",
  "ligas": {
   "brasileirao": {
-   "partidos": 730,
-   "ultimo": "19/11/2026",
+   "partidos": 733,
+   "ultimo": "21/11/2026",
    "temporadas": {
     "2025": 380,
-    "2026": 350
+    "2026": 353
    },
    "equipos": 24,
    "vacias": 0,
@@ -27,7 +27,7 @@
    "duplicados": 0,
    "errores": [],
    "avisos": [
-    "ultimo partido hace 13 dias (08/11/2026); revisar si la fuente dejo de actualizar"
+    "ultimo partido hace 14 dias (08/11/2026); revisar si la fuente dejo de actualizar"
    ],
    "ok": true
   },
@@ -43,7 +43,7 @@
    "duplicados": 0,
    "errores": [],
    "avisos": [
-    "ultimo partido hace 17 dias (04/11/2026); revisar si la fuente dejo de actualizar"
+    "ultimo partido hace 18 dias (04/11/2026); revisar si la fuente dejo de actualizar"
    ],
    "ok": true
   },
@@ -59,7 +59,7 @@
    "duplicados": 0,
    "errores": [],
    "avisos": [
-    "ultimo partido hace 16 dias (05/11/2026); revisar si la fuente dejo de actualizar"
+    "ultimo partido hace 17 dias (05/11/2026); revisar si la fuente dejo de actualizar"
    ],
    "ok": true
   },
@@ -75,16 +75,16 @@
    "duplicados": 0,
    "errores": [],
    "avisos": [
-    "ultimo partido hace 13 dias (08/11/2026); revisar si la fuente dejo de actualizar"
+    "ultimo partido hace 14 dias (08/11/2026); revisar si la fuente dejo de actualizar"
    ],
    "ok": true
   },
   "ligamx": {
-   "partidos": 314,
-   "ultimo": "20/11/2026",
+   "partidos": 318,
+   "ultimo": "21/11/2026",
    "temporadas": {
     "Clausura 2026": 167,
-    "Apertura 2026": 147
+    "Apertura 2026": 151
    },
    "equipos": 19,
    "vacias": 0,
@@ -105,16 +105,16 @@
    "duplicados": 0,
    "errores": [],
    "avisos": [
-    "ultimo partido hace 13 dias (08/11/2026); revisar si la fuente dejo de actualizar"
+    "ultimo partido hace 14 dias (08/11/2026); revisar si la fuente dejo de actualizar"
    ],
    "ok": true
   },
   "mls": {
-   "partidos": 1044,
-   "ultimo": "19/11/2026",
+   "partidos": 1047,
+   "ultimo": "21/11/2026",
    "temporadas": {
     "2025": 533,
-    "2026": 511
+    "2026": 514
    },
    "equipos": 30,
    "vacias": 0,
@@ -151,7 +151,7 @@
    "duplicados": 0,
    "errores": [],
    "avisos": [
-    "ultimo partido hace 13 dias (08/11/2026); revisar si la fuente dejo de actualizar"
+    "ultimo partido hace 14 dias (08/11/2026); revisar si la fuente dejo de actualizar"
    ],
    "ok": true
   },
@@ -168,7 +168,7 @@
    "errores": [],
    "avisos": [
     "2 celdas de estadisticas vacias en 1 partidos (ej. 29/10/2026 Fiorentina-Atalanta)",
-    "ultimo partido hace 13 dias (08/11/2026); revisar si la fuente dejo de actualizar"
+    "ultimo partido hace 14 dias (08/11/2026); revisar si la fuente dejo de actualizar"
    ],
    "ok": true
   }
