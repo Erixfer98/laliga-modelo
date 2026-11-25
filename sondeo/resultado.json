@@ -1,0 +1,1558 @@
+{
+ "api_leagues_sin_cabecera": {
+  "status": 404,
+  "url": "https://www.fotmob.com/api/leagues?id=87",
+  "tipo": null,
+  "inicio": ""
+ },
+ "api_data_leagues": {
+  "status": 200,
+  "url": "https://www.fotmob.com/api/data/leagues?id=87",
+  "tipo": "application/json; charset=utf-8",
+  "inicio": "{\"tabs\":[\"overview\",\"table\",\"fixtures\",\"stats\",\"transfers\",\"seasons\"],\"allAvailableSeasons\":[\"2026/2027\",\"2025/2026\",\"2024/2025\",\"2023/2024\",\"2022/2023\",\"2021/2022\",\"2020/2021\",\"2019/2020\",\"2018/2019\",\"2017/2018\",\"2016/2017\",\"2015/2016\",\"2014/2015\",\"2013/2014\",\"2012/2013\",\"2011/2012\",\"2010/2011\"],\"d"
+ },
+ "liga_87": {
+  "status": 200,
+  "url": "https://www.fotmob.com/leagues/87/fixtures/laliga",
+  "next_data": true,
+  "titulo": null,
+  "pageProps_claves": [
+   "tabs",
+   "allAvailableSeasons",
+   "details",
+   "seostr",
+   "QAData",
+   "table",
+   "transfers",
+   "overview",
+   "stats",
+   "fixtures",
+   "playoff",
+   "seasons",
+   "appFallback"
+  ],
+  "temporadas": [
+   "2026/2027",
+   "2025/2026",
+   "2024/2025",
+   "2023/2024",
+   "2022/2023",
+   "2021/2022"
+  ],
+  "n_partidos": 1140,
+  "n_terminados": 387,
+  "muestra": [
+   {
+    "round": "13",
+    "roundName": 13,
+    "pageUrl": "/matches/getafe-vs-atletico-madrid/2qqieg#5868134",
+    "id": "5868134",
+    "home": {
+     "name": "Getafe",
+     "shortName": "Getafe",
+     "id": "8305"
+    },
+    "away": {
+     "name": "Atlético Madrid",
+     "shortName": "Atlético Madrid",
+     "id": "9906"
+    },
+    "status": {
+     "utcTime": "2026-11-22T20:00:00Z",
+     "timezone": "UTC",
+     "finished": true,
+     "started": true,
+     "cancelled": false,
+     "awarded": false,
+     "scoreStr": "0 - 3",
+     "reason": {
+      "short": "FT",
+      "shortKey": "fulltime_short",
+      "long": "Full-Time",
+      "longKey": "finished"
+     }
+    },
+    "eliminatedTeamId": null
+   },
+   {
+    "round": "13",
+    "roundName": 13,
+    "pageUrl": "/matches/levante-vs-elche/2xrvna#5868135",
+    "id": "5868135",
+    "home": {
+     "name": "Levante",
+     "shortName": "Levante",
+     "id": "8581"
+    },
+    "away": {
+     "name": "Elche",
+     "shortName": "Elche",
+     "id": "10268"
+    },
+    "status": {
+     "utcTime": "2026-11-23T20:00:00Z",
+     "timezone": "UTC",
+     "finished": true,
+     "started": true,
+     "cancelled": false,
+     "awarded": false,
+     "scoreStr": "1 - 1",
+     "reason": {
+      "short": "FT",
+      "shortKey": "fulltime_short",
+      "long": "Full-Time",
+      "longKey": "finished"
+     }
+    },
+    "eliminatedTeamId": null
+   }
+  ]
+ },
+ "liga_230": {
+  "status": 200,
+  "url": "https://www.fotmob.com/leagues/230/fixtures/liga-mx",
+  "next_data": true,
+  "titulo": null,
+  "pageProps_claves": [
+   "tabs",
+   "allAvailableSeasons",
+   "details",
+   "seostr",
+   "QAData",
+   "table",
+   "transfers",
+   "overview",
+   "stats",
+   "fixtures",
+   "playoff",
+   "seasons",
+   "appFallback"
+  ],
+  "temporadas": [
+   "2026/2027 - Apertura",
+   "2025/2026 - Clausura",
+   "2025/2026 - Apertura",
+   "2024/2025 - Clausura",
+   "2024/2025 - Apertura",
+   "2023/2024 - Clausura"
+  ],
+  "n_partidos": 495,
+  "n_terminados": 459,
+  "muestra": [
+   {
+    "round": "17",
+    "roundName": 17,
+    "pageUrl": "/matches/cruz-azul-vs-chivas/1plwzs#1000014650",
+    "id": "1000014650",
+    "home": {
+     "name": "Chivas",
+     "shortName": "Chivas",
+     "id": "7807"
+    },
+    "away": {
+     "name": "Cruz Azul",
+     "shortName": "Cruz Azul",
+     "id": "6578"
+    },
+    "status": {
+     "utcTime": "2026-11-22T23:07:00Z",
+     "timezone": "UTC",
+     "finished": true,
+     "started": true,
+     "cancelled": false,
+     "awarded": false,
+     "scoreStr": "1 - 0",
+     "reason": {
+      "short": "FT",
+      "shortKey": "fulltime_short",
+      "long": "Full-Time",
+      "longKey": "finished"
+     }
+    },
+    "eliminatedTeamId": null
+   },
+   {
+    "round": "17",
+    "roundName": 17,
+    "pageUrl": "/matches/necaxa-vs-queretaro-fc/49m1w#1000014651",
+    "id": "1000014651",
+    "home": {
+     "name": "Querétaro FC",
+     "shortName": "Querétaro",
+     "id": "1943"
+    },
+    "away": {
+     "name": "Necaxa",
+     "shortName": "Necaxa",
+     "id": "1842"
+    },
+    "status": {
+     "utcTime": "2026-11-23T01:10:00Z",
+     "timezone": "UTC",
+     "finished": true,
+     "started": true,
+     "cancelled": false,
+     "awarded": false,
+     "scoreStr": "2 - 2",
+     "reason": {
+      "short": "FT",
+      "shortKey": "fulltime_short",
+      "long": "Full-Time",
+      "longKey": "finished"
+     }
+    },
+    "eliminatedTeamId": null
+   }
+  ]
+ },
+ "liga_42": {
+  "status": 200,
+  "url": "https://www.fotmob.com/leagues/42/fixtures/champions-league",
+  "next_data": true,
+  "titulo": null,
+  "pageProps_claves": [
+   "tabs",
+   "allAvailableSeasons",
+   "details",
+   "seostr",
+   "QAData",
+   "table",
+   "transfers",
+   "overview",
+   "stats",
+   "fixtures",
+   "playoff",
+   "seasons",
+   "appFallback"
+  ],
+  "temporadas": [
+   "2026/2027",
+   "2025/2026",
+   "2024/2025",
+   "2023/2024",
+   "2022/2023",
+   "2021/2022"
+  ],
+  "n_partidos": 432,
+  "n_terminados": 249,
+  "muestra": [
+   {
+    "round": "5",
+    "roundName": 5,
+    "pageUrl": "/matches/barcelona-vs-sabah-fk/5vx6ki4t#6106421",
+    "id": "6106421",
+    "home": {
+     "name": "Sabah FK",
+     "shortName": "Sabah FK",
+     "id": "951893"
+    },
+    "away": {
+     "name": "Barcelona",
+     "shortName": "Barcelona",
+     "id": "8634"
+    },
+    "status": {
+     "utcTime": "2026-11-25T17:45:00.000Z",
+     "halfs": {
+      "firstHalfStarted": "25.11.2026 18:45:12",
+      "secondHalfStarted": "25.11.2026 19:47:29"
+     },
+     "periodLength": 45,
+     "finished": true,
+     "started": true,
+     "cancelled": false,
+     "awarded": false,
+     "scoreStr": "1 - 4",
+     "reason": {
+      "short": "FT",
+      "shortKey": "fulltime_short",
+      "long": "Full-Time",
+      "longKey": "finished"
+     }
+    },
+    "eliminatedTeamId": null
+   },
+   {
+    "round": "5",
+    "roundName": 5,
+    "pageUrl": "/matches/slavia-prague-vs-villarreal/2odhv3#6106391",
+    "id": "6106391",
+    "home": {
+     "name": "Slavia Prague",
+     "shortName": "Slavia Prague",
+     "id": "7787"
+    },
+    "away": {
+     "name": "Villarreal",
+     "shortName": "Villarreal",
+     "id": "10205"
+    },
+    "status": {
+     "utcTime": "2026-11-25T17:45:00.000Z",
+     "halfs": {
+      "firstHalfStarted": "25.11.2026 18:45:34",
+      "secondHalfStarted": "25.11.2026 19:48:53"
+     },
+     "periodLength": 45,
+     "finished": true,
+     "started": true,
+     "cancelled": false,
+     "awarded": false,
+     "scoreStr": "0 - 1",
+     "reason": {
+      "short": "FT",
+      "shortKey": "fulltime_short",
+      "long": "Full-Time",
+      "longKey": "finished"
+     }
+    },
+    "eliminatedTeamId": null
+   }
+  ]
+ },
+ "liga_130": {
+  "status": 200,
+  "url": "https://www.fotmob.com/leagues/130/fixtures/mls",
+  "next_data": true,
+  "titulo": null,
+  "pageProps_claves": [
+   "tabs",
+   "allAvailableSeasons",
+   "details",
+   "seostr",
+   "QAData",
+   "table",
+   "transfers",
+   "overview",
+   "stats",
+   "fixtures",
+   "playoff",
+   "seasons",
+   "appFallback"
+  ],
+  "temporadas": [
+   "2026",
+   "2025",
+   "2024",
+   "2023",
+   "2022",
+   "2021"
+  ],
+  "n_partidos": 1584,
+  "n_terminados": 1560,
+  "muestra": [
+   {
+    "round": "1/8",
+    "roundName": "Round of 16",
+    "pageUrl": "/matches/los-angeles-fc-vs-st-louis-city/xm2qlfzm#6580840",
+    "id": "6580840",
+    "home": {
+     "name": "St. Louis City",
+     "shortName": "St. Louis City",
+     "id": "1427963"
+    },
+    "away": {
+     "name": "Los Angeles FC",
+     "shortName": "LAFC",
+     "id": "867280"
+    },
+    "status": {
+     "utcTime": "2026-11-24T01:20:00Z",
+     "timezone": "UTC",
+     "finished": true,
+     "started": true,
+     "cancelled": false,
+     "awarded": false,
+     "scoreStr": "3 - 2",
+     "reason": {
+      "short": "FT",
+      "shortKey": "fulltime_short",
+      "long": "Full-Time",
+      "longKey": "finished"
+     }
+    },
+    "eliminatedTeamId": null
+   },
+   {
+    "round": "1/8",
+    "roundName": "Round of 16",
+    "pageUrl": "/matches/san-jose-earthquakes-vs-houston-dynamo-fc/1trfsc#6580839",
+    "id": "6580839",
+    "home": {
+     "name": "San Jose Earthquakes",
+     "shortName": "San Jose",
+     "id": "6603"
+    },
+    "away": {
+     "name": "Houston Dynamo FC",
+     "shortName": "Houston",
+     "id": "8259"
+    },
+    "status": {
+     "utcTime": "2026-11-25T03:00:00.000Z",
+     "numberOfAwayRedCards": 1,
+     "halfs": {
+      "firstHalfStarted": "25.11.2026 04:30:25",
+      "secondHalfStarted": "25.11.2026 05:34:02"
+     },
+     "periodLength": 45,
+     "finished": true,
+     "started": true,
+     "cancelled": false,
+     "awarded": false,
+     "scoreStr": "2 - 1",
+     "reason": {
+      "short": "FT",
+      "shortKey": "fulltime_short",
+      "long": "Full-Time",
+      "longKey": "finished"
+     }
+    },
+    "eliminatedTeamId": null
+   }
+  ]
+ },
+ "liga_268": {
+  "status": 200,
+  "url": "https://www.fotmob.com/leagues/268/fixtures/serie",
+  "next_data": true,
+  "titulo": null,
+  "pageProps_claves": [
+   "tabs",
+   "allAvailableSeasons",
+   "details",
+   "seostr",
+   "QAData",
+   "table",
+   "transfers",
+   "overview",
+   "stats",
+   "fixtures",
+   "playoff",
+   "seasons",
+   "appFallback"
+  ],
+  "temporadas": [
+   "2026",
+   "2025",
+   "2024",
+   "2023",
+   "2022",
+   "2021"
+  ],
+  "n_partidos": 1140,
+  "n_terminados": 1080,
+  "muestra": [
+   {
+    "round": "36",
+    "roundName": 36,
+    "pageUrl": "/matches/santos-vs-gremio/2rio1n#5103716",
+    "id": "5103716",
+    "home": {
+     "name": "Santos",
+     "shortName": "Santos",
+     "id": "8514"
+    },
+    "away": {
+     "name": "Grêmio",
+     "shortName": "Grêmio",
+     "id": "9769"
+    },
+    "status": {
+     "utcTime": "2026-11-24T00:00:00Z",
+     "timezone": "UTC",
+     "finished": true,
+     "started": true,
+     "cancelled": false,
+     "awarded": false,
+     "scoreStr": "0 - 2",
+     "reason": {
+      "short": "FT",
+      "shortKey": "fulltime_short",
+      "long": "Full-Time",
+      "longKey": "finished"
+     }
+    },
+    "eliminatedTeamId": null
+   },
+   {
+    "round": "37",
+    "roundName": 37,
+    "pageUrl": "/matches/palmeiras-vs-chapecoense/9xocb69#5103733",
+    "id": "5103733",
+    "home": {
+     "name": "Chapecoense",
+     "shortName": "Chapecoense",
+     "id": "197693"
+    },
+    "away": {
+     "name": "Palmeiras",
+     "shortName": "Palmeiras",
+     "id": "10283"
+    },
+    "status": {
+     "utcTime": "2026-11-24T21:00:00Z",
+     "timezone": "UTC",
+     "finished": true,
+     "started": true,
+     "cancelled": false,
+     "awarded": false,
+     "scoreStr": "3 - 0",
+     "reason": {
+      "short": "FT",
+      "shortKey": "fulltime_short",
+      "long": "Full-Time",
+      "longKey": "finished"
+     }
+    },
+    "eliminatedTeamId": null
+   }
+  ]
+ },
+ "liga_73": {
+  "status": 200,
+  "url": "https://www.fotmob.com/leagues/73/fixtures/europa-league",
+  "next_data": true,
+  "titulo": null,
+  "pageProps_claves": [
+   "tabs",
+   "allAvailableSeasons",
+   "details",
+   "seostr",
+   "QAData",
+   "table",
+   "transfers",
+   "overview",
+   "stats",
+   "fixtures",
+   "playoff",
+   "seasons",
+   "appFallback"
+  ],
+  "temporadas": [
+   "2026/2027",
+   "2025/2026",
+   "2024/2025",
+   "2023/2024",
+   "2022/2023",
+   "2021/2022"
+  ],
+  "n_partidos": 432,
+  "n_terminados": 216,
+  "muestra": [
+   {
+    "round": "4",
+    "roundName": 4,
+    "pageUrl": "/matches/sunderland-vs-dinamo-zagreb/2vb43m#6112331",
+    "id": "6112331",
+    "home": {
+     "name": "Sunderland",
+     "shortName": "Sunderland",
+     "id": "8472"
+    },
+    "away": {
+     "name": "Dinamo Zagreb",
+     "shortName": "Dinamo Zagreb",
+     "id": "10156"
+    },
+    "status": {
+     "utcTime": "2026-11-05T20:00:00Z",
+     "timezone": "UTC",
+     "finished": true,
+     "started": true,
+     "cancelled": false,
+     "awarded": false,
+     "scoreStr": "0 - 2",
+     "reason": {
+      "short": "FT",
+      "shortKey": "fulltime_short",
+      "long": "Full-Time",
+      "longKey": "finished"
+     }
+    },
+    "eliminatedTeamId": null
+   },
+   {
+    "round": "4",
+    "roundName": 4,
+    "pageUrl": "/matches/torreense-vs-ararat-armenia/7fdyqr2u#6112361",
+    "id": "6112361",
+    "home": {
+     "name": "Torreense",
+     "shortName": "Torreense",
+     "id": "212820"
+    },
+    "away": {
+     "name": "Ararat Armenia",
+     "shortName": "Ararat Armenia",
+     "id": "866109"
+    },
+    "status": {
+     "utcTime": "2026-11-05T20:00:00Z",
+     "timezone": "UTC",
+     "finished": true,
+     "started": true,
+     "cancelled": false,
+     "awarded": false,
+     "scoreStr": "3 - 2",
+     "reason": {
+      "short": "FT",
+      "shortKey": "fulltime_short",
+      "long": "Full-Time",
+      "longKey": "finished"
+     }
+    },
+    "eliminatedTeamId": null
+   }
+  ]
+ },
+ "liga_9806": {
+  "status": 200,
+  "url": "https://www.fotmob.com/leagues/9806/fixtures/uefa-nations-league",
+  "next_data": true,
+  "titulo": null,
+  "pageProps_claves": [
+   "tabs",
+   "allAvailableSeasons",
+   "details",
+   "seostr",
+   "QAData",
+   "table",
+   "transfers",
+   "overview",
+   "stats",
+   "fixtures",
+   "playoff",
+   "seasons",
+   "appFallback"
+  ],
+  "temporadas": [
+   "2026/2027",
+   "2024/2025",
+   "2022/2023",
+   "2020/2021",
+   "2018/2019"
+  ],
+  "n_partidos": 180,
+  "n_terminados": 144,
+  "muestra": [
+   {
+    "round": "6",
+    "roundName": 6,
+    "pageUrl": "/matches/denmark-vs-norway/2bbwdn#5181871",
+    "id": "5181871",
+    "home": {
+     "name": "Denmark",
+     "shortName": "Denmark",
+     "id": "8238"
+    },
+    "away": {
+     "name": "Norway",
+     "shortName": "Norway",
+     "id": "8492"
+    },
+    "group": "4",
+    "status": {
+     "utcTime": "2026-11-17T19:45:00Z",
+     "timezone": "UTC",
+     "finished": true,
+     "started": true,
+     "cancelled": false,
+     "awarded": false,
+     "scoreStr": "2 - 3",
+     "reason": {
+      "short": "FT",
+      "shortKey": "fulltime_short",
+      "long": "Full-Time",
+      "longKey": "finished"
+     }
+    },
+    "eliminatedTeamId": null
+   },
+   {
+    "round": "6",
+    "roundName": 6,
+    "pageUrl": "/matches/wales-vs-portugal/1nmd5x#5181872",
+    "id": "5181872",
+    "home": {
+     "name": "Wales",
+     "shortName": "Wales",
+     "id": "5790"
+    },
+    "away": {
+     "name": "Portugal",
+     "shortName": "Portugal",
+     "id": "8361"
+    },
+    "group": "4",
+    "status": {
+     "utcTime": "2026-11-17T19:45:00Z",
+     "timezone": "UTC",
+     "finished": true,
+     "started": true,
+     "cancelled": false,
+     "awarded": false,
+     "scoreStr": "2 - 3",
+     "reason": {
+      "short": "FT",
+      "shortKey": "fulltime_short",
+      "long": "Full-Time",
+      "longKey": "finished"
+     }
+    },
+    "eliminatedTeamId": null
+   }
+  ]
+ },
+ "liga_47": {
+  "status": 200,
+  "url": "https://www.fotmob.com/leagues/47/fixtures/premier-league",
+  "next_data": true,
+  "titulo": null,
+  "pageProps_claves": [
+   "tabs",
+   "allAvailableSeasons",
+   "details",
+   "seostr",
+   "QAData",
+   "table",
+   "transfers",
+   "overview",
+   "stats",
+   "fixtures",
+   "playoff",
+   "seasons",
+   "appFallback"
+  ],
+  "temporadas": [
+   "2026/2027",
+   "2025/2026",
+   "2024/2025",
+   "2023/2024",
+   "2022/2023",
+   "2021/2022"
+  ],
+  "n_partidos": 1140,
+  "n_terminados": 330,
+  "muestra": [
+   {
+    "round": "11",
+    "roundName": 11,
+    "pageUrl": "/matches/liverpool-vs-manchester-united/2ygkcb#5795521",
+    "id": "5795521",
+    "home": {
+     "name": "Liverpool",
+     "shortName": "Liverpool",
+     "id": "8650"
+    },
+    "away": {
+     "name": "Manchester United",
+     "shortName": "Man United",
+     "id": "10260"
+    },
+    "status": {
+     "utcTime": "2026-11-22T16:30:00Z",
+     "timezone": "UTC",
+     "finished": true,
+     "started": true,
+     "cancelled": false,
+     "awarded": false,
+     "scoreStr": "4 - 0",
+     "reason": {
+      "short": "FT",
+      "shortKey": "fulltime_short",
+      "long": "Full-Time",
+      "longKey": "finished"
+     }
+    },
+    "eliminatedTeamId": null
+   },
+   {
+    "round": "11",
+    "roundName": 11,
+    "pageUrl": "/matches/everton-vs-brentford/2v1yu4#5795517",
+    "id": "5795517",
+    "home": {
+     "name": "Brentford",
+     "shortName": "Brentford",
+     "id": "9937"
+    },
+    "away": {
+     "name": "Everton",
+     "shortName": "Everton",
+     "id": "8668"
+    },
+    "status": {
+     "utcTime": "2026-11-23T20:00:00Z",
+     "timezone": "UTC",
+     "finished": true,
+     "started": true,
+     "cancelled": false,
+     "awarded": false,
+     "scoreStr": "4 - 0",
+     "reason": {
+      "short": "FT",
+      "shortKey": "fulltime_short",
+      "long": "Full-Time",
+      "longKey": "finished"
+     }
+    },
+    "eliminatedTeamId": null
+   }
+  ]
+ },
+ "liga_87_temporada_pasada": {
+  "status": 200,
+  "url": "https://www.fotmob.com/leagues/87/fixtures/laliga?season=2025%2F2026",
+  "next_data": true,
+  "titulo": null,
+  "pageProps_claves": [
+   "tabs",
+   "allAvailableSeasons",
+   "details",
+   "seostr",
+   "QAData",
+   "table",
+   "transfers",
+   "overview",
+   "stats",
+   "fixtures",
+   "playoff",
+   "seasons",
+   "appFallback"
+  ],
+  "temporadas": [
+   "2026/2027",
+   "2025/2026",
+   "2024/2025",
+   "2023/2024",
+   "2022/2023",
+   "2021/2022"
+  ],
+  "n_partidos": 1140,
+  "n_terminados": 1140,
+  "muestra": [
+   {
+    "round": "38",
+    "roundName": 38,
+    "pageUrl": "/matches/barcelona-vs-valencia/2ycx1d#4837488",
+    "id": "4837488",
+    "home": {
+     "name": "Valencia",
+     "shortName": "Valencia",
+     "id": "10267"
+    },
+    "away": {
+     "name": "Barcelona",
+     "shortName": "Barcelona",
+     "id": "8634"
+    },
+    "status": {
+     "utcTime": "2026-05-23T19:00:00Z",
+     "timezone": "UTC",
+     "finished": true,
+     "started": true,
+     "cancelled": false,
+     "awarded": false,
+     "scoreStr": "3 - 1",
+     "reason": {
+      "short": "FT",
+      "shortKey": "fulltime_short",
+      "long": "Full-Time",
+      "longKey": "finished"
+     }
+    },
+    "eliminatedTeamId": null
+   },
+   {
+    "round": "38",
+    "roundName": 38,
+    "pageUrl": "/matches/atletico-madrid-vs-villarreal/3ceu3u#4837487",
+    "id": "4837487",
+    "home": {
+     "name": "Villarreal",
+     "shortName": "Villarreal",
+     "id": "10205"
+    },
+    "away": {
+     "name": "Atlético Madrid",
+     "shortName": "Atlético Madrid",
+     "id": "9906"
+    },
+    "status": {
+     "utcTime": "2026-05-24T19:00:00Z",
+     "timezone": "UTC",
+     "finished": true,
+     "started": true,
+     "cancelled": false,
+     "awarded": false,
+     "scoreStr": "5 - 1",
+     "reason": {
+      "short": "FT",
+      "shortKey": "fulltime_short",
+      "long": "Full-Time",
+      "longKey": "finished"
+     }
+    },
+    "eliminatedTeamId": null
+   }
+  ]
+ },
+ "partido": {
+  "match_id": "5868135",
+  "link": "/matches/levante-vs-elche/2xrvna#5868135",
+  "por_link": {
+   "status": 200,
+   "url": "https://www.fotmob.com/matches/levante-vs-elche/2xrvna#5868135",
+   "next_data": true,
+   "xg": [
+    [
+     ".props.pageProps.general.coverageLevel",
+     "\"xG\""
+    ],
+    [
+     ".props.pageProps.header.events.homeTeamGoals.Requena[0].shotmapEvent.expectedGoals",
+     "0.09939877688884735"
+    ],
+    [
+     ".props.pageProps.header.events.homeTeamGoals.Requena[0].shotmapEvent.expectedGoalsOnTarget",
+     "0.8595866560935974"
+    ],
+    [
+     ".props.pageProps.header.events.awayTeamGoals.Revivo[0].shotmapEvent.expectedGoals",
+     "0.04520478472113609"
+    ],
+    [
+     ".props.pageProps.header.events.awayTeamGoals.Revivo[0].shotmapEvent.expectedGoalsOnTarget",
+     "0.39007964730262756"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.shotmap[0].expectedGoals",
+     "0.049808233976364136"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.shotmap[0].expectedGoalsOnTarget",
+     "0"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.shotmap[1].expectedGoals",
+     "0.09939877688884735"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.shotmap[1].expectedGoalsOnTarget",
+     "0.8595866560935974"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.stats[0].stats.Expected goals (xG)",
+     "{\"key\": \"expected_goals\", \"stat\": {\"value\": 0.15, \"type\": \"double\"}}"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.stats[0].stats.Expected goals (xG).key",
+     "\"expected_goals\""
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.stats[0].stats.Expected goals on target (xGOT)",
+     "{\"key\": \"expected_goals_on_target_variant\", \"stat\": {\"value\": 0.86, \"type\": \"double\"}}"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.stats[0].stats.Expected goals on target (xGOT).key",
+     "\"expected_goals_on_target_variant\""
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.stats[0].stats.Expected assists (xA)",
+     "{\"key\": \"expected_assists\", \"stat\": {\"value\": 0.09, \"type\": \"double\"}}"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.stats[0].stats.Expected assists (xA).key",
+     "\"expected_assists\""
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.stats[0].stats.xG + xA",
+     "{\"key\": \"xg_and_xa\", \"stat\": {\"value\": 0.24, \"type\": \"double\"}}"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.stats[0].stats.xG + xA.key",
+     "\"xg_and_xa\""
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.stats[1].stats.xG Non-penalty",
+     "{\"key\": \"expected_goals_non_penalty\", \"stat\": {\"value\": 0.15, \"type\": \"double\"}}"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.stats[1].stats.xG Non-penalty.key",
+     "\"expected_goals_non_penalty\""
+    ],
+    [
+     ".props.pageProps.content.matchFacts.events.events[8].shotmapEvent.expectedGoals",
+     "0.04520478472113609"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.events.events[8].shotmapEvent.expectedGoalsOnTarget",
+     "0.39007964730262756"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.events.events[16].shotmapEvent.expectedGoals",
+     "0.09939877688884735"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.events.events[16].shotmapEvent.expectedGoalsOnTarget",
+     "0.8595866560935974"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.topScorers.homePlayer.stats.expectedGoals",
+     "4.13129997253418"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.topScorers.awayPlayer.stats.expectedGoals",
+     "4.619900226593018"
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[0].stats[1].title",
+     "\"Expected goals (xG)\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[0].stats[1].key",
+     "\"expected_goals\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].title",
+     "\"Expected goals (xG)\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].key",
+     "\"expected_goals\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].stats[0].title",
+     "\"Expected goals (xG)\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].stats[0].key",
+     "\"expected_goals\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].stats[1].title",
+     "\"Expected goals (xG)\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].stats[1].key",
+     "\"expected_goals\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].stats[2].title",
+     "\"xG open play\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].stats[2].key",
+     "\"expected_goals_open_play\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].stats[3].title",
+     "\"xG set play\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].stats[3].key",
+     "\"expected_goals_set_play\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].stats[4].title",
+     "\"xG non-penalty\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].stats[4].key",
+     "\"expected_goals_non_penalty\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].stats[5].title",
+     "\"xG on target (xGOT)\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].stats[5].key",
+     "\"expected_goals_on_target\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[0].stats[1].title",
+     "\"Expected goals (xG)\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[0].stats[1].key",
+     "\"expected_goals\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].title",
+     "\"Expected goals (xG)\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].key",
+     "\"expected_goals\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].stats[0].title",
+     "\"Expected goals (xG)\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].stats[0].key",
+     "\"expected_goals\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].stats[1].title",
+     "\"Expected goals (xG)\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].stats[1].key",
+     "\"expected_goals\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].stats[2].title",
+     "\"xG open play\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].stats[2].key",
+     "\"expected_goals_open_play\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].stats[3].title",
+     "\"xG set play\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].stats[3].key",
+     "\"expected_goals_set_play\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].stats[4].title",
+     "\"xG non-penalty\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].stats[4].key",
+     "\"expected_goals_non_penalty\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].stats[5].title",
+     "\"xG on target (xGOT)\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].stats[5].key",
+     "\"expected_goals_on_target\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.SecondHalf.stats[0].stats[1].title",
+     "\"Expected goals (xG)\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.SecondHalf.stats[0].stats[1].key",
+     "\"expected_goals\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.SecondHalf.stats[2].title",
+     "\"Expected goals (xG)\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.SecondHalf.stats[2].key",
+     "\"expected_goals\""
+    ]
+   ],
+   "general": "{\"matchId\": \"5868135\", \"matchName\": \"Levante-vs-Elche_Mon, Nov 23, 2026, 20:00 UTC\", \"matchRound\": \"13\", \"teamColors\": {\"darkMode\": {\"home\": \"#335686\", \"away\": \"#FFFFFF\"}, \"lightMode\": {\"home\": \"#335686\", \"away\": \"#00662D\"}, \"fontDarkMode\": {\"home\": \"rgba(255, 255, 255, 1.0)\", \"away\": \"rgba(29, 29, 29, 1.0)\"}, \"fontLightMode\": {\"home\": \"rgba(255, 255, 255, 1.0)\", \"away\": \"rgba(255, 255, 255, 1.0)\"}}, \"leagueId\": 87, \"leagueName\": \"LaLiga\", \"leagueRoundName\": \"13\", \"parentLeagueId\": 87, \"countryCode\": \"ESP\", \"homeTeam\": {\"name\": \"Levante\", \"id\": 8581}, \"awayTeam\": {\"name\": \"Elche\", \"id\": 10268}, \"coverageLevel\": \"xG\", \"matchTimeUTC\": \"Mon, Nov 23, 2026, 20:00 UTC\", \"matchTimeUTCDate\": \"2026-11-23T20:00:00.000Z\", \"started\": true, \"finished\": true, \"gender\": \"male\"}",
+   "header": "{\"teams\": [{\"name\": \"Levante\", \"id\": 8581, \"score\": 1, \"imageUrl\": \"https://images.fotmob.com/image_resources/logo/teamlogo/8581_small.png\", \"pageUrl\": \"/teams/8581/overview/levante\"}, {\"name\": \"Elche\", \"id\": 10268, \"score\": 1, \"imageUrl\": \"https://images.fotmob.com/image_resources/logo/teamlogo/10268_small.png\", \"pageUrl\": \"/teams/10268/overview/elche\"}], \"status\": {\"utcTime\": \"2026-11-23T20:00:00.000Z\", \"timezone\": \"UTC\", \"numberOfHomeRedCards\": 0, \"numberOfAwayRedCards\": 0, \"halfs\": {\"firstHalfStarted\": \"23.11.2026 21:01:37\", \"firstHalfEnded\": \"23.11.2026 21:47:53\", \"secondHalfStarted\": \"23.11.2026 22:04:11\", \"secondHalfEnded\": \"23.11.2026 22:53:42\", \"firstExtraHalfStarted\": \"\", \"secondExtraHalfStarted\": \"\", \"gameEnded\": \"23.11.2026 22:53:42\"}, \"finished\": true, \"started\": true, \"cancel"
+  },
+  "por_id": {
+   "status": 200,
+   "url": "https://www.fotmob.com/match/5868135",
+   "next_data": true,
+   "xg": [
+    [
+     ".props.pageProps.general.coverageLevel",
+     "\"xG\""
+    ],
+    [
+     ".props.pageProps.header.events.homeTeamGoals.Requena[0].shotmapEvent.expectedGoals",
+     "0.09939877688884735"
+    ],
+    [
+     ".props.pageProps.header.events.homeTeamGoals.Requena[0].shotmapEvent.expectedGoalsOnTarget",
+     "0.8595866560935974"
+    ],
+    [
+     ".props.pageProps.header.events.awayTeamGoals.Revivo[0].shotmapEvent.expectedGoals",
+     "0.04520478472113609"
+    ],
+    [
+     ".props.pageProps.header.events.awayTeamGoals.Revivo[0].shotmapEvent.expectedGoalsOnTarget",
+     "0.39007964730262756"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.shotmap[0].expectedGoals",
+     "0.049808233976364136"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.shotmap[0].expectedGoalsOnTarget",
+     "0"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.shotmap[1].expectedGoals",
+     "0.09939877688884735"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.shotmap[1].expectedGoalsOnTarget",
+     "0.8595866560935974"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.stats[0].stats.Expected goals (xG)",
+     "{\"key\": \"expected_goals\", \"stat\": {\"value\": 0.15, \"type\": \"double\"}}"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.stats[0].stats.Expected goals (xG).key",
+     "\"expected_goals\""
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.stats[0].stats.Expected goals on target (xGOT)",
+     "{\"key\": \"expected_goals_on_target_variant\", \"stat\": {\"value\": 0.86, \"type\": \"double\"}}"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.stats[0].stats.Expected goals on target (xGOT).key",
+     "\"expected_goals_on_target_variant\""
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.stats[0].stats.Expected assists (xA)",
+     "{\"key\": \"expected_assists\", \"stat\": {\"value\": 0.09, \"type\": \"double\"}}"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.stats[0].stats.Expected assists (xA).key",
+     "\"expected_assists\""
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.stats[0].stats.xG + xA",
+     "{\"key\": \"xg_and_xa\", \"stat\": {\"value\": 0.24, \"type\": \"double\"}}"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.stats[0].stats.xG + xA.key",
+     "\"xg_and_xa\""
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.stats[1].stats.xG Non-penalty",
+     "{\"key\": \"expected_goals_non_penalty\", \"stat\": {\"value\": 0.15, \"type\": \"double\"}}"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.playerOfTheMatch.stats[1].stats.xG Non-penalty.key",
+     "\"expected_goals_non_penalty\""
+    ],
+    [
+     ".props.pageProps.content.matchFacts.events.events[8].shotmapEvent.expectedGoals",
+     "0.04520478472113609"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.events.events[8].shotmapEvent.expectedGoalsOnTarget",
+     "0.39007964730262756"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.events.events[16].shotmapEvent.expectedGoals",
+     "0.09939877688884735"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.events.events[16].shotmapEvent.expectedGoalsOnTarget",
+     "0.8595866560935974"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.topScorers.homePlayer.stats.expectedGoals",
+     "4.13129997253418"
+    ],
+    [
+     ".props.pageProps.content.matchFacts.topScorers.awayPlayer.stats.expectedGoals",
+     "4.619900226593018"
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[0].stats[1].title",
+     "\"Expected goals (xG)\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[0].stats[1].key",
+     "\"expected_goals\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].title",
+     "\"Expected goals (xG)\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].key",
+     "\"expected_goals\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].stats[0].title",
+     "\"Expected goals (xG)\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].stats[0].key",
+     "\"expected_goals\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].stats[1].title",
+     "\"Expected goals (xG)\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].stats[1].key",
+     "\"expected_goals\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].stats[2].title",
+     "\"xG open play\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].stats[2].key",
+     "\"expected_goals_open_play\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].stats[3].title",
+     "\"xG set play\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].stats[3].key",
+     "\"expected_goals_set_play\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].stats[4].title",
+     "\"xG non-penalty\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].stats[4].key",
+     "\"expected_goals_non_penalty\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].stats[5].title",
+     "\"xG on target (xGOT)\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.All.stats[2].stats[5].key",
+     "\"expected_goals_on_target\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[0].stats[1].title",
+     "\"Expected goals (xG)\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[0].stats[1].key",
+     "\"expected_goals\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].title",
+     "\"Expected goals (xG)\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].key",
+     "\"expected_goals\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].stats[0].title",
+     "\"Expected goals (xG)\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].stats[0].key",
+     "\"expected_goals\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].stats[1].title",
+     "\"Expected goals (xG)\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].stats[1].key",
+     "\"expected_goals\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].stats[2].title",
+     "\"xG open play\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].stats[2].key",
+     "\"expected_goals_open_play\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].stats[3].title",
+     "\"xG set play\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].stats[3].key",
+     "\"expected_goals_set_play\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].stats[4].title",
+     "\"xG non-penalty\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].stats[4].key",
+     "\"expected_goals_non_penalty\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].stats[5].title",
+     "\"xG on target (xGOT)\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.FirstHalf.stats[2].stats[5].key",
+     "\"expected_goals_on_target\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.SecondHalf.stats[0].stats[1].title",
+     "\"Expected goals (xG)\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.SecondHalf.stats[0].stats[1].key",
+     "\"expected_goals\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.SecondHalf.stats[2].title",
+     "\"Expected goals (xG)\""
+    ],
+    [
+     ".props.pageProps.content.stats.Periods.SecondHalf.stats[2].key",
+     "\"expected_goals\""
+    ]
+   ],
+   "general": "{\"matchId\": \"5868135\", \"matchName\": \"Levante-vs-Elche_Mon, Nov 23, 2026, 20:00 UTC\", \"matchRound\": \"13\", \"teamColors\": {\"darkMode\": {\"home\": \"#335686\", \"away\": \"#FFFFFF\"}, \"lightMode\": {\"home\": \"#335686\", \"away\": \"#00662D\"}, \"fontDarkMode\": {\"home\": \"rgba(255, 255, 255, 1.0)\", \"away\": \"rgba(29, 29, 29, 1.0)\"}, \"fontLightMode\": {\"home\": \"rgba(255, 255, 255, 1.0)\", \"away\": \"rgba(255, 255, 255, 1.0)\"}}, \"leagueId\": 87, \"leagueName\": \"LaLiga\", \"leagueRoundName\": \"13\", \"parentLeagueId\": 87, \"countryCode\": \"ESP\", \"homeTeam\": {\"name\": \"Levante\", \"id\": 8581}, \"awayTeam\": {\"name\": \"Elche\", \"id\": 10268}, \"coverageLevel\": \"xG\", \"matchTimeUTC\": \"Mon, Nov 23, 2026, 20:00 UTC\", \"matchTimeUTCDate\": \"2026-11-23T20:00:00.000Z\", \"started\": true, \"finished\": true, \"gender\": \"male\"}",
+   "header": "{\"teams\": [{\"name\": \"Levante\", \"id\": 8581, \"score\": 1, \"imageUrl\": \"https://images.fotmob.com/image_resources/logo/teamlogo/8581_small.png\", \"pageUrl\": \"/teams/8581/overview/levante\"}, {\"name\": \"Elche\", \"id\": 10268, \"score\": 1, \"imageUrl\": \"https://images.fotmob.com/image_resources/logo/teamlogo/10268_small.png\", \"pageUrl\": \"/teams/10268/overview/elche\"}], \"status\": {\"utcTime\": \"2026-11-23T20:00:00.000Z\", \"timezone\": \"UTC\", \"numberOfHomeRedCards\": 0, \"numberOfAwayRedCards\": 0, \"halfs\": {\"firstHalfStarted\": \"23.11.2026 21:01:37\", \"firstHalfEnded\": \"23.11.2026 21:47:53\", \"secondHalfStarted\": \"23.11.2026 22:04:11\", \"secondHalfEnded\": \"23.11.2026 22:53:42\", \"firstExtraHalfStarted\": \"\", \"secondExtraHalfStarted\": \"\", \"gameEnded\": \"23.11.2026 22:53:42\"}, \"finished\": true, \"started\": true, \"cancel"
+  },
+  "api_matchDetails": {
+   "status": 404,
+   "url": "https://www.fotmob.com/api/matchDetails?matchId=5868135",
+   "tipo": null,
+   "inicio": ""
+  }
+ },
+ "espn": {
+  "evento": "401882804",
+  "stats": [
+   "foulsCommitted",
+   "yellowCards",
+   "redCards",
+   "offsides",
+   "wonCorners",
+   "saves",
+   "possessionPct",
+   "totalShots",
+   "shotsOnTarget",
+   "shotPct",
+   "penaltyKickGoals",
+   "penaltyKickShots",
+   "accuratePasses",
+   "totalPasses",
+   "passPct",
+   "accurateCrosses",
+   "totalCrosses",
+   "crossPct",
+   "totalLongBalls",
+   "accurateLongBalls",
+   "longballPct",
+   "blockedShots",
+   "effectiveTackles",
+   "totalTackles",
+   "tacklePct",
+   "interceptions",
+   "effectiveClearance",
+   "totalClearance",
+   "foulsCommitted",
+   "yellowCards",
+   "redCards",
+   "offsides",
+   "wonCorners",
+   "saves",
+   "possessionPct",
+   "totalShots",
+   "shotsOnTarget",
+   "shotPct",
+   "penaltyKickGoals",
+   "penaltyKickShots",
+   "accuratePasses",
+   "totalPasses",
+   "passPct",
+   "accurateCrosses",
+   "totalCrosses",
+   "crossPct",
+   "totalLongBalls",
+   "accurateLongBalls",
+   "longballPct",
+   "blockedShots",
+   "effectiveTackles",
+   "totalTackles",
+   "tacklePct",
+   "interceptions",
+   "effectiveClearance",
+   "totalClearance"
+  ],
+  "xg": [
+   [
+    ".leaders[0].leaders[0].leaders[0].statistics[2].name",
+    "\"expectedGoals\""
+   ],
+   [
+    ".leaders[0].leaders[0].leaders[0].statistics[2].displayName",
+    "\"Expected Goals\""
+   ],
+   [
+    ".leaders[0].leaders[0].leaders[0].statistics[2].shortDisplayName",
+    "\"xG\""
+   ],
+   [
+    ".leaders[0].leaders[0].leaders[0].statistics[2].description",
+    "\"Total expected goals\""
+   ],
+   [
+    ".leaders[0].leaders[0].leaders[0].statistics[2].abbreviation",
+    "\"xG\""
+   ],
+   [
+    ".leaders[0].leaders[0].leaders[0].summary",
+    "\"1 SOG, 1.25 xG\""
+   ],
+   [
+    ".leaders[1].leaders[0].leaders[0].statistics[2].name",
+    "\"expectedGoals\""
+   ],
+   [
+    ".leaders[1].leaders[0].leaders[0].statistics[2].displayName",
+    "\"Expected Goals\""
+   ],
+   [
+    ".leaders[1].leaders[0].leaders[0].statistics[2].shortDisplayName",
+    "\"xG\""
+   ],
+   [
+    ".leaders[1].leaders[0].leaders[0].statistics[2].description",
+    "\"Total expected goals\""
+   ],
+   [
+    ".leaders[1].leaders[0].leaders[0].statistics[2].abbreviation",
+    "\"xG\""
+   ],
+   [
+    ".leaders[1].leaders[0].leaders[0].summary",
+    "\"1 SOG, 0.06 xG\""
+   ],
+   [
+    ".leaders[1].leaders[3].leaders[0].statistics[2].name",
+    "\"expectedGoalsConceded\""
+   ],
+   [
+    ".leaders[1].leaders[3].leaders[0].statistics[2].displayName",
+    "\"Expected Goals Conceded\""
+   ],
+   [
+    ".leaders[1].leaders[3].leaders[0].statistics[2].shortDisplayName",
+    "\"xGC\""
+   ],
+   [
+    ".leaders[1].leaders[3].leaders[0].statistics[2].description",
+    "\"Total Expected Goals Against\""
+   ],
+   [
+    ".leaders[1].leaders[3].leaders[0].statistics[2].abbreviation",
+    "\"xGC\""
+   ],
+   [
+    ".leaders[1].leaders[3].leaders[0].summary",
+    "\"10 SOGA, 3.29 xGC\""
+   ]
+  ]
+ },
+ "sofascore": {
+  "status": 403,
+  "url": "https://api.sofascore.com/api/v1/sport/football/scheduled-events/2026-11-22",
+  "tipo": "application/json",
+  "inicio": "{\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}"
+ }
+}
