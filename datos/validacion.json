@@ -1,12 +1,12 @@
 {
- "fecha": "24/11/2026 21:57 UTC",
+ "fecha": "25/11/2026 21:06 UTC",
  "ligas": {
   "brasileirao": {
-   "partidos": 739,
-   "ultimo": "23/11/2026",
+   "partidos": 740,
+   "ultimo": "24/11/2026",
    "temporadas": {
     "2025": 380,
-    "2026": 359
+    "2026": 360
    },
    "equipos": 24,
    "vacias": 0,
@@ -30,11 +30,11 @@
    "ok": true
   },
   "champions": {
-   "partidos": 266,
-   "ultimo": "24/11/2026",
+   "partidos": 269,
+   "ultimo": "25/11/2026",
    "temporadas": {
     "2025-26": 186,
-    "2026-27": 80
+    "2026-27": 83
    },
    "equipos": 54,
    "vacias": 0,
@@ -55,7 +55,7 @@
    "duplicados": 0,
    "errores": [],
    "avisos": [
-    "ultimo partido hace 19 dias (05/11/2026); revisar si la fuente dejo de actualizar"
+    "ultimo partido hace 20 dias (05/11/2026); revisar si la fuente dejo de actualizar"
    ],
    "ok": true
   },
@@ -102,11 +102,11 @@
    "ok": true
   },
   "mls": {
-   "partidos": 1051,
-   "ultimo": "23/11/2026",
+   "partidos": 1052,
+   "ultimo": "24/11/2026",
    "temporadas": {
     "2025": 533,
-    "2026": 518
+    "2026": 519
    },
    "equipos": 30,
    "vacias": 0,
