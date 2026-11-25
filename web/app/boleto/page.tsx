@@ -1,31 +1,78 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { apiPost, type ResumenBoleto, type Stake } from "@/lib/api";
+import {
+  apiPost,
+  type ResumenBoleto,
+  type Stake,
+  type StakePata,
+} from "@/lib/api";
 import { useStore } from "@/lib/store";
 import { gruposBoleto } from "@/lib/selecciones";
 import { num, pct, q, signed } from "@/lib/fmt";
 import { Btn, Card, Cargando, Kpi, Nota, T } from "@/components/ui";
 import { Crest } from "@/components/Crest";
+const FRACCIONES = ["Kelly", "½ Kelly", "¼ Kelly", "⅛ Kelly"];
+
+function StakeLinea({ p, fraccion }: { p?: StakePata; fraccion: string }) {
+  if (!p) return null;
+  if (!p.disponible)
+    return (
+      <p className="text-xs text-mut mt-3" data-testid="stake-pata">
+        Stake no disponible: {p.motivo}
+      </p>
+    );
+  if (p.sin_valor)
+    return (
+      <p className="text-sm font-semibold text-bad mt-3" data-testid="stake-pata">
+        Sin valor: Kelly no asigna apuesta
+      </p>
+    );
+  const o = p.opciones.find((x) => x.nombre === fraccion);
+  return (
+    <div className="mt-3" data-testid="stake-pata">
+      <div className="text-sm">
+        Stake {fraccion}:{" "}
+        <b className="num text-acc text-base">{q(o?.monto ?? 0)}</b>{" "}
+        <span className="text-xs text-mut">
+          ({pct(o?.fraccion ?? 0, 1)} de la banca · EV {signed(p.ev)})
+        </span>
+      </div>
+      {p.ajuste_correlacion && (
+        <p className="text-xs text-mut mt-1">
+          Reducido: comparte partido con otras selecciones.
+        </p>
+      )}
+      {p.pesimista_sin_valor && (
+        <p className="text-xs text-mut mt-1 border-l-2 border-warn pl-2">
+          En el escenario pesimista del modelo no hay valor.
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function Boleto() {
   const { boleto, removeLeg, vaciar, banca, setBanca, listo } = useStore();
   const [revision, setRevision] = useState(0);
   const [res, setRes] = useState<{
     resumen: ResumenBoleto;
     stake: Stake;
+    por_pata?: StakePata[];
     clave: string;
   } | null>(null);
   const [error, setError] = useState<{ clave: string; message: string } | null>(
     null,
   );
   const [confirm, setConfirm] = useState(false);
+  const [fraccion, setFraccion] = useState("¼ Kelly");
   const clave = JSON.stringify({ patas: boleto, banca, revision });
   useEffect(() => {
     if (!listo || !boleto.length) return;
     const controller = new AbortController();
     setRes(null);
     setError(null);
-    apiPost<{ resumen: ResumenBoleto; stake: Stake }>(
+    apiPost<{ resumen: ResumenBoleto; stake: Stake; por_pata?: StakePata[] }>(
       "/boleto",
       { patas: boleto, banca },
       controller.signal,
@@ -42,6 +89,11 @@ export default function Boleto() {
   const actual = res?.clave === clave ? res : null;
   const rb = actual?.resumen;
   const stk = actual?.stake;
+  const porPata = actual?.por_pata ?? [];
+  const totalSencillas = porPata.reduce(
+    (s, p) => s + (p.opciones.find((o) => o.nombre === fraccion)?.monto ?? 0),
+    0,
+  );
   const fail = error?.clave === clave;
   return (
     <>
@@ -124,6 +176,10 @@ export default function Boleto() {
                           <b className="text-txt">{pct(l.prob, 1)}</b>
                         </span>
                       </div>
+                      <StakeLinea
+                        p={porPata.find((p) => p.indice === index)}
+                        fraccion={fraccion}
+                      />
                       <details className="mt-2">
                         <summary className="text-xs text-mut min-h-11 flex items-center">
                           Detalles guardados
@@ -296,9 +352,10 @@ export default function Boleto() {
               <summary>Banca y Kelly</summary>
               <div className="disclosure-body">
                 <p className="text-xs text-mut leading-relaxed mb-4">
-                  Kelly usa las liquidaciones y el mínimo de los escenarios de
-                  sensibilidad. Es una referencia matemática, no una garantía de
-                  rentabilidad.
+                  Sencillas: Kelly con la probabilidad central del modelo, con
+                  aviso si el escenario pesimista no tiene valor. Combinada: el
+                  mínimo de los escenarios. Es una referencia matemática, no una
+                  garantía de rentabilidad.
                 </p>
                 <label className="block text-sm font-semibold">
                   Banca de referencia (Q)
@@ -318,6 +375,45 @@ export default function Boleto() {
                   Guardada localmente; no representa una cuenta ni un saldo
                   conectado.
                 </p>
+                <div
+                  role="radiogroup"
+                  aria-label="Fracción de Kelly"
+                  className="grid grid-cols-4 gap-2 mb-4"
+                >
+                  {FRACCIONES.map((f) => (
+                    <button
+                      key={f}
+                      role="radio"
+                      aria-checked={fraccion === f}
+                      onClick={() => setFraccion(f)}
+                      className={`min-h-11 rounded-lg text-xs font-semibold border ${
+                        fraccion === f
+                          ? "border-acc text-acc bg-card2"
+                          : "border-line2 text-mut"
+                      }`}
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </div>
+                {porPata.length > 0 && (
+                  <div className="border-t border-line2 pt-3 mb-4">
+                    <T>Sencillas · {fraccion}</T>
+                    <div
+                      className="num text-2xl mt-2"
+                      data-testid="total-sencillas"
+                    >
+                      {q(totalSencillas)}
+                    </div>
+                    <p className="text-xs text-mut mt-1">
+                      Total si juegas cada selección por separado (
+                      {pct(totalSencillas / banca, 1)} de la banca). Las del
+                      mismo partido se limitan juntas al mayor Kelly individual,
+                      porque suelen ganarse o perderse a la vez.
+                    </p>
+                  </div>
+                )}
+                <T>Combinada</T>
                 {stk ? (
                   !stk.disponible ? (
                     <p className="text-xs leading-relaxed text-mut">

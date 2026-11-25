@@ -289,6 +289,20 @@ export type Stake = {
   banca: number;
   opciones: { nombre: string; fraccion: number; monto: number }[];
 } | null;
+export type StakePata = {
+  indice: number;
+  disponible: boolean;
+  kelly: number | null;
+  kelly_ajustado: number | null;
+  kelly_lo: number | null;
+  ajuste_correlacion: boolean;
+  pesimista_sin_valor: boolean;
+  sin_valor: boolean;
+  prob: number | null;
+  ev: number | null;
+  motivo: string | null;
+  opciones: { nombre: string; fraccion: number; monto: number }[];
+};
 export type Diccionario = {
   grupo: string;
   descripcion: string;

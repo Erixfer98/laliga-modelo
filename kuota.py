@@ -605,6 +605,52 @@ def stake(legs: list, banca: float) -> dict:
     return stake_desde_resumen(rb, banca)
 
 
+FRACCIONES_KELLY = (("Kelly", 1), ("½ Kelly", 2), ("¼ Kelly", 4), ("⅛ Kelly", 8))
+
+
+def stakes_por_pata(legs: list, banca: float) -> list:
+    """Stake de cada selección jugada como apuesta sencilla.
+
+    Kelly de cada pata = probabilidad central recalculada por el motor (con
+    devolución). `kelly_lo` = mínimo de los escenarios de sensibilidad; si es 0,
+    `pesimista_sin_valor` avisa que el rango del modelo no respalda la apuesta.
+    Varias sencillas del mismo partido están correlacionadas: si el partido sale
+    distinto, se pierden juntas. Por eso la exposición total de un partido se
+    limita al mayor Kelly individual y se reparte en proporción.
+    """
+    if not legs:
+        return []
+    if not math.isfinite(banca) or banca <= 0:
+        raise ValueError("banca debe ser finita y positiva")
+    patas = []
+    for i, leg in enumerate(legs):
+        rb = resumen_boleto([leg])
+        f = kelly(rb["prob"], rb["cuota"], rb["push"]) if rb["disponible"] else None
+        sel = leg.get("seleccion") or {}
+        patas.append({"indice": i, "disponible": f is not None, "kelly": f, "kelly_ajustado": f,
+                      "kelly_lo": rb["kelly"], "ajuste_correlacion": False,
+                      "pesimista_sin_valor": f is not None and f > 0 and not (rb["kelly"] or 0) > 0,
+                      "prob": rb["prob"], "lo": rb["lo"], "ev": rb["ev"], "ev_lo": rb["ev_lo"],
+                      "motivo": None if f is not None else (rb["advertencias"] or ["Kelly no disponible."])[0],
+                      "_partido": (sel.get("liga"), sel.get("local"), sel.get("visitante"))})
+    grupos = {}
+    for p in patas:
+        if p["disponible"] and p["kelly"] > 0:
+            grupos.setdefault(p["_partido"], []).append(p)
+    for ps in grupos.values():
+        total, tope = sum(p["kelly"] for p in ps), max(p["kelly"] for p in ps)
+        if total > tope:
+            for p in ps:
+                p.update(kelly_ajustado=p["kelly"] * tope / total, ajuste_correlacion=True)
+    for p in patas:
+        del p["_partido"]
+        f = p["kelly_ajustado"]
+        p["sin_valor"] = f is not None and f <= 0
+        p["opciones"] = [] if f is None or f <= 0 else [
+            {"nombre": nm, "fraccion": f/d, "monto": banca*f/d} for nm, d in FRACCIONES_KELLY]
+    return patas
+
+
 def stake_desde_resumen(rb, banca):
     if rb is None:
         return None
@@ -615,7 +661,7 @@ def stake_desde_resumen(rb, banca):
             "banca": banca, "boleto": rb, "advertencia": " ".join(rb["advertencias"]),
             "opciones": [] if f is None or f <= 0 else [
                 {"nombre": nm, "fraccion": f/d, "monto": banca*f/d}
-                for nm, d in (("Kelly", 1), ("½ Kelly", 2), ("¼ Kelly", 4), ("⅛ Kelly", 8))]}
+                for nm, d in FRACCIONES_KELLY]}
 
 
 # ================================================================== vistas: el paquete completo que necesita cada pantalla

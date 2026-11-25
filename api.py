@@ -13,7 +13,7 @@ Rutas:
   GET  /liga/{liga}/partido                     Armar + Analizar: mercados evaluados + detalle de una pata
                                                 ?local=..&visitante=..&met=goles&n=5&filtro=Todos&grupo=Total&pata=Total Over 2.5&cfg={json}
                                                 modo=compacto: solo lo que usa la pantalla de partido (λ, prob, cuota justa, X/N)
-  POST /boleto   {"patas": [...], "banca": 1000} resumen del boleto + stake Kelly
+  POST /boleto   {"patas": [...], "banca": 1000} resumen del boleto + stake Kelly (conjunto y por pata)
   GET  /diccionario                             terminos                                     (?q=kelly)
   GET  /logos                                   escudos y logos de ligas (datos/logos.json, lo genera logos.py)
 Pendiente (necesitan claves): login de usuarios, registro de uso y el analista IA. Hoy siguen en app.py.
@@ -214,7 +214,8 @@ def boleto(body: dict):
     if not math.isfinite(banca) or banca <= 0:
         raise ValueError("banca debe ser finita y positiva")
     resumen = kuota.resumen_boleto(patas)
-    return kuota.a_json({"resumen": resumen, "stake": kuota.stake_desde_resumen(resumen, banca)})
+    return kuota.a_json({"resumen": resumen, "stake": kuota.stake_desde_resumen(resumen, banca),
+                         "por_pata": kuota.stakes_por_pata(patas, banca)})
 
 
 @app.get("/diccionario")

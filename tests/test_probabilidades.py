@@ -311,3 +311,34 @@ def test_etiqueta_sin_ventaja():
     assert ku.ventaja("nations", "tiros", {"tipo": "ou", "lado": "local", "linea": 12.5, "over": True}) == "sin probar"
     a = analisis("laliga", "Barcelona", "Racing Santander", "corners")
     assert all(m["ventaja"] in ("probada", "sin ventaja", "sin probar") for m in a["mercados"])
+
+
+def test_stake_por_pata_sencillas_y_tope_por_partido():
+    a=leg(regla={"tipo":"ou","lado":"total","linea":2.5,"over":True},cuota=5.)
+    b=leg(regla={"tipo":"resultado","lado":"local"},cuota=5.)
+    c=leg(liga='premier',local='Arsenal',visitante='Chelsea',cuota=5.)
+    ps=ku.stakes_por_pata([a,b,c],1000)
+    assert [p["indice"] for p in ps]==[0,1,2]
+    for p,l in zip(ps,(a,b,c)):
+        r=ku.resumen_boleto([l])
+        assert p["kelly"]==pytest.approx(ku.kelly(r["prob"],l["cuota"],r["push"]))
+        assert p["kelly_lo"]==r["kelly"]
+    mismo=[p for p in ps[:2] if p["kelly"]>0]
+    if len(mismo)==2:
+        assert all(p["ajuste_correlacion"] for p in mismo)
+        assert sum(p["kelly_ajustado"] for p in mismo)==pytest.approx(max(p["kelly"] for p in mismo))
+    assert not ps[2]["ajuste_correlacion"] and ps[2]["kelly_ajustado"]==ps[2]["kelly"]
+    for p in ps:
+        if p["opciones"]:
+            assert p["opciones"][2]["monto"]==pytest.approx(1000*p["kelly_ajustado"]/4)
+
+
+def test_stake_por_pata_sin_valor_y_legacy():
+    sin=leg(cuota=1.01)
+    legacy={"partido":"x","prob":.5,"cuota":2.5}
+    ps=ku.stakes_por_pata([sin,legacy],1000)
+    assert ps[0]["disponible"] and ps[0]["sin_valor"] and ps[0]["opciones"]==[]
+    assert not ps[1]["disponible"] and ps[1]["motivo"]
+    r=TestClient(app).post('/boleto',json={"patas":[leg(),leg(met='corners',regla={"tipo":"ou","lado":"total","linea":10.5,"over":True})],"banca":350})
+    assert r.status_code==200 and len(r.json()["por_pata"])==2
+    assert all(p["disponible"] for p in r.json()["por_pata"])
