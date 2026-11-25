@@ -44,8 +44,20 @@ export type Compacto = {
   grupos: string[];
   n: number;
   filtro: string;
+  /** Solo métricas de goles: marcadores exactos 0–6 (filas local, columnas visitante). */
+  marcadores?: Marcadores | null;
   mercados: MercadoCorto[];
   data_version: string;
+};
+export type Marcadores = {
+  k: number;
+  max: number;
+  masa_visible: number;
+  celdas: number[][];
+  top: { local: number; visitante: number; p: number }[];
+  local: number;
+  empate: number;
+  visitante: number;
 };
 export type Filtro = "Todos" | "Como jugarán";
 export type Base = {

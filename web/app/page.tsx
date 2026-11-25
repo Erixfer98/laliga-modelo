@@ -8,7 +8,7 @@ import { useApi } from "@/lib/useApi";
 import { usePartidoRapido, type Compacto, type Filtro, type MercadoCorto } from "@/lib/partido";
 import { identidadSeleccion } from "@/lib/selecciones";
 import { usePartido } from "@/components/Selectores";
-import { CaraACara, Equipos, HojaMercado, Lambdas, TablaMercados } from "@/components/Partido";
+import { CaraACara, Equipos, HojaMercado, Lambdas, MatrizMarcadores, TablaMercados } from "@/components/Partido";
 import { ErrorBox } from "@/components/ui";
 
 const NS = [5, 10];
@@ -87,6 +87,7 @@ export default function Partido() {
       ) : (
         <div className={actualizando ? "opacity-60 transition-opacity" : ""} aria-busy={actualizando}>
           <Lambdas d={d} />
+          <MatrizMarcadores d={d} />
           <div className="flex items-center gap-2 my-3">
             <Segmento
               label="Partidos recientes"

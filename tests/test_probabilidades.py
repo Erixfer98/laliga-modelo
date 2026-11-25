@@ -342,3 +342,18 @@ def test_stake_por_pata_sin_valor_y_legacy():
     r=TestClient(app).post('/boleto',json={"patas":[leg(),leg(met='corners',regla={"tipo":"ou","lado":"total","linea":10.5,"over":True})],"banca":350})
     assert r.status_code==200 and len(r.json()["por_pata"])==2
     assert all(p["disponible"] for p in r.json()["por_pata"])
+
+
+def test_marcadores_matriz_top_y_1x2():
+    m=analisis('laliga','Real Madrid','Barcelona','goles')['matriz']
+    mc=ku.marcadores(m)
+    assert mc["k"]==7 and len(mc["celdas"])==7 and all(len(f)==7 for f in mc["celdas"])
+    assert mc["local"]+mc["empate"]+mc["visitante"]==pytest.approx(1)
+    assert mc["masa_visible"]==pytest.approx(m[:7,:7].sum())
+    t=mc["top"][0]
+    assert t["p"]==pytest.approx(m[:7,:7].max())==pytest.approx(mc["max"])
+    assert [x["p"] for x in mc["top"]]==sorted([x["p"] for x in mc["top"]],reverse=True)
+    v=TestClient(app).get('/liga/laliga/partido',params={"local":"Real Madrid","visitante":"Barcelona","modo":"compacto"}).json()
+    assert v["marcadores"]["top"][0]["p"]==pytest.approx(mc["top"][0]["p"])
+    c=TestClient(app).get('/liga/laliga/partido',params={"local":"Real Madrid","visitante":"Barcelona","modo":"compacto","met":"corners"}).json()
+    assert c["marcadores"] is None
