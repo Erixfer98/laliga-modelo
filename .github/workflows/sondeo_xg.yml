@@ -4,6 +4,7 @@ on:
     branches: [xg-fotmob]
     paths:
       - "fotmob.py"
+      - "sondeo/diag.py"
       - ".github/workflows/sondeo_xg.yml"
 permissions:
   contents: write
@@ -17,38 +18,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install pandas openpyxl requests
-      - run: |
-          mkdir -p sondeo
-          python fotmob.py 2>&1 | grep -v "^OK ->" | tee sondeo/salida.txt
-          python fotmob.py 2>&1 | grep -v "^OK ->" | tee -a sondeo/salida.txt
-          python validar_bbdd.py 2>&1 | tail -15 | tee -a sondeo/salida.txt
-          python - <<'PY' | tee -a sondeo/salida.txt
-          import pandas as pd, fotmob
-          for l in fotmob.LIGAS:
-              b = pd.read_csv(f"datos/bbdd_{l}.csv")
-              print(l, "columnas", len(b.columns), "con xg", int(b.xg_local_val.notna().sum()) if "xg_local_val" in b else "-",
-                    "de", len(b), b.groupby("temporada_txt").xg_local_val.apply(lambda s: int(s.notna().sum())).to_dict() if "xg_local_val" in b else "")
-          b = pd.read_csv("datos/bbdd_laliga.csv")
-          print(b[b.equipo_visitante_txt.eq("Real Madrid") | b.equipo_local_txt.eq("Real Madrid")].tail(4).iloc[:, [2, 5, 6, 7, 8, 28, 29]].to_string())
-          b = pd.read_csv("datos/bbdd_champions.csv")
-          print(b.tail(4).iloc[:, [2, 5, 6, 7, 8, 28, 29]].to_string())
-          print("CHAMPIONS SIN XG:")
-          print(b[b.xg_local_val.isna()].iloc[:, [0, 2, 5, 6]].to_string())
-          fm = fotmob.calendario(42)
-          print("calendario fotmob champions:", len(fm), fm.fecha.min(), fm.fecha.max())
-          bb = pd.read_csv("datos/bbdd_champions.csv")
-          mapa = fotmob.emparejar_nombres(fm, bb)
-          u = fotmob.unir(fm, bb, mapa)
-          print("unidos:", len(u))
-          falt = bb.merge(u[["fecha_dt", "equipo_local_txt", "fotmob_id_txt"]], on=["fecha_dt", "equipo_local_txt"], how="left")
-          sin = falt[falt.fotmob_id_txt.isna()]
-          print("sin id de fotmob:", len(sin))
-          for p in falt[falt.fotmob_id_txt.notna() & bb.xg_local_val.isna()].head(3).itertuples():
-              d = fotmob._json("matchDetails", matchId=p.fotmob_id_txt)
-              print("con id pero sin xg:", p.fecha_dt, p.equipo_local_txt, p.fotmob_id_txt, "coverage", d.get("general", {}).get("coverageLevel"))
-          d = fotmob._json("matchDetails", matchId=u.fotmob_id_txt.iloc[-1])
-          print("general:", sorted(d.get("general", {})), d.get("general", {}).get("homeTeam"))
-          PY
+      - run: python sondeo/diag.py
       - run: |
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
