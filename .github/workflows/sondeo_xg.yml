@@ -18,7 +18,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install pandas openpyxl requests
-      - run: python sondeo/diag.py
+      - run: PYTHONPATH=. python sondeo/diag.py
       - run: |
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"

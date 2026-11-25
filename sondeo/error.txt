@@ -1,4 +1,0 @@
-Traceback (most recent call last):
-  File "/home/runner/work/laliga-modelo/laliga-modelo/sondeo/diag.py", line 6, in <module>
-    import fotmob
-ModuleNotFoundError: No module named 'fotmob'
