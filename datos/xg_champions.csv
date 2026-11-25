@@ -1,0 +1,267 @@
+temporada_txt,fecha_dt,equipo_local_txt,equipo_visitante_txt,xg_local_val,xg_visitante_val,fotmob_id_txt
+2025-26,16/09/2025,Athletic Club,Arsenal,0.35,1.28,4947178
+2025-26,16/09/2025,Benfica,FK Qarabag,1.38,1.52,4947188
+2025-26,16/09/2025,Juventus,Borussia Dortmund,1.92,1.71,4947134
+2025-26,16/09/2025,PSV Eindhoven,Union St.-Gilloise,2.52,3.34,4947237
+2025-26,16/09/2025,Real Madrid,Marseille,3.74,0.73,4947120
+2025-26,16/09/2025,Tottenham Hotspur,Villarreal,0.54,0.48,4947209
+2025-26,17/09/2025,Ajax Amsterdam,Internazionale,1.26,1.24,4947129
+2025-26,17/09/2025,Bayern Munich,Chelsea,2.07,0.73,4947101
+2025-26,17/09/2025,Liverpool,Atletico Madrid,2.72,0.61,4947139
+2025-26,17/09/2025,Olympiacos,Pafos,1.52,0.3,4947230
+2025-26,17/09/2025,Paris Saint-Germain,Atalanta,3.48,0.55,4947154
+2025-26,17/09/2025,Slavia Prague,Bodo/Glimt,3.98,2.52,4947222
+2025-26,18/09/2025,Club Brugge,AS Monaco,3.15,1.53,4947192
+2025-26,18/09/2025,Eintracht Frankfurt,Galatasaray,1.27,1.09,4947197
+2025-26,18/09/2025,F.C. Kobenhavn,Bayer Leverkusen,1.89,1.21,4947172
+2025-26,18/09/2025,Manchester City,Napoli,2.12,0.17,4947162
+2025-26,18/09/2025,Newcastle United,Barcelona,1.22,1.13,4947153
+2025-26,18/09/2025,Sporting CP,Kairat Almaty,3.81,0.72,4947226
+2025-26,30/09/2025,Atalanta,Club Brugge,2.96,0.86,4947179
+2025-26,30/09/2025,Atletico Madrid,Eintracht Frankfurt,4.44,0.59,4947194
+2025-26,30/09/2025,Bodo/Glimt,Tottenham Hotspur,2.52,1.46,4947219
+2025-26,30/09/2025,Chelsea,Benfica,0.93,0.85,4947110
+2025-26,30/09/2025,Galatasaray,Liverpool,1.34,1.81,4947144
+2025-26,30/09/2025,Internazionale,Slavia Prague,3.99,0.11,4947128
+2025-26,30/09/2025,Kairat Almaty,Real Madrid,0.43,3.54,4947123
+2025-26,30/09/2025,Marseille,Ajax Amsterdam,1.13,0.8,4947214
+2025-26,30/09/2025,Pafos,Bayern Munich,0.39,4.54,4947108
+2025-26,01/10/2025,AS Monaco,Manchester City,1.45,1.54,4947165
+2025-26,01/10/2025,Arsenal,Olympiacos,2.9,0.5,4947175
+2025-26,01/10/2025,Barcelona,Paris Saint-Germain,1.27,1.67,4947145
+2025-26,01/10/2025,Bayer Leverkusen,PSV Eindhoven,1.74,0.49,4947169
+2025-26,01/10/2025,Borussia Dortmund,Athletic Club,1.18,0.95,4947137
+2025-26,01/10/2025,FK Qarabag,F.C. Kobenhavn,1.91,0.98,4947246
+2025-26,01/10/2025,Napoli,Sporting CP,0.88,1.35,4947225
+2025-26,01/10/2025,Union St.-Gilloise,Newcastle United,0.88,2.76,4947250
+2025-26,01/10/2025,Villarreal,Juventus,1.72,1.6,4947199
+2025-26,21/10/2025,Arsenal,Atletico Madrid,2.19,0.67,4947173
+2025-26,21/10/2025,Barcelona,Olympiacos,2.58,1.0,4947148
+2025-26,21/10/2025,Bayer Leverkusen,Paris Saint-Germain,2.5,2.86,4947155
+2025-26,21/10/2025,F.C. Kobenhavn,Borussia Dortmund,0.82,1.64,4947138
+2025-26,21/10/2025,Kairat Almaty,Pafos,1.26,1.76,4947251
+2025-26,21/10/2025,Newcastle United,Benfica,2.63,0.33,4947189
+2025-26,21/10/2025,PSV Eindhoven,Napoli,2.89,1.16,4947236
+2025-26,21/10/2025,Union St.-Gilloise,Internazionale,0.99,4.55,4947131
+2025-26,21/10/2025,Villarreal,Manchester City,1.28,1.34,4947161
+2025-26,22/10/2025,AS Monaco,Tottenham Hotspur,2.45,0.88,4947221
+2025-26,22/10/2025,Atalanta,Slavia Prague,2.59,0.73,4947181
+2025-26,22/10/2025,Athletic Club,FK Qarabag,3.47,0.52,4947244
+2025-26,22/10/2025,Bayern Munich,Club Brugge,4.2,0.25,4947103
+2025-26,22/10/2025,Chelsea,Ajax Amsterdam,3.65,1.05,4947112
+2025-26,22/10/2025,Eintracht Frankfurt,Liverpool,0.33,3.21,4947140
+2025-26,22/10/2025,Galatasaray,Bodo/Glimt,3.87,1.41,4947224
+2025-26,22/10/2025,Real Madrid,Juventus,2.69,0.59,4947118
+2025-26,22/10/2025,Sporting CP,Marseille,1.11,0.54,4947215
+2025-26,04/11/2025,Atletico Madrid,Union St.-Gilloise,2.3,1.11,4947206
+2025-26,04/11/2025,Bodo/Glimt,AS Monaco,1.67,1.29,4947223
+2025-26,04/11/2025,Juventus,Sporting CP,1.53,0.21,4947200
+2025-26,04/11/2025,Liverpool,Real Madrid,2.51,0.45,4947117
+2025-26,04/11/2025,Napoli,Eintracht Frankfurt,1.85,0.36,4947196
+2025-26,04/11/2025,Olympiacos,PSV Eindhoven,0.92,0.35,4947228
+2025-26,04/11/2025,Paris Saint-Germain,Bayern Munich,1.95,1.53,4947102
+2025-26,04/11/2025,Slavia Prague,Arsenal,0.47,1.81,4947176
+2025-26,04/11/2025,Tottenham Hotspur,F.C. Kobenhavn,3.32,0.35,4947220
+2025-26,05/11/2025,Ajax Amsterdam,Galatasaray,0.88,2.61,4947232
+2025-26,05/11/2025,Benfica,Bayer Leverkusen,1.62,0.74,4947168
+2025-26,05/11/2025,Club Brugge,Barcelona,2.14,2.4,4947147
+2025-26,05/11/2025,FK Qarabag,Chelsea,1.63,1.26,4947115
+2025-26,05/11/2025,Internazionale,Kairat Almaty,2.38,0.15,4947130
+2025-26,05/11/2025,Manchester City,Borussia Dortmund,1.98,1.02,4947132
+2025-26,05/11/2025,Marseille,Atalanta,0.9,1.25,4947182
+2025-26,05/11/2025,Newcastle United,Athletic Club,1.2,0.58,4947245
+2025-26,05/11/2025,Pafos,Villarreal,0.75,1.77,4947211
+2025-26,25/11/2025,Ajax Amsterdam,Benfica,0.96,1.17,4947187
+2025-26,25/11/2025,Bodo/Glimt,Juventus,1.75,3.44,4947201
+2025-26,25/11/2025,Borussia Dortmund,Villarreal,4.03,0.83,4947133
+2025-26,25/11/2025,Chelsea,Barcelona,1.89,0.79,4947109
+2025-26,25/11/2025,Galatasaray,Union St.-Gilloise,1.18,1.63,4947249
+2025-26,25/11/2025,Manchester City,Bayer Leverkusen,1.78,0.51,4947160
+2025-26,25/11/2025,Marseille,Newcastle United,2.0,1.46,4947216
+2025-26,25/11/2025,Napoli,FK Qarabag,3.45,0.49,4947239
+2025-26,25/11/2025,Slavia Prague,Athletic Club,0.57,1.32,4947234
+2025-26,26/11/2025,Arsenal,Bayern Munich,3.11,0.65,4947104
+2025-26,26/11/2025,Atletico Madrid,Internazionale,0.98,1.42,4947127
+2025-26,26/11/2025,Eintracht Frankfurt,Atalanta,0.96,2.84,4947180
+2025-26,26/11/2025,F.C. Kobenhavn,Kairat Almaty,3.27,1.88,4947252
+2025-26,26/11/2025,Liverpool,PSV Eindhoven,2.5,2.17,4947141
+2025-26,26/11/2025,Olympiacos,Real Madrid,1.69,1.68,4947121
+2025-26,26/11/2025,Pafos,AS Monaco,1.21,1.54,4947248
+2025-26,26/11/2025,Paris Saint-Germain,Tottenham Hotspur,1.85,1.79,4947156
+2025-26,26/11/2025,Sporting CP,Club Brugge,1.84,0.81,4947191
+2025-26,09/12/2025,AS Monaco,Galatasaray,3.68,1.29,4947247
+2025-26,09/12/2025,Atalanta,Chelsea,1.72,1.37,4947111
+2025-26,09/12/2025,Barcelona,Eintracht Frankfurt,1.52,0.76,4947146
+2025-26,09/12/2025,Bayern Munich,Sporting CP,2.1,0.28,4947105
+2025-26,09/12/2025,Internazionale,Liverpool,0.44,1.42,4947124
+2025-26,09/12/2025,Kairat Almaty,Olympiacos,0.2,2.28,4947231
+2025-26,09/12/2025,PSV Eindhoven,Atletico Madrid,2.67,2.23,4947205
+2025-26,09/12/2025,Tottenham Hotspur,Slavia Prague,2.75,0.77,4947218
+2025-26,09/12/2025,Union St.-Gilloise,Marseille,0.66,1.46,4947217
+2025-26,10/12/2025,Athletic Club,Paris Saint-Germain,0.52,2.22,4947159
+2025-26,10/12/2025,Bayer Leverkusen,Newcastle United,1.2,2.06,4947171
+2025-26,10/12/2025,Benfica,Napoli,2.22,0.64,4947186
+2025-26,10/12/2025,Borussia Dortmund,Bodo/Glimt,3.19,1.38,4947135
+2025-26,10/12/2025,Club Brugge,Arsenal,1.1,2.99,4947174
+2025-26,10/12/2025,FK Qarabag,Ajax Amsterdam,1.1,1.6,4947233
+2025-26,10/12/2025,Juventus,Pafos,2.65,1.18,4947202
+2025-26,10/12/2025,Real Madrid,Manchester City,1.5,2.6,4947116
+2025-26,10/12/2025,Villarreal,F.C. Kobenhavn,2.08,1.36,4947210
+2025-26,20/01/2026,Bodo/Glimt,Manchester City,1.6,1.23,4947163
+2025-26,20/01/2026,F.C. Kobenhavn,Napoli,1.38,1.54,4947240
+2025-26,20/01/2026,Internazionale,Arsenal,1.36,2.14,4947126
+2025-26,20/01/2026,Kairat Almaty,Club Brugge,0.28,2.54,4947193
+2025-26,20/01/2026,Olympiacos,Bayer Leverkusen,1.13,2.58,4947170
+2025-26,20/01/2026,Real Madrid,AS Monaco,3.86,1.4,4947122
+2025-26,20/01/2026,Sporting CP,Paris Saint-Germain,0.89,1.42,4947157
+2025-26,20/01/2026,Tottenham Hotspur,Borussia Dortmund,1.97,0.38,4947136
+2025-26,20/01/2026,Villarreal,Ajax Amsterdam,1.36,0.91,4947208
+2025-26,21/01/2026,Atalanta,Athletic Club,2.02,1.74,4947183
+2025-26,21/01/2026,Bayern Munich,Union St.-Gilloise,3.09,0.88,4947107
+2025-26,21/01/2026,Chelsea,Pafos,1.85,0.14,4947114
+2025-26,21/01/2026,FK Qarabag,Eintracht Frankfurt,1.78,1.21,4947198
+2025-26,21/01/2026,Galatasaray,Atletico Madrid,0.5,1.43,4947207
+2025-26,21/01/2026,Juventus,Benfica,1.36,1.44,4947185
+2025-26,21/01/2026,Marseille,Liverpool,0.87,1.46,4947142
+2025-26,21/01/2026,Newcastle United,PSV Eindhoven,2.4,0.34,4947238
+2025-26,21/01/2026,Slavia Prague,Barcelona,0.99,1.47,4947151
+2025-26,28/01/2026,AS Monaco,Juventus,1.04,0.18,4947203
+2025-26,28/01/2026,Ajax Amsterdam,Olympiacos,1.87,0.53,4947229
+2025-26,28/01/2026,Arsenal,Kairat Almaty,3.94,1.11,4947177
+2025-26,28/01/2026,Athletic Club,Sporting CP,0.57,1.76,4947227
+2025-26,28/01/2026,Atletico Madrid,Bodo/Glimt,2.18,1.88,4947204
+2025-26,28/01/2026,Barcelona,F.C. Kobenhavn,3.18,1.06,4947152
+2025-26,28/01/2026,Bayer Leverkusen,Villarreal,1.93,0.26,4947167
+2025-26,28/01/2026,Benfica,Real Madrid,3.01,1.5,4947119
+2025-26,28/01/2026,Borussia Dortmund,Internazionale,0.84,0.98,4947125
+2025-26,28/01/2026,Club Brugge,Marseille,1.41,1.03,4947190
+2025-26,28/01/2026,Eintracht Frankfurt,Tottenham Hotspur,0.86,1.27,4947195
+2025-26,28/01/2026,Liverpool,FK Qarabag,5.91,0.22,4947143
+2025-26,28/01/2026,Manchester City,Galatasaray,1.77,0.26,4947164
+2025-26,28/01/2026,Napoli,Chelsea,0.98,2.02,4947113
+2025-26,28/01/2026,PSV Eindhoven,Bayern Munich,0.6,1.98,4947106
+2025-26,28/01/2026,Pafos,Slavia Prague,1.4,1.73,4947235
+2025-26,28/01/2026,Paris Saint-Germain,Newcastle United,2.52,1.07,4947158
+2025-26,28/01/2026,Union St.-Gilloise,Atalanta,1.0,0.83,4947184
+2025-26,17/02/2026,AS Monaco,Paris Saint-Germain,1.19,3.09,5161863
+2025-26,17/02/2026,Benfica,Real Madrid,0.47,0.89,5161859
+2025-26,17/02/2026,Borussia Dortmund,Atalanta,2.1,0.47,5161871
+2025-26,17/02/2026,Galatasaray,Juventus,2.92,1.13,5161867
+2025-26,18/02/2026,Bodo/Glimt,Internazionale,1.19,1.56,5161861
+2025-26,18/02/2026,Club Brugge,Atletico Madrid,2.33,2.33,5161869
+2025-26,18/02/2026,FK Qarabag,Newcastle United,0.46,5.69,5161865
+2025-26,18/02/2026,Olympiacos,Bayer Leverkusen,0.75,1.95,5161873
+2025-26,24/02/2026,Atletico Madrid,Club Brugge,2.1,1.75,5161870
+2025-26,24/02/2026,Bayer Leverkusen,Olympiacos,0.69,0.21,5161874
+2025-26,24/02/2026,Internazionale,Bodo/Glimt,2.29,1.74,5161862
+2025-26,24/02/2026,Newcastle United,FK Qarabag,2.66,1.3,5161866
+2025-26,25/02/2026,Atalanta,Borussia Dortmund,2.93,0.93,5161872
+2025-26,25/02/2026,Paris Saint-Germain,AS Monaco,2.21,1.32,5161864
+2025-26,25/02/2026,Real Madrid,Benfica,0.98,1.64,5161860
+2025-26,10/03/2026,Atalanta,Bayern Munich,1.68,4.84,5205739
+2025-26,10/03/2026,Atletico Madrid,Tottenham Hotspur,2.59,1.99,5205741
+2025-26,10/03/2026,Galatasaray,Liverpool,1.34,1.31,5205737
+2025-26,10/03/2026,Newcastle United,Barcelona,1.3,1.42,5205733
+2025-26,11/03/2026,Bayer Leverkusen,Arsenal,0.85,1.64,5205743
+2025-26,11/03/2026,Bodo/Glimt,Sporting CP,2.78,0.61,5205735
+2025-26,11/03/2026,Paris Saint-Germain,Chelsea,0.9,1.57,5205729
+2025-26,11/03/2026,Real Madrid,Manchester City,2.63,0.59,5205731
+2025-26,17/03/2026,Arsenal,Bayer Leverkusen,1.7,0.52,5205744
+2025-26,17/03/2026,Chelsea,Paris Saint-Germain,1.26,1.09,5205730
+2025-26,17/03/2026,Manchester City,Real Madrid,1.95,3.14,5205732
+2025-26,18/03/2026,Barcelona,Newcastle United,4.29,1.54,5205734
+2025-26,18/03/2026,Bayern Munich,Atalanta,3.59,2.06,5205740
+2025-26,18/03/2026,Liverpool,Galatasaray,4.88,0.18,5205738
+2025-26,18/03/2026,Tottenham Hotspur,Atletico Madrid,2.39,1.02,5205742
+2025-26,07/04/2026,Real Madrid,Bayern Munich,2.2,2.92,5205791
+2025-26,07/04/2026,Sporting CP,Arsenal,0.71,1.33,5205795
+2025-26,08/04/2026,Barcelona,Atletico Madrid,1.1,0.44,5205793
+2025-26,08/04/2026,Paris Saint-Germain,Liverpool,2.35,0.17,5205789
+2025-26,14/04/2026,Atletico Madrid,Barcelona,1.77,2.22,5205794
+2025-26,14/04/2026,Liverpool,Paris Saint-Germain,1.97,1.09,5205790
+2025-26,15/04/2026,Arsenal,Sporting CP,0.64,0.29,5205796
+2025-26,15/04/2026,Bayern Munich,Real Madrid,2.14,2.25,5205792
+2025-26,28/04/2026,Paris Saint-Germain,Bayern Munich,1.9,3.06,5205811
+2025-26,29/04/2026,Atletico Madrid,Arsenal,2.21,1.51,5205813
+2025-26,05/05/2026,Arsenal,Atletico Madrid,1.56,0.99,5205814
+2025-26,06/05/2026,Bayern Munich,Paris Saint-Germain,1.41,1.06,5205812
+2026-27,08/09/2026,AEK Athens,LASK Linz,1.71,0.72,6106404
+2026-27,08/09/2026,Borussia Dortmund,Villarreal,2.83,1.46,6106272
+2026-27,08/09/2026,Club Brugge,Aston Villa,1.53,3.22,6106295
+2026-27,08/09/2026,FC Porto,Manchester City,0.28,2.32,6106286
+2026-27,08/09/2026,Lille,Real Betis,0.83,1.8,6106311
+2026-27,08/09/2026,Real Madrid,Internazionale,2.76,1.83,6106242
+2026-27,09/09/2026,Barcelona,Feyenoord Rotterdam,2.1,0.53,6106264
+2026-27,09/09/2026,Liverpool,Atletico Madrid,1.62,0.91,6106246
+2026-27,09/09/2026,Napoli,Arsenal,0.22,4.05,6106318
+2026-27,09/09/2026,Paris Saint-Germain,Slovan Bratislava,4.57,0.76,6106237
+2026-27,09/09/2026,Sporting CP,Galatasaray,1.75,1.23,6106280
+2026-27,09/09/2026,VfB Stuttgart,Viking FK,2.18,0.63,6106400
+2026-27,10/09/2026,Bayern Munich,Bodo/Glimt,2.61,0.3,6106240
+2026-27,10/09/2026,Como,RB Leipzig,2.98,1.36,6106411
+2026-27,10/09/2026,Fenerbahce,AS Roma,1.57,0.48,6106331
+2026-27,10/09/2026,Manchester United,Sabah FK,3.54,0.84,6106293
+2026-27,10/09/2026,PSV Eindhoven,Shakhtar Donetsk,0.44,0.62,6106304
+2026-27,10/09/2026,Slavia Prague,Lens,1.58,1.78,6106392
+2026-27,13/10/2026,Arsenal,Lille,1.7,0.3,6106260
+2026-27,13/10/2026,Atletico Madrid,Manchester United,1.47,0.98,6106267
+2026-27,13/10/2026,Galatasaray,Barcelona,0.42,2.73,6106338
+2026-27,13/10/2026,Internazionale,Club Brugge,4.33,4.29,6106251
+2026-27,13/10/2026,Lens,Sporting CP,1.5,1.67,6106414
+2026-27,13/10/2026,RB Leipzig,PSV Eindhoven,1.76,1.45,6106323
+2026-27,13/10/2026,Sabah FK,Slavia Prague,1.35,2.14,6106424
+2026-27,13/10/2026,Viking FK,Bayern Munich,0.72,3.29,6106417
+2026-27,13/10/2026,Villarreal,Napoli,1.24,1.7,6106328
+2026-27,14/10/2026,AS Roma,Real Madrid,1.41,1.43,6106274
+2026-27,14/10/2026,Aston Villa,Fenerbahce,3.11,1.73,6106284
+2026-27,14/10/2026,Bodo/Glimt,Borussia Dortmund,1.11,0.79,6106315
+2026-27,14/10/2026,Feyenoord Rotterdam,Como,0.59,1.28,6106309
+2026-27,14/10/2026,LASK Linz,Liverpool,2.04,3.25,6106405
+2026-27,14/10/2026,Manchester City,Paris Saint-Germain,2.63,1.83,6106254
+2026-27,14/10/2026,Real Betis,FC Porto,1.68,0.97,6106299
+2026-27,14/10/2026,Shakhtar Donetsk,AEK Athens,1.37,1.35,6106337
+2026-27,14/10/2026,Slovan Bratislava,VfB Stuttgart,0.78,2.19,6106396
+2026-27,20/10/2026,AS Roma,Slovan Bratislava,3.14,0.02,6106277
+2026-27,20/10/2026,FC Porto,PSV Eindhoven,1.58,1.91,6106287
+2026-27,20/10/2026,Fenerbahce,Slavia Prague,1.07,1.48,6106333
+2026-27,20/10/2026,Liverpool,Villarreal,2.37,1.61,6106248
+2026-27,20/10/2026,Manchester City,AEK Athens,2.74,1.17,6106257
+2026-27,20/10/2026,Napoli,Bodo/Glimt,1.53,2.67,6106320
+2026-27,20/10/2026,Paris Saint-Germain,Barcelona,3.7,2.23,6106234
+2026-27,20/10/2026,Sabah FK,Borussia Dortmund,1.49,3.73,6106422
+2026-27,20/10/2026,VfB Stuttgart,Atletico Madrid,1.59,0.9,6106397
+2026-27,21/10/2026,Aston Villa,Viking FK,2.7,0.74,6106285
+2026-27,21/10/2026,Bayern Munich,Arsenal,2.33,1.69,6106238
+2026-27,21/10/2026,Club Brugge,Lens,2.6,2.03,6106297
+2026-27,21/10/2026,Como,Manchester United,2.11,0.99,6106410
+2026-27,21/10/2026,Internazionale,Shakhtar Donetsk,1.05,0.6,6106252
+2026-27,21/10/2026,Lille,Galatasaray,2.07,1.39,6106312
+2026-27,21/10/2026,Real Betis,Feyenoord Rotterdam,2.14,0.78,6106300
+2026-27,21/10/2026,Real Madrid,RB Leipzig,3.09,1.49,6106244
+2026-27,21/10/2026,Sporting CP,LASK Linz,3.24,1.12,6106281
+2026-27,03/11/2026,Atletico Madrid,Bayern Munich,1.02,1.91,6106266
+2026-27,03/11/2026,Barcelona,Aston Villa,1.86,0.71,6106263
+2026-27,03/11/2026,Bodo/Glimt,Lille,0.65,0.59,6106316
+2026-27,03/11/2026,Feyenoord Rotterdam,Internazionale,0.73,1.19,6106306
+2026-27,03/11/2026,Galatasaray,VfB Stuttgart,0.98,2.2,6106341
+2026-27,03/11/2026,LASK Linz,Slovan Bratislava,4.45,0.47,6106408
+2026-27,03/11/2026,Manchester United,AS Roma,2.7,1.6,6106291
+2026-27,03/11/2026,Shakhtar Donetsk,Sporting CP,1.6,1.52,6106335
+2026-27,03/11/2026,Villarreal,Paris Saint-Germain,0.7,2.37,6106326
+2026-27,04/11/2026,AEK Athens,Real Madrid,0.78,3.39,6106401
+2026-27,04/11/2026,Borussia Dortmund,Real Betis,2.5,0.75,6106271
+2026-27,04/11/2026,FC Porto,Napoli,3.13,1.42,6106288
+2026-27,04/11/2026,Fenerbahce,Liverpool,1.78,1.82,6106330
+2026-27,04/11/2026,Lens,Como,0.98,4.18,6106416
+2026-27,04/11/2026,PSV Eindhoven,Club Brugge,2.66,1.69,6106303
+2026-27,04/11/2026,RB Leipzig,Manchester City,0.87,2.2,6106322
+2026-27,04/11/2026,Slavia Prague,Arsenal,2.11,1.49,6106389
+2026-27,04/11/2026,Viking FK,Sabah FK,2.59,1.59,6106420
+2026-27,24/11/2026,Arsenal,Borussia Dortmund,2.83,1.15,6106259
+2026-27,24/11/2026,Bodo/Glimt,LASK Linz,1.22,0.33,6106317
+2026-27,24/11/2026,Como,AEK Athens,1.83,0.54,6106412
+2026-27,24/11/2026,Galatasaray,Aston Villa,0.49,0.59,6106339
+2026-27,24/11/2026,Manchester City,Napoli,1.34,0.71,6106256
+2026-27,24/11/2026,RB Leipzig,Lens,1.86,1.05,6106325
+2026-27,24/11/2026,Real Madrid,PSV Eindhoven,4.89,1.75,6106243
+2026-27,24/11/2026,Slovan Bratislava,Real Betis,0.65,1.56,6106394

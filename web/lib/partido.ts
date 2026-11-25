@@ -38,7 +38,7 @@ export type Compacto = {
   medias_liga: { local: number; visitante: number; total: number };
   /** Últimos 5: local en casa, visitante fuera; total = los 10 partidos juntos. cv = desviación / media. */
   forma?: { n: number; local: Forma; visitante: Forma; total: Forma };
-  /** xG de Understat (solo métrica goles y las 5 ligas europeas): local en casa, visitante fuera. */
+  /** xG de FotMob (solo métrica goles; 5 ligas europeas y Champions): local en casa, visitante fuera. */
   xg?: XG | null;
   cfg: Cfg;
   grupos: string[];
