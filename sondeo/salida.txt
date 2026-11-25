@@ -1,80 +1,19 @@
-::notice::xG laliga: 509 de 509 partidos de la BBDD (100%), 509 nuevos de FotMob
-::notice::xG champions: 235 de 266 partidos de la BBDD (88%), 235 nuevos de FotMob
-::notice::xG premier: 490 de 490 partidos de la BBDD (100%), 490 nuevos de FotMob
-::notice::xG seriea: 500 de 500 partidos de la BBDD (100%), 500 nuevos de FotMob
-::notice::xG bundesliga: 396 de 396 partidos de la BBDD (100%), 396 nuevos de FotMob
-::notice::xG ligue1: 405 de 405 partidos de la BBDD (100%), 405 nuevos de FotMob
 ::notice::xG laliga: 509 de 509 partidos de la BBDD (100%), 0 nuevos de FotMob
-::notice::xG champions: 235 de 266 partidos de la BBDD (88%), 0 nuevos de FotMob
+::notice::xG champions: 266 de 266 partidos de la BBDD (100%), 31 nuevos de FotMob
 ::notice::xG premier: 490 de 490 partidos de la BBDD (100%), 0 nuevos de FotMob
 ::notice::xG seriea: 500 de 500 partidos de la BBDD (100%), 0 nuevos de FotMob
 ::notice::xG bundesliga: 396 de 396 partidos de la BBDD (100%), 0 nuevos de FotMob
 ::notice::xG ligue1: 405 de 405 partidos de la BBDD (100%), 0 nuevos de FotMob
-   aviso: ultimo partido hace 20 dias (05/11/2026); revisar si la fuente dejo de actualizar
-::warning title=Validacion europa::ultimo partido hace 20 dias (05/11/2026); revisar si la fuente dejo de actualizar
-[OK] laliga: 509 partidos, 23 equipos, ultimo 23/11/2026, 0 celdas vacias
-[OK] ligamx: 320 partidos, 19 equipos, ultimo 22/11/2026, 0 celdas vacias
-[OK] ligue1: 405 partidos, 20 equipos, ultimo 22/11/2026, 0 celdas vacias
-[OK] mls: 1051 partidos, 30 equipos, ultimo 23/11/2026, 0 celdas vacias
-[AVISO] nations: 339 partidos, 54 equipos, ultimo 17/11/2026, 2 celdas vacias
-   aviso: 2 celdas de estadisticas vacias en 1 partidos (ej. 05/09/2024 Scotland-Poland)
-::warning title=Validacion nations::2 celdas de estadisticas vacias en 1 partidos (ej. 05/09/2024 Scotland-Poland)
-[OK] premier: 490 partidos, 23 equipos, ultimo 23/11/2026, 0 celdas vacias
-[AVISO] seriea: 500 partidos, 23 equipos, ultimo 23/11/2026, 2 celdas vacias
-   aviso: 2 celdas de estadisticas vacias en 1 partidos (ej. 29/10/2026 Fiorentina-Atalanta)
-::warning title=Validacion seriea::2 celdas de estadisticas vacias en 1 partidos (ej. 29/10/2026 Fiorentina-Atalanta)
-
-Validacion OK
 laliga columnas 30 con xg 509 de 509 {'2025-26': 380, '2026-27': 129}
-champions columnas 30 con xg 235 de 266 {'2025-26': 186, '2026-27': 49}
+champions columnas 30 con xg 266 de 266 {'2025-26': 186, '2026-27': 80}
 premier columnas 30 con xg 490 de 490 {'2025-26': 380, '2026-27': 110}
 seriea columnas 30 con xg 500 de 500 {'2025-26': 380, '2026-27': 120}
 bundesliga columnas 30 con xg 396 de 396 {'2025-26': 306, '2026-27': 90}
 ligue1 columnas 30 con xg 405 de 405 {'2025-26': 306, '2026-27': 99}
-       fecha_dt  equipo_local_txt equipo_visitante_txt  goles_local_val  goles_visitante_val  xg_local_val  xg_visitante_val
-477  25/10/2026         Barcelona          Real Madrid                1                    2          1.19              1.94
-485  01/11/2026  Racing Santander          Real Madrid                0                    3          0.97              3.36
-493  07/11/2026          Valencia          Real Madrid                0                    3          0.18              2.34
-503  21/11/2026       Real Madrid        Celta de Vigo                2                    1          3.76              1.51
        fecha_dt   equipo_local_txt equipo_visitante_txt  goles_local_val  goles_visitante_val  xg_local_val  xg_visitante_val
+260  24/11/2026            Arsenal    Borussia Dortmund                1                    1          2.83              1.15
+261  24/11/2026               Como           AEK Athens                1                    0          1.83              0.54
 262  24/11/2026    Manchester City               Napoli                2                    2          1.34              0.71
-263  24/11/2026         RB Leipzig                 Lens                3                    1           NaN               NaN
+263  24/11/2026         RB Leipzig                 Lens                3                    1          1.86              1.05
 264  24/11/2026        Real Madrid        PSV Eindhoven                5                    1          4.89              1.75
-265  24/11/2026  Slovan Bratislava           Real Betis                0                    2           NaN               NaN
-CHAMPIONS SIN XG:
-    temporada_txt    fecha_dt     equipo_local_txt equipo_visitante_txt
-186       2026-27  08/09/2026                Lille           Real Betis
-191       2026-27  08/09/2026          Club Brugge          Aston Villa
-195       2026-27  09/09/2026            Barcelona  Feyenoord Rotterdam
-196       2026-27  09/09/2026        VfB Stuttgart            Viking FK
-198       2026-27  10/09/2026    Manchester United             Sabah FK
-200       2026-27  10/09/2026                 Como           RB Leipzig
-201       2026-27  10/09/2026           Fenerbahce              AS Roma
-203       2026-27  10/09/2026        PSV Eindhoven     Shakhtar Donetsk
-205       2026-27  13/10/2026             Sabah FK        Slavia Prague
-209       2026-27  13/10/2026           RB Leipzig        PSV Eindhoven
-212       2026-27  13/10/2026            Viking FK        Bayern Munich
-214       2026-27  14/10/2026              AS Roma          Real Madrid
-215       2026-27  14/10/2026          Aston Villa           Fenerbahce
-217       2026-27  14/10/2026     Shakhtar Donetsk           AEK Athens
-218       2026-27  14/10/2026           Real Betis             FC Porto
-221       2026-27  14/10/2026  Feyenoord Rotterdam                 Como
-223       2026-27  20/10/2026             Sabah FK    Borussia Dortmund
-224       2026-27  20/10/2026              AS Roma    Slovan Bratislava
-233       2026-27  21/10/2026          Aston Villa            Viking FK
-237       2026-27  21/10/2026          Real Madrid           RB Leipzig
-239       2026-27  21/10/2026       Internazionale     Shakhtar Donetsk
-241       2026-27  03/11/2026     Shakhtar Donetsk          Sporting CP
-243       2026-27  03/11/2026            Barcelona          Aston Villa
-245       2026-27  03/11/2026  Feyenoord Rotterdam       Internazionale
-247       2026-27  03/11/2026    Manchester United              AS Roma
-251       2026-27  04/11/2026    Borussia Dortmund           Real Betis
-254       2026-27  04/11/2026           RB Leipzig      Manchester City
-256       2026-27  04/11/2026            Viking FK             Sabah FK
-259       2026-27  24/11/2026          Galatasaray          Aston Villa
-263       2026-27  24/11/2026           RB Leipzig                 Lens
-265       2026-27  24/11/2026    Slovan Bratislava           Real Betis
-calendario fotmob champions: 272 2025-09-16 00:00:00 2026-11-25 00:00:00
-unidos: 235
-sin id de fotmob: 31
-general: ['awayTeam', 'countryCode', 'coverageLevel', 'finished', 'gender', 'homeTeam', 'leagueId', 'leagueName', 'leagueRoundName', 'matchId', 'matchName', 'matchRound', 'matchTimeUTC', 'matchTimeUTCDate', 'parentLeagueId', 'started', 'teamColors'] {'name': 'Real Madrid', 'id': 8633}
+265  24/11/2026  Slovan Bratislava           Real Betis                0                    2          0.65              1.56
