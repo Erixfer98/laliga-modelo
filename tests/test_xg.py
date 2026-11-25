@@ -81,14 +81,17 @@ def test_sin_tiempo_deja_lo_pendiente_para_la_siguiente_corrida(tmp_path):
 
 def test_bbdd_sin_xg_queda_identica(tmp_path):
     for liga in ("laliga", "champions"):
-        shutil.copy(f"datos/bbdd_{liga}.csv", tmp_path)
+        original = tmp_path / f"original_{liga}.csv"
+        pd.read_csv(f"datos/bbdd_{liga}.csv")[generar_bbdd.COLUMNAS].astype(
+            {c: "Int64" for c in generar_bbdd.COLUMNAS if c.endswith("_val")}).to_csv(original, index=False)   # 28 columnas
+        shutil.copy(original, tmp_path / f"bbdd_{liga}.csv")
         generar_bbdd.refrescar(liga, carpeta=str(tmp_path))
-        assert open(f"datos/bbdd_{liga}.csv").read() == open(tmp_path / f"bbdd_{liga}.csv").read()
+        assert original.read_text() == (tmp_path / f"bbdd_{liga}.csv").read_text()
 
 
 def test_bbdd_con_xg_suma_dos_columnas_sin_tocar_las_demas(tmp_path):
     shutil.copy("datos/bbdd_laliga.csv", tmp_path)
-    bbdd = pd.read_csv("datos/bbdd_laliga.csv")
+    bbdd = pd.read_csv("datos/bbdd_laliga.csv")[generar_bbdd.COLUMNAS]
     p = bbdd.iloc[0]
     pd.DataFrame([[p.temporada_txt, p.fecha_dt, p.equipo_local_txt, p.equipo_visitante_txt, 1.234, 0.5, "99"]],
                  columns=fotmob.COLUMNAS).to_csv(tmp_path / "xg_laliga.csv", index=False)
