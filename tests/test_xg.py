@@ -35,6 +35,20 @@ def test_empareja_todos_los_nombres_por_calendario():
     assert len(mapa) == len(set(bbdd.equipo_local_txt) | set(bbdd.equipo_visitante_txt))
 
 
+def test_champions_real_empareja_por_rivales_aunque_haya_muchos_partidos_el_mismo_dia():
+    """Calendario real de FotMob (25/11/2026). Con votos de calendario solos, los equipos nuevos de 2026-27 (5 partidos)
+    se cruzaban entre sí (Aston Villa -> Real Betis) porque 18 equipos juegan el mismo martes y miércoles."""
+    fm = pd.read_csv("tests/datos/fotmob_champions_calendario.csv", dtype={"fotmob_id_txt": str}, parse_dates=["fecha"])
+    bbdd = pd.read_csv("datos/bbdd_champions.csv")
+    bbdd = bbdd[pd.to_datetime(bbdd.fecha_dt, dayfirst=True) <= "2026-11-24"]
+    mapa = fotmob.emparejar_nombres(fm, bbdd)
+    for f, e in {"Aston Villa": "Aston Villa", "Real Betis": "Real Betis", "Inter": "Internazionale", "Roma": "AS Roma",
+                 "Viking": "Viking FK", "Feyenoord": "Feyenoord Rotterdam", "RB Leipzig": "RB Leipzig",
+                 "Shakhtar Donetsk": "Shakhtar Donetsk", "Sabah FK": "Sabah FK", "Bayern München": "Bayern Munich"}.items():
+        assert mapa[f] == e
+    assert len(fotmob.unir(fm, bbdd, mapa)) == len(bbdd)
+
+
 def test_lee_el_xg_del_detalle_de_fotmob():
     assert fotmob.leer_xg(_detalle()) == (0.5, 4.14)
     assert fotmob.leer_xg(_detalle(), local="Getafe") == (0.5, 4.14)

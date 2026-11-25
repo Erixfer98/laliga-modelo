@@ -1,13 +1,10 @@
-"""Diagnóstico temporal (no va al PR): calendario real de FotMob en Champions y cómo se emparejan los nombres."""
-import json
-import traceback
-try:
-    import pandas as pd
-    import fotmob
-    fm = fotmob.calendario(42)
-    fm.to_csv("sondeo/fm_champions.csv", index=False)
-    b = pd.read_csv("datos/bbdd_champions.csv")
-    mapa = fotmob.emparejar_nombres(fm, b)
-    json.dump(mapa, open("sondeo/mapa_champions.json", "w"), indent=1, ensure_ascii=False)
-except Exception:
-    open("sondeo/error.txt", "w").write(traceback.format_exc())
+"""Corrida de prueba temporal (no va al PR): fotmob.py real + resumen de cobertura."""
+import pandas as pd
+import fotmob
+fotmob.main(list(fotmob.LIGAS))
+for l in fotmob.LIGAS:
+    b = pd.read_csv(f"datos/bbdd_{l}.csv")
+    print(l, "columnas", len(b.columns), "con xg", int(b.xg_local_val.notna().sum()), "de", len(b),
+          b.groupby("temporada_txt").xg_local_val.apply(lambda s: int(s.notna().sum())).to_dict())
+b = pd.read_csv("datos/bbdd_champions.csv")
+print(b.tail(6).iloc[:, [2, 5, 6, 7, 8, 28, 29]].to_string())

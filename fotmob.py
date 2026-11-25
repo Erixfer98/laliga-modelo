@@ -9,16 +9,18 @@ Salida:
     a partir del CSV de arriba). Partido sin xG = celda vacía.
 Si FotMob falla, no frena el Action: se queda el último xG publicado.
 
-Nombres: FotMob escribe los equipos a su manera ("Atlético Madrid", "Celta Vigo", ...). Cada nombre de FotMob se
-empareja con el equipo de la BBDD con el que más veces coincide el calendario (mismo día o 1 día de diferencia: FotMob
-da la fecha en UTC). Después cada partido se une por local + visitante + fecha (±1 día).
+Nombres: FotMob escribe los equipos a su manera ("Atlético Madrid", "Inter", ...). Se emparejan primero los nombres
+iguales sin acentos y después por rivales ya conocidos en el mismo partido (ver emparejar_nombres). Después cada partido
+se une por local + visitante + fecha (±1 día: FotMob da la fecha en UTC).
 
 Uso:  python fotmob.py             -> las 6 ligas (La Liga y Champions primero)
       python fotmob.py laliga      -> una sola
 """
 
+import re
 import sys
 import time
+import unicodedata
 from collections import Counter
 
 import pandas as pd
@@ -95,26 +97,70 @@ def xg_partido(id_partido: str, local: str = None):
     return leer_xg(_json("matchDetails", matchId=id_partido), local)
 
 
+def _normal(nombre: str) -> str:
+    """Nombre sin acentos, mayúsculas ni signos: «Atlético Madrid» y «Atletico Madrid» quedan iguales."""
+    s = unicodedata.normalize("NFKD", str(nombre)).encode("ascii", "ignore").decode().lower()
+    return re.sub(r"[^a-z0-9]", "", s)
+
+
+def _asignar(votos: Counter, mapa: dict, minimo: int, solo_uno: bool = False) -> int:
+    """Asigna a cada nombre de FotMob su equipo más votado si tiene al menos `minimo` votos, sin empate y sin repetir
+    equipos de la BBDD. Devuelve cuántos asignó."""
+    candidatos = {}
+    for (f, e), v in votos.items():
+        candidatos.setdefault(f, []).append((v, e))
+    usados, n = set(mapa.values()), 0
+    for f, lista in sorted(candidatos.items(), key=lambda kv: -max(kv[1])[0]):
+        lista.sort(reverse=True)
+        v, e = lista[0]
+        if f in mapa or e in usados or v < minimo or (len(lista) > 1 and lista[1][0] == v):
+            continue
+        mapa[f], n = e, n + 1
+        usados.add(e)
+        if solo_uno:
+            break
+    return n
+
+
 def emparejar_nombres(fm: pd.DataFrame, bbdd: pd.DataFrame) -> dict:
-    """Nombre de FotMob -> nombre de la BBDD, por votos de calendario: cada partido de FotMob vota por los equipos de la
-    BBDD que jugaron en la misma posición (local/visitante) el mismo día (±1). El equipo real acumula ~1 voto por
-    partido; los demás, pocos. Se asigna de mayor a menor voto sin repetir equipos."""
-    votos = Counter()
+    """Nombre de FotMob -> nombre de la BBDD, en 3 pasos:
+      1. Nombres iguales sin acentos ni mayúsculas («Atlético Madrid» = «Atletico Madrid»).
+      2. Por rivales: si FotMob tiene «Inter» de visitante en casa del Real Madrid el 08/09 y la BBDD tiene
+         Real Madrid - Internazionale ese día (±1), es un voto Inter -> Internazionale. Exacto aunque haya muchos
+         partidos el mismo día (Champions).
+      3. Si los rivales no alcanzan, votos de calendario (equipos que jugaron en la misma posición el mismo día; el
+         mismo día pesa doble) para el nombre más claro, y se vuelve al paso 2."""
+    equipos = sorted(set(bbdd.equipo_local_txt) | set(bbdd.equipo_visitante_txt))
+    por_normal = {_normal(e): e for e in equipos}
+    nombres_fm = set(fm.fm_local) | set(fm.fm_visitante)
+    mapa = {f: por_normal[_normal(f)] for f in nombres_fm if _normal(f) in por_normal}
     b = bbdd.assign(fecha=pd.to_datetime(bbdd.fecha_dt, dayfirst=True))
-    por_dia = {f: g for f, g in b.groupby("fecha")}
-    for p in fm.itertuples():
-        for d in (-1, 0, 1):
-            g = por_dia.get(p.fecha + pd.Timedelta(days=d))
-            if g is None:
+    por_dia = {f: list(zip(g.equipo_local_txt, g.equipo_visitante_txt)) for f, g in b.groupby("fecha")}
+    dias = lambda f: [(d, por_dia.get(f + pd.Timedelta(days=d), [])) for d in (-1, 0, 1)]
+    while len(mapa) < len(nombres_fm):
+        usados, votos = set(mapa.values()), Counter()
+        for p in fm.itertuples():
+            l, v = mapa.get(p.fm_local), mapa.get(p.fm_visitante)
+            if (l is None) == (v is None):
                 continue
-            for x in g.itertuples():
-                votos[(p.fm_local, x.equipo_local_txt)] += 1
-                votos[(p.fm_visitante, x.equipo_visitante_txt)] += 1
-    mapa, usados = {}, set()
-    for (f, e), v in votos.most_common():
-        if f not in mapa and e not in usados and v >= 3:
-            mapa[f] = e
-            usados.add(e)
+            for _, partidos in dias(p.fecha):
+                for bl, bv in partidos:
+                    if l is not None and bl == l and bv not in usados:
+                        votos[(p.fm_visitante, bv)] += 1
+                    if v is not None and bv == v and bl not in usados:
+                        votos[(p.fm_local, bl)] += 1
+        if _asignar(votos, mapa, minimo=2):
+            continue
+        votos = Counter()
+        for p in fm.itertuples():
+            for d, partidos in dias(p.fecha):
+                for bl, bv in partidos:
+                    if p.fm_local not in mapa and bl not in usados:
+                        votos[(p.fm_local, bl)] += 2 if d == 0 else 1
+                    if p.fm_visitante not in mapa and bv not in usados:
+                        votos[(p.fm_visitante, bv)] += 2 if d == 0 else 1
+        if not _asignar(votos, mapa, minimo=4, solo_uno=True):
+            break
     return mapa
 
 
