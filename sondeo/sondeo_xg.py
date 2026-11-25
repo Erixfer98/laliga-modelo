@@ -1,13 +1,19 @@
-"""Sondeo temporal (no va al PR): qué entrega FotMob (y ESPN / Sofascore) sobre xG desde GitHub Actions."""
+"""Sondeo temporal 2 (no va al PR): formato exacto del xG en FotMob, cobertura por liga y velocidad."""
 import json
 import re
+import time
 import traceback
 
 import requests
 
 H = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
                    "Chrome/131.0 Safari/537.36", "Accept-Language": "en-US,en;q=0.9"}
+s = requests.Session()
+s.headers.update(H)
 out = {}
+
+LIGAS = {"laliga": 87, "premier": 47, "seriea": 55, "bundesliga": 54, "ligue1": 53, "ligamx": 230, "champions": 42,
+         "europa": 73, "brasileirao": 268, "mls": 130, "nations": 9806}
 
 
 def nd(html):
@@ -15,116 +21,111 @@ def nd(html):
     return json.loads(m.group(1)) if m else None
 
 
-def buscar(o, pat, ruta="", res=None, lim=60):
-    res = [] if res is None else res
-    if len(res) >= lim:
-        return res
-    if isinstance(o, dict):
-        for k, v in o.items():
-            r = f"{ruta}.{k}"
-            if re.search(pat, str(k), re.I) or (isinstance(v, str) and re.search(pat, v, re.I) and len(v) < 60):
-                res.append([r, json.dumps(v)[:300]])
-            buscar(v, pat, r, res, lim)
-    elif isinstance(o, list):
-        for i, v in enumerate(o[:400]):
-            buscar(v, pat, f"{ruta}[{i}]", res, lim)
-    return res
+def item_xg(details):
+    """El bloque de estadística 'expected_goals' del partido (Periods.All)."""
+    try:
+        grupos = details["content"]["stats"]["Periods"]["All"]["stats"]
+    except Exception:
+        return None
+    for g in grupos:
+        for st in g.get("stats", []):
+            if st.get("key") == "expected_goals":
+                return st
+    return None
 
 
-def partidos(o, res=None):
-    """dicts con pinta de partido: id + home + away + status."""
-    res = [] if res is None else res
-    if isinstance(o, dict):
-        if {"id", "home", "away", "status"} <= set(o):
-            res.append(o)
-        else:
-            for v in o.values():
-                partidos(v, res)
-    elif isinstance(o, list):
-        for v in o:
-            partidos(v, res)
-    return res
-
-
-def paso(nombre, f):
+def ver(nombre, f):
     try:
         out[nombre] = f()
     except Exception:
         out[nombre] = {"excepcion": traceback.format_exc()[-1500:]}
 
 
-def resp(r):
-    return {"status": r.status_code, "url": r.url, "tipo": r.headers.get("content-type"), "inicio": r.text[:300]}
+def api_liga(lid, season=None):
+    p = {"id": lid}
+    if season:
+        p["season"] = season
+    r = s.get("https://www.fotmob.com/api/data/leagues", params=p, timeout=30)
+    return r
 
-
-s = requests.Session()
-s.headers.update(H)
-
-paso("api_leagues_sin_cabecera", lambda: resp(s.get("https://www.fotmob.com/api/leagues?id=87", timeout=30)))
-paso("api_data_leagues", lambda: resp(s.get("https://www.fotmob.com/api/data/leagues?id=87", timeout=30)))
 
 ESTADO = {}
 
 
-def liga_html(lid, slug, extra=""):
-    r = s.get(f"https://www.fotmob.com/leagues/{lid}/fixtures/{slug}{extra}", timeout=30)
+def liga(clave, lid):
+    r = api_liga(lid)
+    j = r.json()
+    info = {"status": r.status_code, "claves": list(j)[:30], "nombre": j.get("details", {}).get("name"),
+            "temporada": j.get("details", {}).get("selectedSeason"), "temporadas": j.get("allAvailableSeasons", [])[:4]}
+    fx = j.get("fixtures", {})
+    info["fixtures_claves"] = list(fx)[:20]
+    ms = fx.get("allMatches", [])
+    fin = [m for m in ms if m.get("status", {}).get("finished") and not m.get("status", {}).get("cancelled")]
+    info["n"], info["n_fin"] = len(ms), len(fin)
+    info["equipos"] = sorted({m["home"]["name"] for m in ms})[:40]
+    info["muestra"] = fin[-1] if fin else None
+    ESTADO[clave] = [m["id"] for m in fin[-3:]]
+    return info
+
+
+for c, l in LIGAS.items():
+    ver(f"liga_{c}", lambda c=c, l=l: liga(c, l))
+
+ver("liga_laliga_pasada", lambda: {k: v for k, v in api_liga(87, "2025/2026").json().get("details", {}).items() if k in ("name", "selectedSeason")}
+    | {"n": len(api_liga(87, "2025/2026").json().get("fixtures", {}).get("allMatches", []))})
+ver("liga_ligamx_clausura", lambda: {"n": len(api_liga(230, "2025/2026 - Clausura").json().get("fixtures", {}).get("allMatches", []))})
+
+
+def partido_api(mid):
+    r = s.get("https://www.fotmob.com/api/data/matchDetails", params={"matchId": mid}, timeout=30)
+    return r
+
+
+def partido_html(mid):
+    r = s.get(f"https://www.fotmob.com/match/{mid}", timeout=30)
     d = nd(r.text)
-    info = {"status": r.status_code, "url": r.url, "next_data": d is not None,
-            "titulo": (re.search(r"<title>(.*?)</title>", r.text, re.S) or [None, None])[1]}
-    if d:
-        pp = d.get("props", {}).get("pageProps", {})
-        info["pageProps_claves"] = list(pp)[:40]
-        info["temporadas"] = pp.get("allAvailableSeasons", [])[:6]
-        ps = partidos(pp)
-        info["n_partidos"] = len(ps)
-        fin = [p for p in ps if p.get("status", {}).get("finished")]
-        info["n_terminados"] = len(fin)
-        info["muestra"] = fin[-2:] if fin else ps[:2]
-        if fin:
-            ESTADO.setdefault("match_id", fin[-1]["id"])
-            ESTADO.setdefault("match_link", fin[-1].get("pageUrl"))
-    return info
+    return r, (d or {}).get("props", {}).get("pageProps")
 
 
-for lid, slug in [(87, "laliga"), (230, "liga-mx"), (42, "champions-league"), (130, "mls"), (268, "serie-a"),
-                  (73, "europa-league"), (9806, "uefa-nations-league-a"), (47, "premier-league")]:
-    paso(f"liga_{lid}", lambda lid=lid, slug=slug: liga_html(lid, slug))
-paso("liga_87_temporada_pasada", lambda: liga_html(87, "laliga", "?season=2025%2F2026"))
+def detalle(clave):
+    res = []
+    for mid in ESTADO.get(clave, [])[-2:]:
+        x = {"id": mid}
+        t = time.time()
+        r = partido_api(mid)
+        x["api"] = {"status": r.status_code, "tipo": r.headers.get("content-type"), "seg": round(time.time() - t, 2)}
+        det = None
+        if r.status_code == 200 and "json" in (r.headers.get("content-type") or ""):
+            det = r.json()
+            x["api"]["claves"] = list(det)[:20]
+        if det is None or item_xg(det) is None:
+            t = time.time()
+            rh, det2 = partido_html(mid)
+            x["html"] = {"status": rh.status_code, "seg": round(time.time() - t, 2), "kb": len(rh.content) // 1024}
+            det = det2 or det
+        x["coverage"] = (det or {}).get("general", {}).get("coverageLevel")
+        x["header_equipos"] = [(t.get("name"), t.get("score")) for t in (det or {}).get("header", {}).get("teams", [])]
+        x["xg"] = item_xg(det or {})
+        res.append(x)
+    return res
 
 
-def partido_html():
-    mid, link = ESTADO.get("match_id"), ESTADO.get("match_link")
-    info = {"match_id": mid, "link": link}
-    for nombre, url in [("por_link", f"https://www.fotmob.com{link}" if link else None),
-                        ("por_id", f"https://www.fotmob.com/match/{mid}")]:
-        if not url:
-            continue
-        r = s.get(url, timeout=30)
-        d = nd(r.text)
-        i = {"status": r.status_code, "url": r.url, "next_data": d is not None}
-        if d:
-            i["xg"] = buscar(d, r"expected|xg")
-            i["general"] = json.dumps(d.get("props", {}).get("pageProps", {}).get("general", {}))[:800]
-            i["header"] = json.dumps(d.get("props", {}).get("pageProps", {}).get("header", {}))[:800]
-        info[nombre] = i
-    r = s.get(f"https://www.fotmob.com/api/matchDetails?matchId={mid}", timeout=30)
-    info["api_matchDetails"] = resp(r)
-    return info
+for c in LIGAS:
+    ver(f"partido_{c}", lambda c=c: detalle(c))
 
 
-paso("partido", partido_html)
+def velocidad():
+    ids = ESTADO.get("laliga", []) + ESTADO.get("premier", []) + ESTADO.get("mls", [])
+    ids = (ids * 5)[:25]
+    t, est = time.time(), []
+    for mid in ids:
+        r = partido_api(mid)
+        est.append(r.status_code)
+        time.sleep(0.3)
+    return {"n": len(ids), "seg": round(time.time() - t, 1), "status": est}
 
 
-def espn():
-    sb = requests.get("https://site.api.espn.com/apis/site/v2/sports/soccer/esp.1/scoreboard?dates=20261122", timeout=30).json()
-    ev = sb["events"][0]["id"]
-    sm = requests.get(f"https://site.api.espn.com/apis/site/v2/sports/soccer/esp.1/summary?event={ev}", timeout=30).json()
-    nombres = [st.get("name") for t in sm.get("boxscore", {}).get("teams", []) for st in t.get("statistics", [])]
-    return {"evento": ev, "stats": nombres, "xg": buscar(sm, r"expected|xg")}
-
-
-paso("espn", espn)
-paso("sofascore", lambda: resp(s.get("https://api.sofascore.com/api/v1/sport/football/scheduled-events/2026-11-22", timeout=30)))
+ver("velocidad_api", velocidad)
 
 with open("sondeo/resultado.json", "w") as f:
     json.dump(out, f, indent=1, ensure_ascii=False, default=str)
