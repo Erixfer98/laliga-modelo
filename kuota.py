@@ -420,6 +420,20 @@ def matriz_datos(m: np.ndarray, region, k: int = 6, regla: dict = None) -> dict:
             "celdas": [[{"p": float(m[x, y]), "gana": bool(region(x, y)), "push": bool(push[x, y])} for y in range(k)] for x in range(k)]}
 
 
+def marcadores(m: np.ndarray, k: int = 7) -> dict:
+    """Matriz de marcadores exactos 0..k-1 (filas = local, columnas = visitante), los 3 más probables y el 1X2.
+    El 1X2 sale de la matriz completa; las celdas visibles no se renormalizan."""
+    k = min(k, m.shape[0])
+    sub = m[:k, :k]
+    x, y = np.indices(m.shape)
+    top = np.argsort(sub, axis=None)[::-1][:3]
+    return {"k": k, "max": float(sub.max()), "masa_visible": float(sub.sum()),
+            "celdas": [[float(sub[i, j]) for j in range(k)] for i in range(k)],
+            "top": [{"local": int(i), "visitante": int(j), "p": float(sub[i, j])}
+                    for i, j in (np.unravel_index(t, sub.shape) for t in top)],
+            "local": float(m[x > y].sum()), "empate": float(m[x == y].sum()), "visitante": float(m[x < y].sum())}
+
+
 def distribucion_datos(m: np.ndarray, mk: dict) -> list:
     """Probabilidad de cada cantidad (total del partido o de un equipo) y si con esa cantidad gana la pata."""
     k = m.shape[0]
@@ -713,6 +727,7 @@ def vista_partido(df: pd.DataFrame, liga: str, local: str, visitante: str, met: 
                 "lambda_local": an["lambda_local"], "lambda_visitante": an["lambda_visitante"], "medias_liga": an["medias_liga"],
                 "forma": forma_reciente(df, local, visitante, met), "xg": xg_reciente(liga, local, visitante) if met == "goles" else None,
                 "cfg": an["cfg"], "grupos": an["grupos"], "n": n, "filtro": filtro,
+                "marcadores": marcadores(an["matriz"]) if met in GOL else None,
                 "mercados": [{k: x[k] for k in COMPACTO} for x in evaluados]}
     nombres = [x["mercado"] for x in evaluados]
     if sel not in nombres:

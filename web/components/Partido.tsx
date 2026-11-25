@@ -131,6 +131,92 @@ export function Lambdas({ d }: { d: Compacto }) {
   );
 }
 
+// ------------------------------------------------------------------ matriz de marcadores (solo goles)
+export function MatrizMarcadores({ d }: { d: Compacto }) {
+  const mc = d.marcadores;
+  if (!mc) return null;
+  const top = mc.top[0];
+  const r1x2 = [
+    { t: `Gana ${d.local}`, p: mc.local },
+    { t: "Empate", p: mc.empate },
+    { t: `Gana ${d.visitante}`, p: mc.visitante },
+  ];
+  return (
+    <details open className="disclosure mt-3" data-testid="matriz-marcadores">
+      <summary>Matriz de marcadores · {metMin(d.metrica)}</summary>
+      <div className="disclosure-body">
+        <div className="grid grid-cols-3 gap-2">
+          {mc.top.map((t, i) => (
+            <div
+              key={i}
+              className={`rounded-xl border px-2 py-2 text-center ${i === 0 ? "border-[#F9A825] bg-[#F9A825]/15" : "border-line2"}`}
+            >
+              <div className="text-[11px] text-mut">{i === 0 ? "Más probable" : `Alterno ${i}`}</div>
+              <div className="num text-xl mt-1">
+                {t.local}–{t.visitante}
+              </div>
+              <div className="text-xs text-mut">{pct(t.p, 1)}</div>
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-3 gap-2 mt-2 text-center">
+          {r1x2.map((x) => (
+            <div key={x.t} className="min-w-0">
+              <div className="text-[11px] text-mut truncate">{x.t}</div>
+              <div className="num text-sm font-semibold">{pct(x.p, 1)}</div>
+            </div>
+          ))}
+        </div>
+        <div className="scrollx mt-4">
+          <table className="w-full min-w-[300px] table-fixed border-separate border-spacing-[3px] text-[10px] sm:text-xs">
+            <caption className="text-left text-xs text-mut mb-2">
+              Filas: goles de {d.local} · columnas: goles de {d.visitante}
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col" className="text-mut w-7">L/V</th>
+                {Array.from({ length: mc.k }, (_, y) => (
+                  <th scope="col" key={y} className="text-mut py-1">{y}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {mc.celdas.map((fila, x) => (
+                <tr key={x}>
+                  <th scope="row" className="text-mut">{x}</th>
+                  {fila.map((p, y) => {
+                    const esTop = x === top.local && y === top.visitante;
+                    const t = p / (mc.max || 1);
+                    return (
+                      <td
+                        key={y}
+                        title={`${d.local} ${x}–${y} ${d.visitante}: ${pct(p, 2)}`}
+                        className={`text-center py-2 rounded num ${x === y ? "outline outline-1 outline-line" : ""}`}
+                        style={{
+                          background: esTop ? "#F9A825" : `hsl(214 80% ${97 - 22 * t}%)`,
+                          color: esTop || t > 0.55 ? "#0f172a" : "#334155",
+                          fontWeight: esTop ? 700 : 500,
+                        }}
+                      >
+                        {p >= 0.0005 ? pct(p, 1) : "·"}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-xs text-mut mt-3 leading-relaxed">
+          Probabilidad de cada marcador exacto según el modelo. Amarillo = el más
+          probable; borde = empates. El tablero cubre {pct(mc.masa_visible, 1)} de
+          los resultados posibles; el 1X2 usa todos.
+        </p>
+      </div>
+    </details>
+  );
+}
+
 // ------------------------------------------------------------------ xG (Understat): local en casa, visitante fuera
 function TarjetaXG({ d }: { d: Compacto }) {
   const xg = d.xg!;
