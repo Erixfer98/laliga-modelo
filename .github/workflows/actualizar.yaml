@@ -27,7 +27,7 @@ jobs:
       - run: python generar_bbdd.py
       - run: python validar_bbdd.py
       - run: |
-          python understat.py || echo "xG: Understat no respondio; se queda el ultimo CSV"
+          python fotmob.py || echo "xG: FotMob no respondio; se queda el ultimo xG"
       - run: |
           python logos.py || echo "logos: sin cambios (ESPN no respondio)"
       - name: Publicar datos validados

@@ -1,5 +1,6 @@
 """
 generar_bbdd.py — regenera datos/bbdd_<liga>.xlsx + .csv (28 columnas, hojas partidos + diccionario).
+  - Si existe datos/xg_<liga>.csv (lo deja fotmob.py), se agregan al final xg_local_val y xg_visitante_val (30 columnas).
   - 5 grandes ligas europeas: football-data.co.uk (se borra y reescribe todo en cada corrida).
   - Liga MX, Champions League, Europa League, Brasileirao, MLS y Nations League: ESPN via espn.py (football-data no publica sus estadisticas). Incremental: solo
     pide los dias nuevos y los mezcla con el CSV existente; con --completo rehace desde el inicio configurado.
@@ -12,6 +13,7 @@ Uso: python generar_bbdd.py                    (todas las ligas)
      python generar_bbdd.py mls --completo         (MLS desde la temporada 2025)
      python generar_bbdd.py nations --completo     (Nations League desde la 2024-25)
 """
+import os
 from datetime import datetime
 from io import StringIO
 from zoneinfo import ZoneInfo
@@ -111,6 +113,8 @@ COLUMNAS = [
 ]
 ANCHOS = [11, 13, 13, 13.5, 14.2, 13, 15.3, 16.7, 19.7, 24.2, 18.7, 13, 13, 13, 13,
           17.3, 12.3, 14.8, 17.8, 20, 13.5, 16, 13, 15.3, 14.8, 17.3, 12.3, 14.8]
+XG = ["xg_local_val", "xg_visitante_val"]   # solo en las ligas con datos/xg_<liga>.csv (fotmob.py)
+ANCHOS_XG = [12.3, 14.8]
 
 
 def descargar(codigo: str, div: str = "SP1") -> pd.DataFrame:
@@ -251,7 +255,7 @@ def fila_partido(i, p):  # i = numero de fila en Excel
     ]
 
 
-def diccionario(partidos: pd.DataFrame, fecha_carga: str):
+def diccionario(partidos: pd.DataFrame, fecha_carga: str, n_columnas: int = 28):
     cobertura = ", ".join(f"{t}: {n} partidos" for t, n in partidos["temporada_txt"].value_counts(sort=False).items())
     equipos = ", ".join(sorted(set(partidos["equipo_local_txt"]) | set(partidos["equipo_visitante_txt"])))
     return [
@@ -274,9 +278,14 @@ def diccionario(partidos: pd.DataFrame, fecha_carga: str):
         ["goles_total_partido_val", "numero", "Formula: goles local + goles visitante.", "Calculado en el script."],
         ["tiros_*, tiros_a_puerta_*, corners_*, faltas_*, amarillas_*, rojas_*", "numero", "Estadisticas del partido por equipo.",
          "HS/AS, HST/AST, HC/AC, HF/AF, HY/AY, HR/AR de football-data.co.uk."],
+    ] + ([
+        ["xg_local_val / xg_visitante_val", "numero",
+         "Goles esperados (xG) de cada equipo en el partido, con 2 decimales. Vacia = FotMob no tiene el xG de ese partido.",
+         "FotMob (fotmob.py), unido por local + visitante + fecha. Se completa despues de cada actualizacion diaria."],
+    ] if n_columnas > 28 else []) + [
         [None, None, None, None],
         ["HANDICAP / CUOTAS", None, "Sin columnas de handicap ni de cuotas, igual que la BBDD de Liga MX.", "A peticion."],
-        ["COBERTURA", None, f"{len(partidos)} partidos ({cobertura}). 28 columnas. Cargado el {fecha_carga}.", "Descarga automatica con generar_bbdd.py."],
+        ["COBERTURA", None, f"{len(partidos)} partidos ({cobertura}). {n_columnas} columnas. Cargado el {fecha_carga}.", "Descarga automatica con generar_bbdd.py."],
         ["LLAVE SUGERIDA", None, "No hay id unico. Para SQL sirve fecha_dt + equipo_local_txt, que no se repite en toda la tabla.",
          "El script deduplica por esa llave en cada corrida porque la fuente republica el CSV completo."],
         ["COMO ACTUALIZAR", None, "Volver a correr generar_bbdd.py: descarga los CSV de las temporadas configuradas y regenera el Excel completo de cada liga.",
@@ -284,25 +293,57 @@ def diccionario(partidos: pd.DataFrame, fecha_carga: str):
     ]
 
 
+def xg_de(partidos: pd.DataFrame, ruta_xg: str):
+    """xG local y visitante de cada partido (en el orden de `partidos`) desde datos/xg_<liga>.csv; None si no existe."""
+    try:
+        xg = pd.read_csv(ruta_xg)
+    except FileNotFoundError:
+        return None
+    llave = ["fecha_dt", "equipo_local_txt", "equipo_visitante_txt"]
+    xg = xg.drop_duplicates(llave)[llave + XG]
+    return partidos[llave].merge(xg, on=llave, how="left")[XG].to_numpy()
+
+
+def _xg_celda(x):
+    return None if pd.isna(x) else round(float(x), 2)
+
+
 def generar(partidos: pd.DataFrame, salida: str = SALIDA):
+    carpeta, archivo = os.path.split(salida)
+    xg = xg_de(partidos, os.path.join(carpeta, archivo.replace("bbdd_", "xg_", 1).replace(".xlsx", ".csv")))
+    columnas = COLUMNAS + (XG if xg is not None else [])
     wb = Workbook()
     ws = wb.active
     ws.title = "partidos"
     filas = [fila_partido(i, p) for i, (_, p) in enumerate(partidos.iterrows(), start=2)]
-    escribir_hoja(ws, COLUMNAS, filas, ANCHOS, alto_hdr=79.75)
+    if xg is not None:
+        filas = [f + [_xg_celda(a), _xg_celda(b)] for f, (a, b) in zip(filas, xg)]
+    escribir_hoja(ws, columnas, filas, ANCHOS + (ANCHOS_XG if xg is not None else []), alto_hdr=79.75)
     ws.freeze_panes = "H2"
-    ws.auto_filter.ref = f"A1:AB{ws.max_row}"
+    ws.auto_filter.ref = f"A1:{get_column_letter(len(columnas))}{ws.max_row}"
 
     wd = wb.create_sheet("diccionario")
     escribir_hoja(wd, ["columna", "tipo", "definicion", "fuente / supuesto"],
-                  diccionario(partidos, datetime.now().strftime("%d/%m/%Y")),
+                  diccionario(partidos, datetime.now().strftime("%d/%m/%Y"), len(columnas)),
                   [38, 10, 62, 58], alto_hdr=20, wrap_cuerpo=True)
     wb.save(salida)
     # copia CSV con los mismos valores: es lo que leen modelo.py y la app
-    tabla = pd.DataFrame([f for f in filas], columns=COLUMNAS)
+    tabla = pd.DataFrame([f for f in filas], columns=columnas)
     tabla = tabla.astype({c: "Int64" for c in COLUMNAS if c.endswith("_val")})   # enteros aunque haya celdas vacias (5, no 5.0)
+    if xg is not None:
+        tabla = tabla.astype({c: "float64" for c in XG})                          # xG con decimales, vacio si no hay
     tabla.to_csv(salida.replace(".xlsx", ".csv"), index=False)
     print(f"OK -> {salida} y .csv ({len(partidos)} partidos)")
+
+
+def refrescar(clave: str, carpeta: str = "datos"):
+    """Reescribe bbdd_<clave>.xlsx y .csv desde su propio CSV (sin descargar nada) para sumar el xG nuevo de
+    xg_<clave>.csv. Los demas datos quedan identicos."""
+    csv = f"{carpeta}/bbdd_{clave}.csv"
+    txt = [c for c in COLUMNAS if not c.endswith("_val")]
+    partidos = pd.read_csv(csv, dtype={c: str for c in txt}, keep_default_na=False,
+                           na_values={c: [""] for c in COLUMNAS if c.endswith("_val")})
+    generar(partidos[COLUMNAS], salida=csv.replace(".csv", ".xlsx"))
 
 if __name__ == "__main__":
     import os

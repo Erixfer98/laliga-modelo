@@ -217,7 +217,7 @@ export function MatrizMarcadores({ d }: { d: Compacto }) {
   );
 }
 
-// ------------------------------------------------------------------ xG (Understat): local en casa, visitante fuera
+// ------------------------------------------------------------------ xG (FotMob): local en casa, visitante fuera
 function TarjetaXG({ d }: { d: Compacto }) {
   const xg = d.xg!;
   const lados = [

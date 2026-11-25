@@ -189,8 +189,8 @@ def _xg_csv(ruta: str, firma) -> pd.DataFrame:
 
 
 def xg_reciente(liga: str, local: str, visitante: str, n: int = 5, carpeta: str = None):
-    """xG de Understat: últimos n partidos del local en casa y del visitante fuera. Media y CV del xG a favor
-    (lo que generó) y en contra (lo que le generaron). None si la liga no tiene xG (solo las 5 grandes europeas)."""
+    """xG de FotMob: últimos n partidos del local en casa y del visitante fuera. Media y CV del xG a favor
+    (lo que generó) y en contra (lo que le generaron). None si la liga no tiene xG (5 grandes europeas y Champions)."""
     ruta = f"{carpeta or CARPETA_DATOS}/xg_{liga}.csv"
     if not os.path.exists(ruta):
         return None
@@ -198,7 +198,7 @@ def xg_reciente(liga: str, local: str, visitante: str, n: int = 5, carpeta: str 
     df = _xg_csv(ruta, (st.st_mtime_ns, st.st_size))
     casa = df[df.equipo_local_txt == local].head(n)
     fuera = df[df.equipo_visitante_txt == visitante].head(n)
-    return {"n": n, "fuente": "Understat",
+    return {"n": n, "fuente": "FotMob",
             "local": {"favor": _media_cv(casa.xg_local_val), "contra": _media_cv(casa.xg_visitante_val)},
             "visitante": {"favor": _media_cv(fuera.xg_visitante_val), "contra": _media_cv(fuera.xg_local_val)}}
 
@@ -855,7 +855,7 @@ DICCIONARIO = [
     ("Banca", "Kelly", "Maximiza el crecimiento logarítmico de la distribución de retornos, incluyendo devoluciones. Se usa el mínimo Kelly de los escenarios heurísticos calculados. Si falta distribución conjunta, hay duplicados o incompatibilidad, no se recomienda stake. Partidos distintos suponen independencia no validada."),
     ("Banca", "½, ¼, ⅛ Kelly", "La mitad, un cuarto y un octavo del Kelly completo. Para parlays usa ¼ o ⅛: menos crecimiento pero mucha menos probabilidad de quebrar."),
     ("Banca", "Patas no independientes", "Dos patas del mismo partido (ej. gana Madrid + over 2.5) están relacionadas; multiplicar sus probabilidades da un número inexacto."),
-    ("Datos", "xG", "Goles esperados de Understat (solo La Liga, Premier, Serie A, Bundesliga y Ligue 1), en la métrica Goles. A favor = el xG que generó el equipo; en contra = el que le generaron. Local: sus últimos 5 en casa; visitante: sus últimos 5 fuera. CV = desviación ÷ promedio (con 3 partidos o más)."),
+    ("Datos", "xG", "Goles esperados de FotMob (La Liga, Premier, Serie A, Bundesliga, Ligue 1 y Champions), en la métrica Goles. A favor = el xG que generó el equipo; en contra = el que le generaron. Local: sus últimos 5 en casa; visitante: sus últimos 5 fuera. CV = desviación ÷ promedio (con 3 partidos o más)."),
     ("Datos", "Fuente", "football-data.co.uk para las 5 ligas europeas; ESPN para Liga MX, Champions League, Europa League, Brasileirão, MLS y Nations League. Se descarga todos los días a las 6:00 am (Guatemala) por GitHub Actions."),
     ("Datos", "Columnas _val", "goles, goles 1er/2do tiempo, tiros, tiros a puerta, corners, faltas, amarillas y rojas, cada una para local y visitante."),
     ("Datos", "Jornada", "Estimada: partido n-ésimo de cada equipo en la temporada. Un aplazado se cuenta cuando se jugó."),
