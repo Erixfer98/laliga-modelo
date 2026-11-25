@@ -1,5 +1,5 @@
 {
- "fecha": "25/11/2026 21:06 UTC",
+ "fecha": "25/11/2026 22:17 UTC",
  "ligas": {
   "brasileirao": {
    "partidos": 740,
@@ -30,11 +30,11 @@
    "ok": true
   },
   "champions": {
-   "partidos": 269,
+   "partidos": 276,
    "ultimo": "25/11/2026",
    "temporadas": {
     "2025-26": 186,
-    "2026-27": 83
+    "2026-27": 90
    },
    "equipos": 54,
    "vacias": 0,
