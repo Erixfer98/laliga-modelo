@@ -1,0 +1,27 @@
+name: Sondeo xG (temporal, no va a main)
+on:
+  push:
+    branches: [xg-fotmob]
+    paths:
+      - "sondeo/*.py"
+      - ".github/workflows/sondeo_xg.yml"
+permissions:
+  contents: write
+jobs:
+  sondeo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests pandas
+      - run: python sondeo/sondeo_xg.py
+      - run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add sondeo/
+          git commit -m "sondeo xG" || exit 0
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"
