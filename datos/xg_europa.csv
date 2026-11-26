@@ -10,6 +10,7 @@ temporada_txt,fecha_dt,equipo_local_txt,equipo_visitante_txt,xg_local_val,xg_vis
 2025-26,24/09/2025,SC Freiburg,FC Basel,0.92,1.11,4947858
 2025-26,25/09/2025,Aston Villa,Bologna,1.45,1.24,4947807
 2025-26,25/09/2025,FC Utrecht,Lyon,1.25,1.04,4947906
+2025-26,25/09/2025,Ferencvaros,Viktoria Plzen,0.93,0.67,4947833
 2025-26,25/09/2025,Go Ahead Eagles,FCSB,1.39,0.66,4947903
 2025-26,25/09/2025,Lille,SK Brann,1.57,1.19,4947787
 2025-26,25/09/2025,RB Salzburg,FC Porto,1.36,1.23,4947800
@@ -33,6 +34,7 @@ temporada_txt,fecha_dt,equipo_local_txt,equipo_visitante_txt,xg_local_val,xg_vis
 2025-26,02/10/2025,Racing Genk,Ferencvaros,1.19,1.18,4947910
 2025-26,02/10/2025,SK Brann,FC Utrecht,0.66,0.51,4947916
 2025-26,02/10/2025,SK Sturm Graz,Rangers,1.64,1.87,4947868
+2025-26,02/10/2025,Viktoria Plzen,Malmo FF,2.17,0.36,4947831
 2025-26,23/10/2025,AS Roma,Viktoria Plzen,2.28,0.16,4947773
 2025-26,23/10/2025,Braga,Red Star Belgrade,1.73,0.41,4947813
 2025-26,23/10/2025,Celta Vigo,Nice,1.31,1.18,4947887
@@ -58,6 +60,7 @@ temporada_txt,fecha_dt,equipo_local_txt,equipo_visitante_txt,xg_local_val,xg_vis
 2025-26,06/11/2025,FC Basel,FCSB,4.03,1.16,4947850
 2025-26,06/11/2025,FC Midtjylland,Celtic,2.73,0.98,4947853
 2025-26,06/11/2025,FC Utrecht,FC Porto,0.54,1.22,4947905
+2025-26,06/11/2025,Ferencvaros,Ludogorets Razgrad,1.98,0.67,4947834
 2025-26,06/11/2025,Malmo FF,Panathinaikos,1.42,1.36,4947900
 2025-26,06/11/2025,Nice,SC Freiburg,1.79,2.13,4947878
 2025-26,06/11/2025,PAOK,Young Boys,3.8,0.19,4947826
@@ -67,6 +70,7 @@ temporada_txt,fecha_dt,equipo_local_txt,equipo_visitante_txt,xg_local_val,xg_vis
 2025-26,06/11/2025,Red Star Belgrade,Lille,1.71,1.58,4947816
 2025-26,06/11/2025,SK Sturm Graz,Nottingham Forest,0.09,1.7,4947870
 2025-26,06/11/2025,VfB Stuttgart,Feyenoord Rotterdam,1.73,0.89,4947889
+2025-26,06/11/2025,Viktoria Plzen,Fenerbahce,1.16,1.05,4947829
 2025-26,27/11/2025,AS Roma,FC Midtjylland,0.84,0.73,4947774
 2025-26,27/11/2025,Aston Villa,Young Boys,2.19,0.38,4947806
 2025-26,27/11/2025,Bologna,RB Salzburg,3.91,2.07,4947880
@@ -84,6 +88,7 @@ temporada_txt,fecha_dt,equipo_local_txt,equipo_visitante_txt,xg_local_val,xg_vis
 2025-26,27/11/2025,Rangers,Braga,1.69,1.67,4947789
 2025-26,27/11/2025,Real Betis,FC Utrecht,1.95,0.76,4947799
 2025-26,27/11/2025,Red Star Belgrade,FCSB,1.75,0.78,4947818
+2025-26,27/11/2025,Viktoria Plzen,SC Freiburg,1.29,0.87,4947830
 2025-26,11/12/2025,Celta Vigo,Bologna,0.34,2.2,4947888
 2025-26,11/12/2025,Celtic,AS Roma,1.34,1.47,4947836
 2025-26,11/12/2025,Dinamo Zagreb,Real Betis,0.77,1.86,4947792
@@ -92,6 +97,7 @@ temporada_txt,fecha_dt,equipo_local_txt,equipo_visitante_txt,xg_local_val,xg_vis
 2025-26,11/12/2025,FC Porto,Malmo FF,2.81,0.81,4947779
 2025-26,11/12/2025,FC Utrecht,Nottingham Forest,0.73,1.65,4947907
 2025-26,11/12/2025,FCSB,Feyenoord Rotterdam,1.28,2.11,4947872
+2025-26,11/12/2025,Ferencvaros,Rangers,1.71,1.15,4947832
 2025-26,11/12/2025,Ludogorets Razgrad,PAOK,2.18,3.4,4947861
 2025-26,11/12/2025,Lyon,Go Ahead Eagles,3.06,0.47,4947823
 2025-26,11/12/2025,Nice,Braga,1.5,0.73,4947877
@@ -108,6 +114,7 @@ temporada_txt,fecha_dt,equipo_local_txt,equipo_visitante_txt,xg_local_val,xg_vis
 2025-26,22/01/2026,Dinamo Zagreb,FCSB,2.84,0.24,4947794
 2025-26,22/01/2026,FC Utrecht,Racing Genk,2.06,1.61,4947908
 2025-26,22/01/2026,Fenerbahce,Aston Villa,1.08,1.69,4947808
+2025-26,22/01/2026,Ferencvaros,Panathinaikos,1.49,0.73,4947835
 2025-26,22/01/2026,Feyenoord Rotterdam,SK Sturm Graz,1.37,0.14,4947782
 2025-26,22/01/2026,Malmo FF,Red Star Belgrade,0.42,1.23,4947898
 2025-26,22/01/2026,Nice,Go Ahead Eagles,2.43,1.78,4947879
@@ -116,6 +123,7 @@ temporada_txt,fecha_dt,equipo_local_txt,equipo_visitante_txt,xg_local_val,xg_vis
 2025-26,22/01/2026,Rangers,Ludogorets Razgrad,1.42,0.97,4947790
 2025-26,22/01/2026,SC Freiburg,Maccabi Tel-Aviv,2.46,0.17,4947857
 2025-26,22/01/2026,SK Brann,FC Midtjylland,3.32,1.86,4947915
+2025-26,22/01/2026,Viktoria Plzen,FC Porto,0.34,2.14,4947828
 2025-26,22/01/2026,Young Boys,Lyon,0.86,0.59,4947845
 2025-26,29/01/2026,Aston Villa,RB Salzburg,1.54,2.73,4947804
 2025-26,29/01/2026,Celtic,FC Utrecht,2.66,0.41,4947839
@@ -145,10 +153,12 @@ temporada_txt,fecha_dt,equipo_local_txt,equipo_visitante_txt,xg_local_val,xg_vis
 2025-26,19/02/2026,SK Brann,Bologna,0.5,0.94,5161883
 2025-26,26/02/2026,Bologna,SK Brann,1.23,0.51,5161891
 2025-26,26/02/2026,Celta Vigo,PAOK,1.35,0.35,5161893
+2025-26,26/02/2026,Ferencvaros,Ludogorets Razgrad,1.75,0.91,5161888
 2025-26,26/02/2026,Nottingham Forest,Fenerbahce,0.99,1.76,5161894
 2025-26,26/02/2026,VfB Stuttgart,Celtic,2.13,0.3,5161890
 2025-26,12/03/2026,Bologna,AS Roma,1.46,1.35,5206093
 2025-26,12/03/2026,Celta Vigo,Lyon,1.1,1.08,5206095
+2025-26,12/03/2026,Ferencvaros,Braga,1.42,0.59,5206090
 2025-26,12/03/2026,Lille,Aston Villa,0.43,0.51,5206097
 2025-26,12/03/2026,Nottingham Forest,FC Midtjylland,1.72,0.69,5206096
 2025-26,12/03/2026,Panathinaikos,Real Betis,0.97,0.68,5206094
