@@ -1,5 +1,5 @@
 """
-fotmob.py — xG (goles esperados) de cada partido desde FotMob: 5 grandes ligas europeas y Champions League.
+fotmob.py — xG (goles esperados) de cada partido desde FotMob: 5 grandes ligas europeas, Champions League y Europa League.
 Reemplaza a understat.py (Understat en mantenimiento desde ~03/11/2026).
 
 Salida:
@@ -13,7 +13,7 @@ Nombres: FotMob escribe los equipos a su manera ("Atlético Madrid", "Inter", ..
 iguales sin acentos y después por rivales ya conocidos en el mismo partido (ver emparejar_nombres). Después cada partido
 se une por local + visitante + fecha (±1 día: FotMob da la fecha en UTC).
 
-Uso:  python fotmob.py             -> las 6 ligas (La Liga y Champions primero)
+Uso:  python fotmob.py             -> las 7 ligas (La Liga y Champions primero)
       python fotmob.py laliga      -> una sola
 """
 
@@ -29,7 +29,7 @@ import requests
 import generar_bbdd
 
 # clave de la BBDD -> id de la liga en FotMob. El orden es la prioridad si se acaba el tiempo de la corrida.
-LIGAS = {"laliga": 87, "champions": 42, "premier": 47, "seriea": 55, "bundesliga": 54, "ligue1": 53}
+LIGAS = {"laliga": 87, "champions": 42, "premier": 47, "seriea": 55, "bundesliga": 54, "ligue1": 53, "europa": 73}
 N_TEMPORADAS = 2            # la actual y la anterior, igual que la BBDD
 API = "https://www.fotmob.com/api/data"
 CABECERAS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
