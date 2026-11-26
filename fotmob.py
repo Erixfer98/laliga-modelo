@@ -77,7 +77,7 @@ def leer_xg(detalle: dict, local: str = None):
     """(xG local, xG visitante) del detalle de un partido de FotMob; None si el partido no tiene xG.
     Si se pasa `local` (nombre de FotMob) y no coincide con el local del detalle, None: mejor vacío que al revés."""
     casa = (detalle.get("general") or {}).get("homeTeam", {}).get("name")
-    if local and casa and casa != local:
+    if local and casa and _normal(casa) != _normal(local):   # sin acentos: «Ferencváros» = «Ferencvaros»
         return None
     try:
         grupos = detalle["content"]["stats"]["Periods"]["All"]["stats"]
