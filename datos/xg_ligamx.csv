@@ -1,0 +1,323 @@
+temporada_txt,fecha_dt,equipo_local_txt,equipo_visitante_txt,xg_local_val,xg_visitante_val,fotmob_id_txt
+Clausura 2026,09/01/2026,Atlas,Puebla,2.52,1.82,5101715
+Clausura 2026,09/01/2026,Mazatlan,FC Juarez,0.44,0.97,5101717
+Clausura 2026,09/01/2026,Tijuana,America,0.51,0.13,5101716
+Clausura 2026,10/01/2026,Guadalajara,Pachuca,2.8,0.52,5101718
+Clausura 2026,10/01/2026,Leon,Cruz Azul,0.81,1.5,5101719
+Clausura 2026,10/01/2026,Monterrey,Toluca,1.56,1.19,5101721
+Clausura 2026,10/01/2026,Santos Laguna,Necaxa,1.01,2.23,5101720
+Clausura 2026,11/01/2026,Atletico San Luis,Tigres UANL,0.68,0.51,5101723
+Clausura 2026,11/01/2026,Pumas UNAM,Queretaro,1.28,1.43,5101722
+Clausura 2026,13/01/2026,FC Juarez,Guadalajara,0.78,0.85,5101728
+Clausura 2026,13/01/2026,Necaxa,Monterrey,1.03,1.74,5101724
+Clausura 2026,13/01/2026,Pachuca,Leon,0.79,0.74,5101725
+Clausura 2026,13/01/2026,Puebla,Mazatlan,1.77,1.29,5101726
+Clausura 2026,14/01/2026,America,Atletico San Luis,0.43,1.4,5101729
+Clausura 2026,14/01/2026,Cruz Azul,Atlas,0.91,0.32,5101727
+Clausura 2026,14/01/2026,Queretaro,Tijuana,1.82,0.41,5101730
+Clausura 2026,14/01/2026,Tigres UANL,Pumas UNAM,2.76,0.95,5101731
+Clausura 2026,14/01/2026,Toluca,Santos Laguna,2.26,0.2,5101732
+Clausura 2026,16/01/2026,Mazatlan,Monterrey,0.67,2.75,5101733
+Clausura 2026,17/01/2026,Cruz Azul,Puebla,1.61,0.17,5101738
+Clausura 2026,17/01/2026,Guadalajara,Queretaro,2.36,1.37,5101734
+Clausura 2026,17/01/2026,Necaxa,Atlas,0.78,0.7,5101735
+Clausura 2026,17/01/2026,Tigres UANL,Toluca,0.27,0.65,5101736
+Clausura 2026,17/01/2026,Tijuana,Atletico San Luis,0.85,0.62,5101737
+Clausura 2026,18/01/2026,Pachuca,America,0.38,0.55,5101741
+Clausura 2026,18/01/2026,Pumas UNAM,Leon,0.85,1.4,5101739
+Clausura 2026,18/01/2026,Santos Laguna,FC Juarez,2.16,1.41,5101740
+Clausura 2026,30/01/2026,FC Juarez,Cruz Azul,2.47,2.56,5101743
+Clausura 2026,30/01/2026,Puebla,Toluca,0.53,2.13,5101742
+Clausura 2026,30/01/2026,Pumas UNAM,Santos Laguna,0.38,0.72,5101744
+Clausura 2026,31/01/2026,America,Necaxa,2.22,0.25,5101748
+Clausura 2026,31/01/2026,Atlas,Mazatlan,0.97,0.62,5101745
+Clausura 2026,31/01/2026,Atletico San Luis,Guadalajara,1.33,2.5,5101750
+Clausura 2026,31/01/2026,Leon,Tigres UANL,1.49,1.52,5101746
+Clausura 2026,31/01/2026,Monterrey,Tijuana,1.35,1.72,5101747
+Clausura 2026,01/02/2026,Queretaro,Pachuca,0.27,0.86,5101749
+Clausura 2026,06/02/2026,Mazatlan,Guadalajara,0.31,2.19,5101754
+Clausura 2026,06/02/2026,Necaxa,Atletico San Luis,2.01,1.21,5101751
+Clausura 2026,06/02/2026,Tigres UANL,Santos Laguna,3.44,1.48,5101752
+Clausura 2026,06/02/2026,Tijuana,Puebla,0.52,1.38,5101753
+Clausura 2026,07/02/2026,America,Monterrey,1.23,0.08,5101759
+Clausura 2026,07/02/2026,Atlas,Pumas UNAM,1.69,1.26,5101757
+Clausura 2026,07/02/2026,Pachuca,FC Juarez,1.61,1.37,5101758
+Clausura 2026,07/02/2026,Queretaro,Leon,2.02,1.45,5101755
+Clausura 2026,07/02/2026,Toluca,Cruz Azul,2.62,0.79,5101756
+Clausura 2026,13/02/2026,Puebla,Pumas UNAM,1.12,2.11,5101760
+Clausura 2026,13/02/2026,Toluca,Tijuana,2.0,0.28,5101762
+Clausura 2026,14/02/2026,Atletico San Luis,Queretaro,1.86,0.93,5101763
+Clausura 2026,14/02/2026,FC Juarez,Necaxa,1.36,0.68,5101761
+Clausura 2026,14/02/2026,Guadalajara,America,1.75,0.31,5101766
+Clausura 2026,14/02/2026,Monterrey,Leon,1.78,0.53,5101764
+Clausura 2026,14/02/2026,Pachuca,Atlas,0.83,1.56,5101765
+Clausura 2026,15/02/2026,Cruz Azul,Tigres UANL,1.85,0.43,5101768
+Clausura 2026,15/02/2026,Santos Laguna,Mazatlan,2.36,1.25,5101767
+Clausura 2026,20/02/2026,Puebla,America,1.1,2.51,5101770
+Clausura 2026,20/02/2026,Tigres UANL,Pachuca,0.61,1.03,5101769
+Clausura 2026,21/02/2026,Atlas,Atletico San Luis,3.23,1.08,5101771
+Clausura 2026,21/02/2026,Cruz Azul,Guadalajara,0.65,1.15,5101774
+Clausura 2026,21/02/2026,Leon,Santos Laguna,1.08,0.88,5101772
+Clausura 2026,21/02/2026,Necaxa,Toluca,0.61,3.05,5101773
+Clausura 2026,21/02/2026,Tijuana,Mazatlan,0.74,2.09,5101777
+Clausura 2026,22/02/2026,Pumas UNAM,Monterrey,1.62,1.33,5101775
+Clausura 2026,27/02/2026,FC Juarez,Atlas,0.55,1.16,5101781
+Clausura 2026,27/02/2026,Mazatlan,Pachuca,1.79,1.78,5101778
+Clausura 2026,27/02/2026,Queretaro,Santos Laguna,3.96,2.01,5101779
+Clausura 2026,27/02/2026,Tijuana,Pumas UNAM,0.82,1.88,5101780
+Clausura 2026,28/02/2026,America,Tigres UANL,0.87,1.63,5101786
+Clausura 2026,28/02/2026,Atletico San Luis,Puebla,0.86,1.34,5101782
+Clausura 2026,28/02/2026,Leon,Necaxa,2.3,0.31,5101784
+Clausura 2026,28/02/2026,Monterrey,Cruz Azul,1.17,1.95,5101785
+Clausura 2026,28/02/2026,Toluca,Guadalajara,2.01,0.83,5101783
+Clausura 2026,03/03/2026,Atletico San Luis,Mazatlan,1.27,0.36,5101789
+Clausura 2026,03/03/2026,Pachuca,Necaxa,1.27,0.49,5101787
+Clausura 2026,03/03/2026,Pumas UNAM,Toluca,2.71,3.32,5101790
+Clausura 2026,03/03/2026,Santos Laguna,Cruz Azul,0.54,1.57,5101788
+Clausura 2026,04/03/2026,America,FC Juarez,1.33,2.48,5101794
+Clausura 2026,04/03/2026,Atlas,Tijuana,0.89,1.58,5101793
+Clausura 2026,04/03/2026,Monterrey,Queretaro,1.98,0.32,5101791
+Clausura 2026,04/03/2026,Puebla,Tigres UANL,1.82,1.95,5101792
+Clausura 2026,06/03/2026,Mazatlan,Leon,2.16,1.15,5101795
+Clausura 2026,06/03/2026,Necaxa,Pumas UNAM,0.38,2.21,5101796
+Clausura 2026,07/03/2026,Atlas,Guadalajara,0.27,2.61,5101799
+Clausura 2026,07/03/2026,Cruz Azul,Atletico San Luis,3.25,0.84,5101797
+Clausura 2026,07/03/2026,Pachuca,Puebla,1.35,0.49,5101798
+Clausura 2026,07/03/2026,Queretaro,America,1.51,2.21,5101801
+Clausura 2026,07/03/2026,Tigres UANL,Monterrey,1.65,0.06,5101800
+Clausura 2026,08/03/2026,Tijuana,Santos Laguna,0.92,2.92,5101803
+Clausura 2026,08/03/2026,Toluca,FC Juarez,2.23,0.27,5101802
+Clausura 2026,13/03/2026,FC Juarez,Monterrey,4.06,1.08,5101806
+Clausura 2026,13/03/2026,Puebla,Necaxa,0.93,0.29,5101804
+Clausura 2026,14/03/2026,Atletico San Luis,Pachuca,1.07,0.97,5101807
+Clausura 2026,14/03/2026,Guadalajara,Santos Laguna,2.6,0.36,5101808
+Clausura 2026,14/03/2026,Leon,Tijuana,1.02,1.42,5101809
+Clausura 2026,14/03/2026,Pumas UNAM,Cruz Azul,1.08,1.5,5101811
+Clausura 2026,14/03/2026,Toluca,Atlas,2.18,0.88,5101810
+Clausura 2026,15/03/2026,America,Mazatlan,2.62,0.97,5101812
+Clausura 2026,15/03/2026,Tigres UANL,Queretaro,0.42,0.29,5101805
+Clausura 2026,18/03/2026,Guadalajara,Leon,5.49,0.1,5101813
+Clausura 2026,20/03/2026,Mazatlan,Cruz Azul,1.58,1.28,5101815
+Clausura 2026,20/03/2026,Necaxa,Tijuana,2.39,0.64,5101814
+Clausura 2026,21/03/2026,Atlas,Queretaro,0.71,0.62,5101816
+Clausura 2026,21/03/2026,Atletico San Luis,Leon,0.69,1.47,5101818
+Clausura 2026,21/03/2026,Monterrey,Guadalajara,2.29,1.21,5101819
+Clausura 2026,21/03/2026,Pumas UNAM,America,1.35,0.39,5101820
+Clausura 2026,22/03/2026,FC Juarez,Tigres UANL,0.96,0.54,5101822
+Clausura 2026,22/03/2026,Pachuca,Toluca,0.91,0.56,5101817
+Clausura 2026,22/03/2026,Santos Laguna,Puebla,2.93,1.45,5101821
+Clausura 2026,03/04/2026,Necaxa,Mazatlan,2.38,0.39,5101825
+Clausura 2026,03/04/2026,Puebla,FC Juarez,1.01,1.4,5101823
+Clausura 2026,03/04/2026,Tijuana,Tigres UANL,0.24,1.31,5101824
+Clausura 2026,04/04/2026,Cruz Azul,Pachuca,0.98,1.06,5101828
+Clausura 2026,04/04/2026,Leon,Atlas,1.54,0.37,5101827
+Clausura 2026,04/04/2026,Monterrey,Atletico San Luis,0.74,1.02,5101826
+Clausura 2026,04/04/2026,Queretaro,Toluca,2.77,2.06,5101830
+Clausura 2026,04/04/2026,Santos Laguna,America,0.39,1.28,5101829
+Clausura 2026,05/04/2026,Guadalajara,Pumas UNAM,2.69,0.8,5101831
+Clausura 2026,07/04/2026,Queretaro,FC Juarez,1.24,1.41,5101776
+Clausura 2026,10/04/2026,FC Juarez,Tijuana,2.87,1.57,5101833
+Clausura 2026,10/04/2026,Puebla,Leon,0.56,1.36,5101832
+Clausura 2026,11/04/2026,America,Cruz Azul,0.4,0.72,5101838
+Clausura 2026,11/04/2026,Atlas,Monterrey,0.62,0.91,5101836
+Clausura 2026,11/04/2026,Pachuca,Santos Laguna,1.38,0.86,5101837
+Clausura 2026,11/04/2026,Queretaro,Necaxa,1.75,0.46,5101834
+Clausura 2026,11/04/2026,Tigres UANL,Guadalajara,1.67,0.89,5101835
+Clausura 2026,12/04/2026,Pumas UNAM,Mazatlan,2.13,1.66,5101839
+Clausura 2026,12/04/2026,Toluca,Atletico San Luis,1.07,1.27,5101840
+Clausura 2026,17/04/2026,Atletico San Luis,Pumas UNAM,1.5,1.83,5101841
+Clausura 2026,17/04/2026,Mazatlan,Queretaro,1.54,1.85,5101842
+Clausura 2026,18/04/2026,America,Toluca,0.97,1.06,5101847
+Clausura 2026,18/04/2026,Cruz Azul,Tijuana,2.25,1.05,5101844
+Clausura 2026,18/04/2026,Guadalajara,Puebla,1.1,0.24,5101845
+Clausura 2026,18/04/2026,Leon,FC Juarez,1.27,1.69,5101848
+Clausura 2026,18/04/2026,Monterrey,Pachuca,1.77,1.64,5101846
+Clausura 2026,18/04/2026,Necaxa,Tigres UANL,0.71,1.21,5101843
+Clausura 2026,19/04/2026,Santos Laguna,Atlas,2.1,0.55,5101849
+Clausura 2026,21/04/2026,Leon,America,1.21,1.82,5101852
+Clausura 2026,21/04/2026,Monterrey,Puebla,2.57,1.2,5101853
+Clausura 2026,21/04/2026,Pumas UNAM,FC Juarez,3.13,0.65,5101851
+Clausura 2026,21/04/2026,Queretaro,Cruz Azul,0.5,2.25,5101850
+Clausura 2026,22/04/2026,Atlas,Tigres UANL,0.1,0.93,5101854
+Clausura 2026,22/04/2026,Atletico San Luis,Santos Laguna,2.09,0.38,5101855
+Clausura 2026,22/04/2026,Mazatlan,Toluca,1.89,1.67,5101856
+Clausura 2026,22/04/2026,Necaxa,Guadalajara,0.3,0.93,5101858
+Clausura 2026,22/04/2026,Tijuana,Pachuca,3.05,0.57,5101857
+Clausura 2026,24/04/2026,Puebla,Queretaro,0.93,3.06,5101859
+Clausura 2026,25/04/2026,America,Atlas,1.09,0.51,5101864
+Clausura 2026,25/04/2026,FC Juarez,Atletico San Luis,1.73,1.24,5101865
+Clausura 2026,25/04/2026,Guadalajara,Tijuana,2.37,0.98,5101862
+Clausura 2026,25/04/2026,Pachuca,Pumas UNAM,1.47,1.41,5101860
+Clausura 2026,25/04/2026,Tigres UANL,Mazatlan,1.9,0.36,5101861
+Clausura 2026,25/04/2026,Toluca,Leon,1.14,1.22,5101863
+Clausura 2026,26/04/2026,Cruz Azul,Necaxa,1.11,1.15,5101867
+Clausura 2026,26/04/2026,Santos Laguna,Monterrey,0.92,0.71,5101866
+Clausura 2026,02/05/2026,Atlas,Cruz Azul,2.06,2.01,5407883
+Clausura 2026,02/05/2026,Tigres UANL,Guadalajara,2.03,1.01,5407882
+Clausura 2026,03/05/2026,America,Pumas UNAM,2.94,0.42,5407884
+Clausura 2026,03/05/2026,Toluca,Pachuca,0.66,1.65,5407885
+Clausura 2026,09/05/2026,Cruz Azul,Atlas,0.48,1.0,5407887
+Clausura 2026,09/05/2026,Guadalajara,Tigres UANL,2.15,0.63,5407886
+Clausura 2026,10/05/2026,Pachuca,Toluca,1.63,0.69,5407888
+Clausura 2026,10/05/2026,Pumas UNAM,America,1.04,3.46,5407889
+Clausura 2026,13/05/2026,Cruz Azul,Guadalajara,1.77,1.74,5499495
+Clausura 2026,14/05/2026,Pachuca,Pumas UNAM,1.23,0.29,5499496
+Clausura 2026,16/05/2026,Guadalajara,Cruz Azul,0.75,1.93,5499497
+Clausura 2026,17/05/2026,Pumas UNAM,Pachuca,0.77,1.26,5499498
+Clausura 2026,21/05/2026,Cruz Azul,Pumas UNAM,1.17,0.11,5647377
+Clausura 2026,24/05/2026,Pumas UNAM,Cruz Azul,0.57,0.98,5636989
+Apertura 2026,16/07/2026,Necaxa,Atlante,2.33,0.71,1000014499
+Apertura 2026,16/07/2026,Tijuana,Tigres UANL,1.97,0.59,1000014500
+Apertura 2026,17/07/2026,Atletico San Luis,Cruz Azul,1.32,3.15,1000014501
+Apertura 2026,17/07/2026,FC Juarez,Puebla,0.86,1.22,1000014503
+Apertura 2026,17/07/2026,Leon,Atlas,1.35,1.68,1000014502
+Apertura 2026,18/07/2026,Guadalajara,Toluca,1.09,1.77,1000014505
+Apertura 2026,18/07/2026,Monterrey,Santos Laguna,1.82,2.04,1000014506
+Apertura 2026,18/07/2026,Pumas UNAM,Pachuca,0.28,1.07,1000014504
+Apertura 2026,18/07/2026,Queretaro,America,0.95,1.64,1000014507
+Apertura 2026,21/07/2026,Cruz Azul,Puebla,1.38,0.9,1000014508
+Apertura 2026,21/07/2026,Toluca,Pumas UNAM,1.32,0.44,1000014509
+Apertura 2026,24/07/2026,Atlante,America,0.78,1.5,1000014511
+Apertura 2026,24/07/2026,Tijuana,Leon,2.08,0.89,1000014512
+Apertura 2026,25/07/2026,Guadalajara,FC Juarez,2.16,0.5,1000014513
+Apertura 2026,25/07/2026,Santos Laguna,Atlas,0.78,1.17,1000014514
+Apertura 2026,25/07/2026,Tigres UANL,Atletico San Luis,1.39,0.5,1000014510
+Apertura 2026,26/07/2026,Necaxa,Monterrey,3.16,1.06,1000014515
+Apertura 2026,26/07/2026,Pachuca,Queretaro,1.49,2.68,1000014516
+Apertura 2026,31/07/2026,Atletico San Luis,Tijuana,0.59,0.31,1000014518
+Apertura 2026,31/07/2026,FC Juarez,Pumas UNAM,0.54,2.66,1000014519
+Apertura 2026,31/07/2026,Puebla,Guadalajara,0.69,1.97,1000014517
+Apertura 2026,01/08/2026,Atlas,Monterrey,0.43,1.82,1000014522
+Apertura 2026,01/08/2026,Cruz Azul,Atlante,2.86,1.89,1000014523
+Apertura 2026,01/08/2026,Leon,Pachuca,0.79,0.88,1000014521
+Apertura 2026,01/08/2026,Queretaro,Tigres UANL,2.16,2.79,1000014520
+Apertura 2026,02/08/2026,America,Santos Laguna,1.9,2.25,1000014524
+Apertura 2026,02/08/2026,Toluca,Necaxa,1.89,1.34,1000014525
+Apertura 2026,15/08/2026,Atlante,Toluca,1.03,1.07,1000014526
+Apertura 2026,15/08/2026,Atlas,Tigres UANL,0.64,2.87,1000014528
+Apertura 2026,15/08/2026,Monterrey,FC Juarez,3.15,0.18,1000014527
+Apertura 2026,16/08/2026,America,Atletico San Luis,1.98,0.91,1000014530
+Apertura 2026,16/08/2026,Pumas UNAM,Queretaro,0.75,0.7,1000014529
+Apertura 2026,16/08/2026,Santos Laguna,Guadalajara,0.71,1.58,1000014531
+Apertura 2026,16/08/2026,Tijuana,Cruz Azul,1.81,1.3,1000014532
+Apertura 2026,17/08/2026,Necaxa,Leon,1.45,1.46,1000014533
+Apertura 2026,17/08/2026,Pachuca,Puebla,2.65,2.41,1000014534
+Apertura 2026,21/08/2026,FC Juarez,America,1.37,1.93,1000014536
+Apertura 2026,21/08/2026,Leon,Monterrey,1.73,1.35,1000014539
+Apertura 2026,21/08/2026,Queretaro,Toluca,1.62,1.51,1000014537
+Apertura 2026,21/08/2026,Tigres UANL,Atlante,1.44,1.33,1000014540
+Apertura 2026,22/08/2026,Cruz Azul,Atlas,1.21,1.8,1000014541
+Apertura 2026,22/08/2026,Guadalajara,Tijuana,2.3,1.09,1000014538
+Apertura 2026,22/08/2026,Puebla,Santos Laguna,1.02,0.37,1000014535
+Apertura 2026,23/08/2026,Atletico San Luis,Pachuca,2.71,0.99,1000014542
+Apertura 2026,23/08/2026,Pumas UNAM,Necaxa,1.19,1.59,1000014543
+Apertura 2026,28/08/2026,Atlante,Leon,1.03,1.53,1000014545
+Apertura 2026,28/08/2026,Necaxa,Cruz Azul,0.44,1.79,1000014544
+Apertura 2026,28/08/2026,Tijuana,Pumas UNAM,2.88,0.42,1000014546
+Apertura 2026,29/08/2026,America,Puebla,0.84,1.01,1000014549
+Apertura 2026,29/08/2026,Atlas,Queretaro,0.9,1.93,1000014547
+Apertura 2026,29/08/2026,Pachuca,Guadalajara,1.51,1.51,1000014548
+Apertura 2026,29/08/2026,Santos Laguna,Tigres UANL,1.14,1.23,1000014550
+Apertura 2026,30/08/2026,Monterrey,Atletico San Luis,2.0,1.19,1000014552
+Apertura 2026,30/08/2026,Toluca,FC Juarez,3.04,0.18,1000014551
+Apertura 2026,04/09/2026,FC Juarez,Pachuca,0.63,0.93,1000014554
+Apertura 2026,05/09/2026,Atlas,Atlante,1.18,1.93,1000014559
+Apertura 2026,05/09/2026,Atletico San Luis,Guadalajara,0.67,0.76,1000014555
+Apertura 2026,05/09/2026,Tigres UANL,Necaxa,1.94,3.2,1000014557
+Apertura 2026,06/09/2026,Cruz Azul,Santos Laguna,1.95,0.35,1000014561
+Apertura 2026,10/09/2026,Pumas UNAM,Leon,1.55,1.47,1000014560
+Apertura 2026,11/09/2026,Atlante,Pachuca,1.3,1.16,1000014563
+Apertura 2026,11/09/2026,Necaxa,Puebla,1.02,0.68,1000014562
+Apertura 2026,11/09/2026,Tijuana,Queretaro,1.81,0.87,1000014564
+Apertura 2026,12/09/2026,Cruz Azul,America,2.14,2.3,1000014567
+Apertura 2026,12/09/2026,Monterrey,Tigres UANL,1.1,0.14,1000014570
+Apertura 2026,12/09/2026,Toluca,Atlas,2.2,0.99,1000014566
+Apertura 2026,13/09/2026,Guadalajara,Pumas UNAM,0.83,0.56,1000014569
+Apertura 2026,13/09/2026,Santos Laguna,FC Juarez,3.19,1.58,1000014568
+Apertura 2026,14/09/2026,Leon,Atletico San Luis,1.42,1.08,1000014565
+Apertura 2026,15/09/2026,Puebla,Toluca,0.59,1.94,1000014553
+Apertura 2026,18/09/2026,FC Juarez,Tigres UANL,1.84,1.67,1000014572
+Apertura 2026,18/09/2026,Puebla,Atlante,0.66,1.73,1000014571
+Apertura 2026,19/09/2026,America,Guadalajara,0.99,1.92,1000014576
+Apertura 2026,19/09/2026,Atlas,Pumas UNAM,1.99,0.76,1000014573
+Apertura 2026,19/09/2026,Atletico San Luis,Necaxa,1.72,0.64,1000014574
+Apertura 2026,19/09/2026,Monterrey,Cruz Azul,0.82,1.28,1000014575
+Apertura 2026,20/09/2026,Pachuca,Tijuana,2.37,1.93,1000014577
+Apertura 2026,20/09/2026,Queretaro,Leon,1.88,2.11,1000014579
+Apertura 2026,20/09/2026,Toluca,Santos Laguna,3.45,1.86,1000014578
+Apertura 2026,25/09/2026,Atlante,Monterrey,2.6,1.39,1000014580
+Apertura 2026,25/09/2026,Tijuana,Atlas,2.62,2.54,1000014581
+Apertura 2026,26/09/2026,Cruz Azul,Toluca,1.63,1.78,1000014585
+Apertura 2026,26/09/2026,Guadalajara,Queretaro,1.34,2.01,1000014582
+Apertura 2026,26/09/2026,Santos Laguna,Pachuca,2.19,0.79,1000014583
+Apertura 2026,26/09/2026,Tigres UANL,Puebla,1.92,0.4,1000014584
+Apertura 2026,27/09/2026,Leon,FC Juarez,0.64,1.78,1000014587
+Apertura 2026,27/09/2026,Necaxa,America,2.66,4.4,1000014588
+Apertura 2026,27/09/2026,Pumas UNAM,Atletico San Luis,1.42,2.41,1000014586
+Apertura 2026,09/10/2026,Puebla,Leon,0.63,1.75,1000014590
+Apertura 2026,09/10/2026,Tigres UANL,Toluca,1.72,1.18,1000014591
+Apertura 2026,10/10/2026,America,Monterrey,1.56,0.51,1000014594
+Apertura 2026,10/10/2026,Atlas,Guadalajara,0.99,1.97,1000014593
+Apertura 2026,10/10/2026,FC Juarez,Tijuana,1.41,1.27,1000014592
+Apertura 2026,10/10/2026,Queretaro,Atlante,1.44,1.0,1000014589
+Apertura 2026,11/10/2026,Atletico San Luis,Santos Laguna,0.73,2.48,1000014596
+Apertura 2026,11/10/2026,Pachuca,Necaxa,1.6,2.93,1000014595
+Apertura 2026,11/10/2026,Pumas UNAM,Cruz Azul,1.33,2.87,1000014597
+Apertura 2026,16/10/2026,Atlante,Pumas UNAM,1.24,1.11,1000014599
+Apertura 2026,16/10/2026,Necaxa,Atlas,1.81,2.18,1000014598
+Apertura 2026,16/10/2026,Tijuana,Puebla,1.09,0.39,1000014600
+Apertura 2026,17/10/2026,Cruz Azul,FC Juarez,2.67,1.06,1000014605
+Apertura 2026,17/10/2026,Guadalajara,Tigres UANL,1.63,0.61,1000014601
+Apertura 2026,17/10/2026,Leon,America,1.56,2.13,1000014603
+Apertura 2026,17/10/2026,Santos Laguna,Queretaro,4.43,1.53,1000014602
+Apertura 2026,17/10/2026,Toluca,Atletico San Luis,2.8,1.46,1000014604
+Apertura 2026,18/10/2026,Monterrey,Pachuca,1.83,0.82,1000014606
+Apertura 2026,20/10/2026,Atletico San Luis,Queretaro,1.34,1.55,1000014607
+Apertura 2026,20/10/2026,FC Juarez,Atlante,0.4,0.73,1000014608
+Apertura 2026,20/10/2026,Guadalajara,Necaxa,0.55,0.68,1000014610
+Apertura 2026,20/10/2026,Tigres UANL,Leon,1.59,2.38,1000014609
+Apertura 2026,21/10/2026,Atlas,America,2.48,2.18,1000014612
+Apertura 2026,21/10/2026,Pachuca,Cruz Azul,1.34,1.69,1000014614
+Apertura 2026,21/10/2026,Puebla,Monterrey,1.45,1.99,1000014611
+Apertura 2026,21/10/2026,Santos Laguna,Pumas UNAM,1.81,0.14,1000014615
+Apertura 2026,21/10/2026,Toluca,Tijuana,2.62,2.02,1000014613
+Apertura 2026,23/10/2026,Atlante,Atletico San Luis,2.24,0.63,1000014617
+Apertura 2026,23/10/2026,Necaxa,FC Juarez,2.42,1.75,1000014616
+Apertura 2026,24/10/2026,Leon,Toluca,1.71,1.22,1000014618
+Apertura 2026,24/10/2026,Monterrey,Guadalajara,1.85,1.77,1000014619
+Apertura 2026,24/10/2026,Pumas UNAM,Tigres UANL,2.05,1.14,1000014620
+Apertura 2026,25/10/2026,America,Pachuca,2.71,0.67,1000014622
+Apertura 2026,25/10/2026,Atlas,Puebla,1.28,0.99,1000014621
+Apertura 2026,25/10/2026,Queretaro,Cruz Azul,0.94,1.85,1000014623
+Apertura 2026,25/10/2026,Tijuana,Santos Laguna,3.19,0.47,1000014624
+Apertura 2026,28/10/2026,America,Tijuana,1.52,0.4,1000014558
+Apertura 2026,30/10/2026,Atletico San Luis,Atlas,1.0,0.87,1000014625
+Apertura 2026,30/10/2026,FC Juarez,Queretaro,1.42,2.69,1000014626
+Apertura 2026,30/10/2026,Puebla,Pumas UNAM,0.94,2.83,1000014627
+Apertura 2026,31/10/2026,America,Toluca,1.98,1.87,1000014631
+Apertura 2026,31/10/2026,Guadalajara,Atlante,1.42,1.45,1000014629
+Apertura 2026,31/10/2026,Monterrey,Tijuana,2.37,0.77,1000014630
+Apertura 2026,31/10/2026,Pachuca,Tigres UANL,2.78,0.44,1000014628
+Apertura 2026,01/11/2026,Cruz Azul,Leon,1.53,2.09,1000014633
+Apertura 2026,01/11/2026,Santos Laguna,Necaxa,0.97,3.14,1000014632
+Apertura 2026,06/11/2026,Atlante,Santos Laguna,1.92,0.65,1000014636
+Apertura 2026,06/11/2026,Atletico San Luis,FC Juarez,0.96,1.55,1000014634
+Apertura 2026,06/11/2026,Necaxa,Tijuana,1.51,1.98,1000014635
+Apertura 2026,07/11/2026,Atlas,Pachuca,1.18,1.85,1000014637
+Apertura 2026,07/11/2026,Pumas UNAM,America,1.74,1.75,1000014640
+Apertura 2026,07/11/2026,Tigres UANL,Cruz Azul,3.12,2.36,1000014638
+Apertura 2026,07/11/2026,Toluca,Monterrey,0.84,0.4,1000014639
+Apertura 2026,08/11/2026,Leon,Guadalajara,0.35,1.62,1000014642
+Apertura 2026,08/11/2026,Queretaro,Puebla,1.06,1.27,1000014641
+Apertura 2026,14/11/2026,Queretaro,Monterrey,0.5,1.61,1000014556
+Apertura 2026,20/11/2026,FC Juarez,Atlas,2.86,1.05,1000014644
+Apertura 2026,20/11/2026,Puebla,Atletico San Luis,0.94,2.4,1000014643
+Apertura 2026,20/11/2026,Tijuana,Atlante,2.38,0.47,1000014645
+Apertura 2026,21/11/2026,Pachuca,Toluca,2.22,0.61,1000014647
+Apertura 2026,21/11/2026,Pumas UNAM,Monterrey,1.93,1.07,1000014648
+Apertura 2026,21/11/2026,Santos Laguna,Leon,0.46,1.41,1000014646
+Apertura 2026,21/11/2026,Tigres UANL,America,0.74,0.36,1000014649
+Apertura 2026,22/11/2026,Guadalajara,Cruz Azul,0.76,1.8,1000014650
+Apertura 2026,22/11/2026,Queretaro,Necaxa,0.78,1.45,1000014651
+Apertura 2026,25/11/2026,Monterrey,America,0.51,1.37,1000022853
+Apertura 2026,25/11/2026,Toluca,Atlas,2.03,0.8,1000022854
